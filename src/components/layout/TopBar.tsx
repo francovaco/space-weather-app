@@ -45,9 +45,8 @@ export function TopBar() {
         <span className="text-2xs font-medium text-green-400 uppercase tracking-wider">En vivo</span>
       </div>
 
-      {/* Right: Dual clocks */}
+      {/* Right: Dual clocks — fixed-width containers prevent layout shift */}
       <div className="flex items-center gap-6">
-        {/* UTC Clock */}
         <Clock
           label="UTC"
           time={utcStr}
@@ -55,11 +54,7 @@ export function TopBar() {
           tz="UTC"
           accent="text-accent-cyan"
         />
-
-        {/* Separator */}
         <div className="h-6 w-px bg-border" />
-
-        {/* Local Clock */}
         <Clock
           label="LOCAL"
           time={localStr}
@@ -82,16 +77,37 @@ interface ClockProps {
 
 function Clock({ label, time, date, tz, accent }: ClockProps) {
   return (
-    <div className="flex flex-col items-end gap-0.5">
-      <div className="flex items-center gap-1.5">
+    // Fixed outer width — the whole clock never resizes
+    <div className="flex flex-col items-end gap-0.5" style={{ width: '12rem' }}>
+
+      {/* Label row — fixed widths on each token */}
+      <div className="flex w-full items-center justify-end gap-1.5">
         <span className={cn('section-label', accent)}>{label}</span>
-        <span className="text-2xs text-text-muted">{tz}</span>
+        {/* Timezone label: wide enough for "UTC+XX:XX", right-aligned, never shifts */}
+        <span
+          className="font-data text-2xs text-text-muted"
+          style={{ minWidth: '5rem', textAlign: 'right' }}
+        >
+          {tz}
+        </span>
       </div>
-      <div className="flex items-baseline gap-1.5">
-        <span className={cn('font-display text-sm font-semibold tabular-nums', accent)}>
+
+      {/* Time row — ch units lock each piece to its character count */}
+      <div className="flex w-full items-baseline justify-end gap-1.5">
+        {/* HH:mm:ss = 8 chars in a monospace display font */}
+        <span
+          className={cn('font-display text-sm font-semibold tabular-nums', accent)}
+          style={{ width: '5.6rem', textAlign: 'right' }}
+        >
           {time}
         </span>
-        <span className="font-data text-2xs text-text-muted tabular-nums">{date}</span>
+        {/* yyyy-MM-dd = 10 chars */}
+        <span
+          className="font-data text-2xs text-text-muted tabular-nums"
+          style={{ width: '5.4rem', textAlign: 'right' }}
+        >
+          {date}
+        </span>
       </div>
     </div>
   )
