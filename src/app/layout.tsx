@@ -30,23 +30,23 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    template: '%s | GOES-19 Space Weather',
-    default: 'GOES-19 Space Weather',
+    template: '%s | GOES-19 Clima Espacial',
+    default: 'GOES-19 Clima Espacial',
   },
   description:
-    'Real-time space weather monitoring using GOES-19 satellite data. ' +
-    'X-ray flux, proton flux, magnetometer, ABI imagery, aurora forecasts and more.',
+    'Monitoreo de clima espacial en tiempo real con datos del satélite GOES-19. ' +
+    'Flujo de rayos X, flujo de protones, magnetómetro, imágenes ABI, pronósticos de aurora y más.',
   keywords: [
-    'space weather',
+    'clima espacial',
     'GOES-19',
     'NOAA',
     'SWPC',
-    'solar flares',
+    'llamaradas solares',
     'aurora',
-    'satellite imagery',
-    'magnetometer',
-    'proton flux',
-    'electron flux',
+    'imágenes satelitales',
+    'magnetómetro',
+    'flujo de protones',
+    'flujo de electrones',
   ],
 }
 

@@ -23,53 +23,53 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   {
-    label: 'Dashboard',
+    label: 'Panel Principal',
     href: '/',
     icon: <Gauge size={15} />,
   },
   {
-    label: 'Documentation',
+    label: 'Documentación',
     href: '/documentation',
     icon: <BookOpen size={15} />,
   },
   {
-    label: 'Satellite Status',
+    label: 'Estado del Satélite',
     href: '/satellite-status',
     icon: <Satellite size={15} />,
-    badge: 'LIVE',
+    badge: 'VIVO',
   },
   {
-    label: 'ABI Imagery',
+    label: 'Imágenes ABI',
     href: '/imagery',
     icon: <Image size={15} />,
-    badge: 'LIVE',
+    badge: 'VIVO',
   },
   {
-    label: 'Instruments',
+    label: 'Instrumentos',
     icon: <Activity size={15} />,
     children: [
-      { label: 'Magnetometer', href: '/instruments/magnetometer', icon: <Gauge size={13} /> },
-      { label: 'X-Ray Flux', href: '/instruments/xray-flux', icon: <Zap size={13} /> },
-      { label: 'Electron Flux', href: '/instruments/electron-flux', icon: <Radio size={13} /> },
-      { label: 'Proton Flux', href: '/instruments/proton-flux', icon: <Activity size={13} /> },
-      { label: 'SUVI Solar UV', href: '/instruments/suvi', icon: <Sun size={13} /> },
-      { label: 'Coronagraph', href: '/instruments/coronagraph', icon: <Eye size={13} /> },
-      { label: 'Sat. Environment', href: '/instruments/satellite-environment', icon: <Layers size={13} /> },
+      { label: 'Magnetómetro', href: '/instruments/magnetometer', icon: <Gauge size={13} /> },
+      { label: 'Flujo de Rayos X', href: '/instruments/xray-flux', icon: <Zap size={13} /> },
+      { label: 'Flujo de Electrones', href: '/instruments/electron-flux', icon: <Radio size={13} /> },
+      { label: 'Flujo de Protones', href: '/instruments/proton-flux', icon: <Activity size={13} /> },
+      { label: 'SUVI Ultravioleta', href: '/instruments/suvi', icon: <Sun size={13} /> },
+      { label: 'Coronógrafo', href: '/instruments/coronagraph', icon: <Eye size={13} /> },
+      { label: 'Entorno Satélite', href: '/instruments/satellite-environment', icon: <Layers size={13} /> },
     ],
   },
   {
-    label: 'Aurora Forecast',
+    label: 'Pronóstico de Aurora',
     href: '/aurora',
     icon: <SunDim size={15} />,
-    badge: 'LIVE',
+    badge: 'VIVO',
   },
   {
-    label: 'Solar Wind',
+    label: 'Viento Solar',
     href: '/solar-wind',
     icon: <Wind size={15} />,
   },
   {
-    label: 'Solar Synoptic',
+    label: 'Mapa Solar Sinóptico',
     href: '/solar-synoptic',
     icon: <Globe size={15} />,
   },
@@ -98,7 +98,7 @@ export function Sidebar() {
       <div className="flex h-12 items-center border-b border-border px-3">
         {sidebarOpen ? (
           <span className="font-display text-xs font-bold uppercase tracking-widest text-primary">
-            SW Monitor
+            Monitor Espacial
           </span>
         ) : (
           <Activity size={18} className="mx-auto text-primary" />

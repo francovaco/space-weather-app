@@ -15,7 +15,7 @@ export function UsageImpacts({ usage, impacts, className }: UsageImpactsProps) {
   return (
     <div className={cn('grid gap-3 md:grid-cols-2', className)}>
       <div className="info-block">
-        <p className="info-block-title">Usage</p>
+        <p className="info-block-title">Uso</p>
         <ul className="info-block-list space-y-1.5">
           {usage.map((item, i) => (
             <li key={i} className="flex items-start gap-1.5 text-2xs text-text-secondary">
@@ -26,7 +26,7 @@ export function UsageImpacts({ usage, impacts, className }: UsageImpactsProps) {
         </ul>
       </div>
       <div className="info-block">
-        <p className="info-block-title" style={{ color: '#f59e0b' }}>Impacts</p>
+        <p className="info-block-title" style={{ color: '#f59e0b' }}>Impactos</p>
         <ul className="info-block-list space-y-1.5">
           {impacts.map((item, i) => (
             <li key={i} className="flex items-start gap-1.5 text-2xs text-text-secondary">

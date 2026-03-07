@@ -116,21 +116,21 @@ export function AnimationPlayer({
         <button
           className="ctrl-btn"
           onClick={player.prevFrame}
-          title="Previous frame"
+          title="Cuadro anterior"
         >
           <SkipBack size={13} />
         </button>
         <button
           className="ctrl-btn"
           onClick={player.toggle}
-          title={player.isPlaying ? 'Pause' : 'Play'}
+          title={player.isPlaying ? 'Pausar' : 'Reproducir'}
         >
           {player.isPlaying ? <Pause size={13} /> : <Play size={13} />}
         </button>
         <button
           className="ctrl-btn"
           onClick={player.nextFrame}
-          title="Next frame"
+          title="Cuadro siguiente"
         >
           <SkipForward size={13} />
         </button>
@@ -138,13 +138,13 @@ export function AnimationPlayer({
         <div className="h-4 w-px bg-border" />
 
         {/* Speed */}
-        <button className="ctrl-btn" onClick={player.increaseSpeed} title="Faster">
+        <button className="ctrl-btn" onClick={player.increaseSpeed} title="Más rápido">
           <span className="text-2xs font-bold">+</span>
         </button>
         <span className="data-value text-text-muted">
           {Math.round(1000 / player.speedMs)}fps
         </span>
-        <button className="ctrl-btn" onClick={player.decreaseSpeed} title="Slower">
+        <button className="ctrl-btn" onClick={player.decreaseSpeed} title="Más lento">
           <span className="text-2xs font-bold">−</span>
         </button>
 
@@ -157,7 +157,7 @@ export function AnimationPlayer({
           className="rounded border border-border bg-background px-1 py-0.5 text-2xs text-text-secondary"
         >
           {FRAME_COUNT_OPTIONS.map((n) => (
-            <option key={n} value={n}>{n} frames</option>
+            <option key={n} value={n}>{n} cuadros</option>
           ))}
         </select>
 
@@ -168,7 +168,7 @@ export function AnimationPlayer({
           className="rounded border border-border bg-background px-1 py-0.5 text-2xs text-text-secondary"
         >
           <option value="loop">Loop</option>
-          <option value="rock">Rock</option>
+          <option value="rock">Vaivén</option>
         </select>
 
         <div className="h-4 w-px bg-border" />
@@ -177,7 +177,7 @@ export function AnimationPlayer({
         <button
           className={cn('ctrl-btn', player.showGrid && 'active')}
           onClick={player.toggleGrid}
-          title="Toggle lat/lon grid"
+          title="Mostrar/ocultar grilla lat/lon"
         >
           <Grid size={13} />
         </button>
@@ -187,7 +187,7 @@ export function AnimationPlayer({
           <button
             className="ctrl-btn ml-auto"
             onClick={onDownload}
-            title="Download animation"
+            title="Descargar animación"
           >
             <Download size={13} />
           </button>

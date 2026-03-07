@@ -26,7 +26,7 @@ export function TopBar() {
         <button
           onClick={toggleSidebar}
           className="ctrl-btn"
-          aria-label="Toggle sidebar"
+          aria-label="Alternar barra lateral"
         >
           <Menu size={16} />
         </button>
@@ -35,14 +35,14 @@ export function TopBar() {
           <span className="font-display text-xs font-semibold tracking-widest text-text-primary uppercase">
             GOES-19
           </span>
-          <span className="text-2xs text-text-muted">Space Weather</span>
+          <span className="text-2xs text-text-muted">Clima Espacial</span>
         </div>
       </div>
 
       {/* Center: Live indicator */}
       <div className="flex items-center gap-2">
         <span className="live-dot" />
-        <span className="text-2xs font-medium text-green-400 uppercase tracking-wider">Live</span>
+        <span className="text-2xs font-medium text-green-400 uppercase tracking-wider">En vivo</span>
       </div>
 
       {/* Right: Dual clocks */}

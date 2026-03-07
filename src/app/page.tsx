@@ -5,7 +5,7 @@ import type { Metadata } from 'next'
 import { Activity, Satellite, Zap, Wind, Globe } from 'lucide-react'
 
 export const metadata: Metadata = {
-  title: 'Dashboard',
+  title: 'Panel Principal',
 }
 
 export default function DashboardPage() {
@@ -14,25 +14,25 @@ export default function DashboardPage() {
       {/* Page header */}
       <div>
         <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">
-          Space Weather Monitor
+          Monitor de Clima Espacial
         </h1>
         <p className="mt-1 text-xs text-text-muted">
-          GOES-19 · NOAA/SWPC Real-Time Data · South America Sector
+          GOES-19 · Datos en Tiempo Real NOAA/SWPC · Sector Sudamérica
         </p>
       </div>
 
       {/* Quick status cards */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <StatusCard
-          label="X-Ray Class"
+          label="Clase Rayos X"
           value="C2.1"
-          sub="Short wave"
+          sub="Onda corta"
           color="text-yellow-400"
           icon={<Zap size={14} />}
           href="/instruments/xray-flux"
         />
         <StatusCard
-          label="Proton Flux"
+          label="Flujo de Protones"
           value="0.12"
           sub=">10 MeV pfu"
           color="text-blue-400"
@@ -40,9 +40,9 @@ export default function DashboardPage() {
           href="/instruments/proton-flux"
         />
         <StatusCard
-          label="Kp Index"
+          label="Índice Kp"
           value="2"
-          sub="Quiet"
+          sub="Tranquilo"
           color="text-green-400"
           icon={<Globe size={14} />}
           href="/instruments/magnetometer"
@@ -50,7 +50,7 @@ export default function DashboardPage() {
         <StatusCard
           label="GOES-19"
           value="OPER"
-          sub="All instruments nominal"
+          sub="Todos los instrumentos nominales"
           color="text-green-400"
           icon={<Satellite size={14} />}
           href="/satellite-status"
@@ -60,43 +60,43 @@ export default function DashboardPage() {
       {/* Quick links grid */}
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
         <QuickLink
-          title="ABI Imagery"
-          description="16 channels · 10-min loop · Full Disk & South America"
+          title="Imágenes ABI"
+          description="16 canales · Loop de 10 minutos · Disco Completo y Sudamérica"
           href="/imagery"
           icon={<Satellite size={18} />}
           color="text-accent-cyan"
         />
         <QuickLink
-          title="X-Ray Flux"
-          description="Solar flare monitoring · Updates every 1 minute"
+          title="Flujo de Rayos X"
+          description="Monitoreo de llamaradas solares · Actualización cada 1 minuto"
           href="/instruments/xray-flux"
           icon={<Zap size={18} />}
           color="text-accent-amber"
         />
         <QuickLink
-          title="Magnetometer"
-          description="Hp, He, Hn components · Geomagnetic storm detection"
+          title="Magnetómetro"
+          description="Componentes Hp, He, Hn · Detección de tormentas geomagnéticas"
           href="/instruments/magnetometer"
           icon={<Activity size={18} />}
           color="text-primary"
         />
         <QuickLink
-          title="Aurora Forecast"
-          description="30-minute aurora forecast · North & South poles"
+          title="Pronóstico de Aurora"
+          description="Pronóstico de aurora 30 minutos · Polos Norte y Sur"
           href="/aurora"
           icon={<Wind size={18} />}
           color="text-purple-400"
         />
         <QuickLink
-          title="Coronagraph"
-          description="CME detection · CCOR-1, LASCO C2 & C3"
+          title="Coronógrafo"
+          description="Detección de CMEs · CCOR-1, LASCO C2 y C3"
           href="/instruments/coronagraph"
           icon={<Globe size={18} />}
           color="text-accent-teal"
         />
         <QuickLink
-          title="Solar Wind"
-          description="WSA-ENLIL prediction model · Solar wind propagation"
+          title="Viento Solar"
+          description="Modelo de predicción WSA-ENLIL · Propagación del viento solar"
           href="/solar-wind"
           icon={<Wind size={18} />}
           color="text-accent-orange"
@@ -105,11 +105,12 @@ export default function DashboardPage() {
 
       {/* Getting started note */}
       <div className="rounded-md border border-border bg-background-card p-4">
-        <p className="section-label mb-2">Getting Started</p>
+        <p className="section-label mb-2">Cómo usar</p>
         <p className="text-xs text-text-secondary">
-          Use the sidebar to navigate between sections. All data panels refresh automatically
-          according to their respective update schedules. Charts are interactive — hover to see
-          values, drag to zoom, and use the time range selector to change the displayed period.
+          Usá el menú lateral para navegar entre secciones. Todos los paneles se actualizan
+          automáticamente según el intervalo de cada instrumento. Los gráficos son interactivos
+          — pasá el mouse para ver valores, arrastrá para hacer zoom y usá el selector de rango
+          temporal para cambiar el período visualizado.
         </p>
       </div>
     </div>
