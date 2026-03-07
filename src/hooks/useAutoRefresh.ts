@@ -1,0 +1,43 @@
+'use client'
+// ============================================================
+// src/hooks/useAutoRefresh.ts — Polling hook for live data
+// ============================================================
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+
+interface UseAutoRefreshOptions {
+  queryKey: string[]
+  fetcher: () => Promise<unknown>
+  /** Refresh interval in milliseconds */
+  intervalMs: number
+  enabled?: boolean
+}
+
+export function useAutoRefresh<T>({
+  queryKey,
+  fetcher,
+  intervalMs,
+  enabled = true,
+}: UseAutoRefreshOptions) {
+  return useQuery<T>({
+    queryKey,
+    queryFn: fetcher as () => Promise<T>,
+    refetchInterval: intervalMs,
+    refetchIntervalInBackground: true,
+    staleTime: intervalMs * 0.9,
+    enabled,
+  })
+}
+
+/** 
+ * Common refresh intervals matching SWPC/NOAA update schedules
+ */
+export const REFRESH_INTERVALS = {
+  /** 1 minute — magnetometer, x-ray flux, solar wind */
+  ONE_MIN: 60_000,
+  /** 5 minutes — electron/proton flux, aurora, SUVI */
+  FIVE_MIN: 5 * 60_000,
+  /** 10 minutes — ABI imagery, coronagraph */
+  TEN_MIN: 10 * 60_000,
+  /** Satellite status — every 5 min */
+  STATUS: 5 * 60_000,
+} as const

@@ -1,0 +1,210 @@
+/* src/styles/globals.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   Fonts — loaded via next/font in layout.tsx
+   ============================================================ */
+
+/* ============================================================
+   Base reset & defaults
+   ============================================================ */
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    border-color: theme('colors.border.DEFAULT');
+  }
+
+  html {
+    color-scheme: dark;
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background-color: theme('colors.background.DEFAULT');
+    color: theme('colors.text.primary');
+    font-family: theme('fontFamily.mono');
+    font-size: theme('fontSize.sm');
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* Scrollbar styling — dark theme */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: theme('colors.background.secondary');
+  }
+  ::-webkit-scrollbar-thumb {
+    background: theme('colors.border.accent');
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: theme('colors.primary.DEFAULT');
+  }
+
+  /* Selection */
+  ::selection {
+    background: rgba(59, 130, 246, 0.3);
+    color: #fff;
+  }
+
+  /* Focus ring */
+  :focus-visible {
+    outline: 1px solid theme('colors.primary.DEFAULT');
+    outline-offset: 2px;
+  }
+}
+
+/* ============================================================
+   Component-level utilities
+   ============================================================ */
+@layer components {
+
+  /* Card */
+  .card {
+    @apply rounded-lg border border-border bg-background-card p-4 shadow-card;
+  }
+
+  .card-header {
+    @apply mb-3 flex items-center justify-between border-b border-border pb-3;
+  }
+
+  /* Monospace data display */
+  .data-value {
+    @apply font-data text-xs tabular-nums;
+  }
+
+  /* Live indicator dot */
+  .live-dot {
+    @apply h-2 w-2 rounded-full bg-green-400;
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  /* Section label */
+  .section-label {
+    @apply font-display text-2xs uppercase tracking-widest text-text-muted;
+  }
+
+  /* Instrument panel */
+  .instrument-panel {
+    @apply card flex flex-col gap-4;
+  }
+
+  /* Chart container */
+  .chart-container {
+    @apply relative overflow-hidden rounded-md bg-background-secondary;
+  }
+
+  /* Player controls bar */
+  .player-controls {
+    @apply flex items-center gap-2 rounded-md border border-border bg-background-secondary px-3 py-2;
+  }
+
+  /* Control button */
+  .ctrl-btn {
+    @apply flex h-7 w-7 items-center justify-center rounded
+           text-text-secondary transition-colors
+           hover:bg-border hover:text-text-primary
+           active:scale-95;
+  }
+  .ctrl-btn.active {
+    @apply bg-primary text-white;
+  }
+
+  /* Badge */
+  .badge {
+    @apply inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-2xs font-medium;
+  }
+  .badge-live {
+    @apply badge border border-green-500/30 bg-green-500/10 text-green-400;
+  }
+  .badge-warn {
+    @apply badge border border-amber-500/30 bg-amber-500/10 text-amber-400;
+  }
+  .badge-error {
+    @apply badge border border-red-500/30 bg-red-500/10 text-red-400;
+  }
+
+  /* Tab trigger */
+  .tab-trigger {
+    @apply cursor-pointer rounded-sm px-3 py-1.5 text-xs text-text-muted
+           transition-colors hover:text-text-primary
+           data-[state=active]:bg-border data-[state=active]:text-text-primary;
+  }
+
+  /* Usage/Impacts block */
+  .info-block {
+    @apply rounded-md border border-border bg-background-secondary p-4;
+  }
+  .info-block-title {
+    @apply mb-2 font-display text-xs uppercase tracking-wider text-accent-cyan;
+  }
+  .info-block-list {
+    @apply space-y-1 text-xs text-text-secondary;
+  }
+  .info-block-list li::before {
+    content: '› ';
+    @apply text-text-muted;
+  }
+}
+
+/* ============================================================
+   Plotly chart overrides — dark theme
+   ============================================================ */
+@layer utilities {
+  .plotly-dark .js-plotly-plot .plotly .main-svg {
+    background: transparent !important;
+  }
+
+  .plotly-dark .js-plotly-plot .plotly .bg {
+    fill: transparent !important;
+  }
+}
+
+/* ============================================================
+   Animation keyframes
+   ============================================================ */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+@keyframes scanLine {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+
+/* Scan line overlay for satellite imagery */
+.scan-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.03) 2px,
+    rgba(0, 0, 0, 0.03) 4px
+  );
+  pointer-events: none;
+  z-index: 1;
+}
