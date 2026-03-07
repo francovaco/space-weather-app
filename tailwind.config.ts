@@ -73,9 +73,9 @@ const config: Config = {
         data: ['var(--font-jetbrains)', 'JetBrains Mono', 'monospace'],
       },
       fontSize: {
-        '2xs': '0.625rem',
-        xs: '0.75rem',
-        sm: '0.8125rem',
+        '2xs': '0.75rem',    // 10px → 12px
+        xs:    '0.875rem',   // 12px → 14px
+        sm:    '1rem',       // 13px → 16px
       },
       backgroundImage: {
         'grid-pattern':

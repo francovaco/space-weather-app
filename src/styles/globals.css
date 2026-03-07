@@ -30,7 +30,7 @@
     color: theme('colors.text.primary');
     font-family: theme('fontFamily.mono');
     font-size: theme('fontSize.sm');
-    line-height: 1.6;
+    line-height: 1.65;
     overflow-x: hidden;
   }
 

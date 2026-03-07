@@ -95,7 +95,7 @@ export function Sidebar() {
       )}
     >
       {/* Logo area */}
-      <div className="flex h-12 items-center border-b border-border px-3">
+      <div className="flex h-14 items-center border-b border-border px-3">
         {sidebarOpen ? (
           <span className="font-display text-xs font-bold uppercase tracking-widest text-primary">
             Monitor Espacial
