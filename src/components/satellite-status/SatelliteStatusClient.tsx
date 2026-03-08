@@ -321,12 +321,12 @@ function traducirRol(role: string): string {
 // ── Componente principal ───────────────────────────────────────
 
 export function SatelliteStatusClient() {
-  const { data, isLoading, isError, dataUpdatedAt, refetch, isFetching } =
+  const { data, isLoading, isError, dataUpdatedAt, isFetching } =
     useQuery<StatusResponse>({
       queryKey: ['goes-status'],
       queryFn: () => fetch('/api/goes/status').then((r) => r.json()),
-      refetchInterval: 5 * 60 * 1000,
-      staleTime: 4 * 60 * 1000,
+      refetchInterval: 60 * 1000,
+      staleTime: 50 * 1000,
     })
 
   const goes19Row = data?.satellites?.find(
@@ -352,18 +352,12 @@ export function SatelliteStatusClient() {
             Estado del Satélite e Instrumentos
           </h1>
           <p className="mt-1 text-xs text-text-muted">
-            GOES-19 (GOES Este) · Fuente: NOAA OSPO · Actualización cada 5 minutos
+            GOES-19 (GOES Este) · Fuente: NOAA OSPO · Actualización automática cada 1 minuto
           </p>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-2xs text-text-dim">Actualizado: {lastUpdate}</span>
-          <button
-            onClick={() => refetch()}
-            className={cn('ctrl-btn', isFetching && 'text-primary')}
-            title="Actualizar ahora"
-          >
-            <RefreshCw size={13} className={isFetching ? 'animate-spin' : ''} />
-          </button>
+          {isFetching && <RefreshCw size={11} className="animate-spin text-primary" />}
         </div>
       </div>
 

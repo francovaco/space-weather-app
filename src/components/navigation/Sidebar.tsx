@@ -36,13 +36,11 @@ const NAV_ITEMS: NavItem[] = [
     label: 'Estado del Satélite',
     href: '/satellite-status',
     icon: <Satellite size={15} />,
-    badge: 'VIVO',
   },
   {
     label: 'Imágenes ABI',
     href: '/imagery',
     icon: <Image size={15} />,
-    badge: 'VIVO',
   },
   {
     label: 'Instrumentos',
@@ -61,7 +59,6 @@ const NAV_ITEMS: NavItem[] = [
     label: 'Pronóstico de Aurora',
     href: '/aurora',
     icon: <SunDim size={15} />,
-    badge: 'VIVO',
   },
   {
     label: 'Viento Solar',

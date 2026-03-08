@@ -16,9 +16,8 @@ export async function GET(req: NextRequest) {
     ? 'https://cdn.star.nesdis.noaa.gov/GOES19/GLM/SECTOR/ssa/EXTENT3/'
     : `https://cdn.star.nesdis.noaa.gov/GOES19/ABI/SECTOR/SSA/${band}/`
 
-  // ── Resolution filter: ONLY one resolution per band type ──────
-  // GLM → 1200x720  |  ABI → 3600x2160
-  const RES = isGlm ? '1200x720' : '3600x2160'
+  // ── Resolution filter: always 7200×4320 for both ABI and GLM ──
+  const RES = '7200x4320'
   const re  = new RegExp(`href="(\\d{11}_GOES19-[^"]*?-${RES}\\.jpg)"`, 'gi')
 
   try {

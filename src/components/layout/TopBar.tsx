@@ -35,12 +35,6 @@ export function TopBar() {
         </div>
       </div>
 
-      {/* Center */}
-      <div className="flex items-center gap-2">
-        <span className="live-dot" />
-        <span className="text-2xs font-medium text-green-400 uppercase tracking-wider">En vivo</span>
-      </div>
-
       {/* Right: dual clocks — suppressHydrationWarning prevents React complaining
           about the ── placeholder vs real time on first paint */}
       <div className="flex items-center gap-6" suppressHydrationWarning>

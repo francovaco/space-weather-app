@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import {
   Play, Pause, SkipBack, SkipForward, RotateCcw,
   Download, Grid3x3, ExternalLink, ChevronLeft,
-  RefreshCw, Minus, Plus, Info, AlertTriangle,
+  RefreshCw, Minus, Plus, AlertTriangle,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -75,28 +75,31 @@ const CHANNELS: Channel[] = [
     tipo:'rgb', color:'#22d3ee', descripcion:'Color verdadero de día · IR multiespectral de noche',
     docUrl:'https://www.star.nesdis.noaa.gov/GOES/documents/QuickGuide_CIRA_Geocolor_20171019.pdf',
     ref:{ frecuencia:'Cada 10 min · Sector SSA',
-      descripcionLarga:'Algoritmo CIRA/CSU. Combina bandas visibles para simular color natural de día. El canal verde no existe en el ABI — se sintetiza desde B01/B02/B03. De noche usa B13 IR en paleta azul-gris.',
-      receta:'Día: pseudo-verde = 0.45·B02 + 0.10·B03 + 0.45·B01 · Noche: B13 IR → paleta azul/gris CIRA',
-      aplicaciones:['Nubes y frentes sinópticos','Humo y aerosoles','Hielo marino y nieve','Ciclones tropicales','Florescencia de algas'],
-      escala:[{label:'Nubes altas frías',color:'#ffffff'},{label:'Nubes medias',color:'#c8d0e0'},{label:'Océano claro',color:'#3a6ea8'},{label:'Vegetación',color:'#3a7a3a'},{label:'Suelo/desierto',color:'#c8a040'},{label:'Noche (IR)',color:'#1a2a4a'}] }},
+      descripcionLarga:'Producto multiespectral compuesto por Color Verdadero (True Color, usando un componente verde simulado) durante el día, y un producto infrarrojo que combina las bandas 7 y 13 de noche. De día, las imágenes se ven aproximadamente como se verían con ojos humanos desde el espacio. De noche, los colores azules representan nubes de agua líquida como niebla y estratos, mientras que los tonos gris a blanco indican nubes altas de hielo, y las luces urbanas provienen de una base de datos estática derivada del VIIRS Day Night Band (JPSS). Desarrollado por CIRA y NOAA STAR/RAMMB. Nota: las áreas iluminadas en imágenes nocturnas no son representaciones en tiempo real de luces urbanas.',
+      receta:'Día: True Color con verde simulado (B01/B02/B03) · Noche: IR bandas 7 + 13 · Luces urbanas: base estática VIIRS DNB',
+      aplicaciones:['Nubes y frentes sinópticos','Niebla y estratos nocturnos (azul)','Nubes altas de hielo (gris/blanco)','Humo y aerosoles','Ciclones tropicales','Orientación nocturna con luces urbanas','Hielo marino y nieve'],
+      escala:[] }},
 
   { id:'AirMass', nombre:'Air Mass RGB', nombreCorto:'Air Mass RGB',
     tipo:'rgb', color:'#a78bfa', descripcion:'Masas de aire · Tropopausa dinámica · Jet stream',
     docUrl:'https://www.star.nesdis.noaa.gov/GOES/documents/QuickGuide_GOESR_AirMassRGB_final.pdf',
     ref:{ frecuencia:'Cada 10 min · Sector SSA',
-      descripcionLarga:'Compuesto EUMETSAT. Identifica masas de aire y dinámica de troposfera superior. Esencial para análisis sinóptico y ciclogénesis sobre Sudamérica.',
+      descripcionLarga:'RGB basado en datos IR y vapor de agua. Diagnostica el entorno de sistemas sinópticos realzando características de temperatura y humedad de las masas de aire. Permite inferir ciclogénesis identificando aire estratosférico seco, cálido y rico en ozono descendente, asociado a jet streams y anomalías de vorticidad potencial (PV). Permite validar la ubicación de anomalías PV en datos de modelos y distinguir entre masas de aire polares y tropicales, especialmente a lo largo de límites frontales de niveles altos. También identifica nubes altas, medias y bajas.',
       receta:'R = B08 (6.2µm) − B10 (7.3µm)  ·  G = B12 (9.6µm) − B13 (10.3µm)  ·  B = B08 (6.2µm) invertido',
-      aplicaciones:['Masas de aire polar vs tropical','Tropopausa dinámica','Vorticidad potencial','Jet stream sobre los Andes','Ciclogénesis explosiva'],
-      escala:[{label:'Aire polar estratosférico',color:'#ff4444'},{label:'Aire polar troposférico',color:'#aa44aa'},{label:'Aire tropical húmedo',color:'#44aa44'},{label:'Nubes convectivas profundas',color:'#222244'},{label:'Cielo seco en altura',color:'#ff8844'}] }},
+      aplicaciones:['Jet stream y zonas de deformación','Vorticidad potencial (PV) y anomalías','Ciclogénesis','Distinción masas de aire polares vs tropicales','Límites frontales en niveles altos','Identificación de nubes altas, medias y bajas'],
+      escala:[{label:'Jet stream / PV / zonas de deformación / aire seco en altura',color:'#cc3300'},{label:'Masa de aire frío',color:'#2a1a6e'},{label:'Masa de aire cálido',color:'#44aa44'},{label:'Masa de aire cálido, menos humedad',color:'#8b7a2a'},{label:'Nube alta gruesa',color:'#ffffff'},{label:'Nube de nivel medio',color:'#d2a679'},{label:'Nube de nivel bajo',color:'#2a5a2a'},{label:'Efectos de limbo',color:'#6633aa'}] }},
 
   { id:'DayNightCloudMicroCombo', nombre:'Día/Noche Micro Combo RGB', nombreCorto:'Día/Noche Micro Combo RGB',
-    tipo:'rgb', color:'#6366f1', descripcion:'Microfísica diurna · Niebla nocturna',
+    tipo:'rgb', color:'#6366f1', descripcion:'Fase de nubes de día · Microfísica nocturna',
     docUrl:'https://www.star.nesdis.noaa.gov/GOES/documents/ABIQuickGuide_DayNightCloudMicroCombo.pdf',
     ref:{ frecuencia:'Cada 10 min · Sector SSA',
-      descripcionLarga:'Producto híbrido: microfísica de nubes de día, detección de niebla y nubes bajas de noche. Muy útil para niebla costera y de valles andinos.',
-      receta:'Día: R=B06 · G=B02 · B=B01  ·  Noche: R=B07−B13 · G=B07 · B=B05',
-      aplicaciones:['Niebla y nubes bajas nocturnas','Fase de partículas (gotitas vs hielo)','Niebla costera Pacífico/Atlántico','Potencial de precipitación','Inversiones térmicas en valles'],
-      escala:[{label:'Agua líquida (día)',color:'#aa44ff'},{label:'Hielo (día)',color:'#ffffff'},{label:'Niebla/nubes bajas (noche)',color:'#ffaa00'},{label:'Cielo claro noche',color:'#2244aa'}] }},
+      descripcionLarga:'Producto combo desarrollado por el equipo STAR GOES para entregar el valor observacional del Day Cloud Phase Distinction RGB (día) y el Night Microphysics RGB (noche). De día: evalúa la fase de cimas de nubes en enfriamiento para monitorear iniciación convectiva, crecimiento y decaimiento de tormentas, e identificar nieve en superficie. Aprovecha diferencias de reflectancia entre canales visibles e IR cercano. Desarrollado por JMA para Himawari-8. De noche: distingue nubes bajas y niebla usando diferencias entre canales 10.4 y 3.9 µm, con el canal 12.4−10.4 µm como proxy de espesor de nube, realzando nubes cálidas/bajas donde la niebla es más probable.',
+      receta:'Día: Day Cloud Phase RGB (B02, B05, IR) · Noche: Night Microphysics RGB (B07−B13, B13−B15, B13)',
+      aplicaciones:['Fase de cima de nube (agua vs hielo)','Iniciación convectiva y crecimiento de tormentas','Nieve en superficie','Niebla y nubes bajas nocturnas','Distinción de tipos de nubes en atmósfera media y alta','Necesidades de pronóstico aeronáutico'],
+      escala:[
+        {label:'Día: Nubes bajas agua (cyan/lavanda)',color:'#88cccc'},{label:'Día: Nubes en glaciación (verde)',color:'#008800'},{label:'Día: Nieve (verde)',color:'#336633'},{label:'Día: Nubes altas hielo gruesas (amarillo)',color:'#cccc00'},{label:'Día: Nubes medias agua delgadas (magenta)',color:'#cc00cc'},{label:'Día: Nubes altas hielo delgadas (rojo-naranja)',color:'#cc4400'},{label:'Día: Superficie terrestre (azul)',color:'#3344aa'},{label:'Día: Superficie agua (negro)',color:'#000000'},
+        {label:'Noche: Niebla (aqua opaco/gris)',color:'#668888'},{label:'Noche: Nube baja cálida (aqua)',color:'#00cccc'},{label:'Noche: Nube baja fría (verde brillante)',color:'#00ff00'},{label:'Noche: Nube media agua (verde claro)',color:'#88cc88'},{label:'Noche: Nube media gruesa agua/hielo (tostado)',color:'#ccaa77'},{label:'Noche: Nube alta delgada hielo (azul oscuro)',color:'#000088'},{label:'Noche: Nube alta muy delgada hielo (púrpura)',color:'#660088'},{label:'Noche: Nube alta gruesa (rojo oscuro)',color:'#880000'},{label:'Noche: Nube alta delgada (casi negro)',color:'#111111'},{label:'Noche: Nube alta gruesa muy fría (rojo/amarillo)',color:'#cc6600'}
+      ] }},
 
   { id:'Dust', nombre:'Polvo RGB', nombreCorto:'Polvo RGB',
     tipo:'rgb', color:'#d97706', descripcion:'Polvo patagónico · Tolvaneras · Aerosoles gruesos',
@@ -108,40 +111,40 @@ const CHANNELS: Channel[] = [
       escala:[{label:'Polvo denso',color:'#ff88aa'},{label:'Polvo moderado',color:'#ffaacc'},{label:'Sin polvo',color:'#224422'},{label:'Nubes de hielo altas',color:'#ff2222'},{label:'Nubes de agua',color:'#ffffff'}] }},
 
   { id:'FireTemperature', nombre:'Temperatura de Incendios RGB', nombreCorto:'Temperatura de Incendios RGB',
-    tipo:'rgb', color:'#ef4444', descripcion:'Temperatura y extensión de incendios activos',
+    tipo:'rgb', color:'#ef4444', descripcion:'RGB para resaltar incendios e identificar los más intensos',
     docUrl:'https://www.star.nesdis.noaa.gov/GOES/documents/QuickGuide_Fire_Temperature_RGB.pdf',
     ref:{ frecuencia:'Cada 10 min · Sector SSA',
-      descripcionLarga:'Usa IR de onda corta para detectar fuego activo día y noche. Detecta volcanes andinos (Copahue, Villarrica, Calbuco) y quemas en la pampa.',
+      descripcionLarga:'Fire Temperature RGB permite identificar dónde se producen los incendios más intensos y diferenciarlos de los más "fríos". El RGB aprovecha que desde 3.9 µm hacia longitudes de onda más cortas, la radiación solar de fondo y la reflectancia superficial aumentan. Esto significa que los incendios deben ser más intensos para ser detectados por las bandas de 2.2 y 1.6 µm, ya que los incendios más intensos emiten más radiación en esas longitudes de onda. Por lo tanto, incendios pequeños/"fríos" solo aparecen a 3.9 µm y se ven rojos, mientras que aumentos en la intensidad del fuego aportan mayor contribución de los otros canales, resultando en blanco para los incendios muy intensos.',
       receta:'R = B07 (3.9µm)  ·  G = B06 (2.2µm)  ·  B = B05 (1.6µm)',
       aplicaciones:['Incendios forestales y de pastizales','Volcanes activos andinos','Quemas agrícolas en la pampa','Temperatura del frente de fuego'],
-      escala:[{label:'Fuego >600°C (saturado)',color:'#ffffff'},{label:'Fuego caliente',color:'#ffff00'},{label:'Fuego moderado',color:'#ff4400'},{label:'Humo denso',color:'#884422'},{label:'Sin actividad ígnea',color:'#224422'}] }},
+      escala:[{label:'Fuego templado',color:'#CC0000'},{label:'Fuego muy cálido',color:'#FF6600'},{label:'Fuego caliente',color:'#FFFF00'},{label:'Fuego muy caliente',color:'#FFFFFF'},{label:'Cicatrices de quema',color:'#800020'},{label:'Cielo despejado: tierra',color:'#660033'},{label:'Cielo despejado: tierra',color:'#FF69B4'},{label:'Cielo despejado: agua/nieve/noche',color:'#000000'},{label:'Nubes de agua',color:'#004488'},{label:'Nubes de hielo',color:'#008080'}] }},
 
   { id:'Sandwich', nombre:'Sandwich RGB', nombreCorto:'Sandwich RGB',
-    tipo:'rgb', color:'#f97316', descripcion:'Bandas 3 + 13 · Textura visible + temperatura IR',
+    tipo:'rgb', color:'#f97316', descripcion:'Combina banda visible 3 con IR banda 13',
     docUrl:'https://www.star.nesdis.noaa.gov/GOES/documents/SandwichProduct.pdf',
     ref:{ frecuencia:'Cada 10 min · Sector SSA',
-      descripcionLarga:'Combina la alta resolución espacial del canal visible B03 (1 km) con la temperatura de cima del B13 (2 km). Detalle textural + información de altura de nubes simultáneamente.',
-      receta:'B03 reflectancia (0.86µm, 1km) superpuesto sobre B13 IR (10.35µm)',
-      aplicaciones:['Tormentas convectivas con detalle','Temperatura de cima con textura','Nubes bajas y niebla','Ciclones tropicales'],
-      escala:[{label:'Nubes muy frías (<-60°C)',color:'#ff2222'},{label:'Nubes frías',color:'#ffaa00'},{label:'Nubes templadas',color:'#44cc44'},{label:'Nubes cálidas bajas',color:'#2244ff'}] }},
+      descripcionLarga:'El beneficio del VIS/IR Sandwich RGB es que combina el alto detalle espacial de la banda visible 3 con la información de temperatura de la banda IR 13. Con este producto es posible monitorear las características de la cima de nubes de tormentas convectivas maduras, las cuales están relacionadas con la severidad.',
+      receta:'Banda visible 3 (0.86µm, alta resolución espacial) combinada con banda IR 13 (10.35µm, temperatura)',
+      aplicaciones:['Monitoreo de cimas de tormentas convectivas maduras','Características de severidad de tormentas','Detalle espacial con información de temperatura','Nubes bajas y niebla'],
+      escala:[{label:'-15°C',color:'#ccccee'},{label:'-30°C',color:'#8888cc'},{label:'-45°C',color:'#4444aa'},{label:'-55°C',color:'#00ff00'},{label:'-65°C',color:'#ffff00'},{label:'-75°C',color:'#ff8800'},{label:'-85°C',color:'#ff0000'},{label:'-93°C',color:'#880000'}] }},
 
   { id:'EXTENT3', nombre:'GLM Densidad de Destellos', nombreCorto:'GLM Densidad de Destellos',
     tipo:'rgb', color:'#facc15', descripcion:'Destellos GLM + GeoColor · Tormentas eléctricas',
     docUrl:'https://www.star.nesdis.noaa.gov/GOES/documents/GLM_Quick_Guides_May_2019.pdf',
-    ref:{ frecuencia:'Cada 10 min · Sector SSA',
-      descripcionLarga:'El GLM detecta destellos ópticos de rayos a 500 fotogramas/seg. EXTENT3 muestra densidad de extensión de cada destello superpuesta sobre GeoColor.',
-      receta:'Fondo: GeoColor · Superposición: densidad GLM Flash Extent acumulada',
-      aplicaciones:['Actividad eléctrica en tiempo real','Sistemas convectivos de mesoescala','Alerta de tormentas severas','Seguimiento de tormentas transfronterizas'],
-      escala:[{label:'Alta densidad de rayos',color:'#ff0000'},{label:'Media densidad',color:'#ffaa00'},{label:'Baja densidad',color:'#ffff00'},{label:'Fondo GeoColor',color:'#3a6ea8'}] }},
+    ref:{ frecuencia:'Cada 5 min · Sector SSA',
+      descripcionLarga:'Densidad de Extensión de Destellos GLM (Flash Extent Density). Representa la cantidad de destellos de rayos que ocurren dentro de cada celda de grilla en un período de 5 minutos. FED es la mejor métrica individual para expresar tanto la cantidad como la extensión de la actividad eléctrica. La visualización superpone los datos GLM sobre una imagen de fondo GeoColor. Los datos GLM se producen entre 54°N y 54°S.',
+      receta:'Fondo: GeoColor · Superposición: GLM Flash Extent Density acumulada en 5 minutos',
+      aplicaciones:['Densidad de destellos por celda de grilla','Tendencia y evolución de tormentas','Cobertura geográfica de actividad eléctrica','Sistemas convectivos de mesoescala','Alerta de tormentas severas','Seguimiento de tormentas transfronterizas'],
+      escala:[{label:'Extremo (>100 destellos/5min)',color:'#ffffff'},{label:'Muy alto (50–100)',color:'#ff00ff'},{label:'Alto (20–50)',color:'#ff0000'},{label:'Moderado-alto (10–20)',color:'#ffa500'},{label:'Moderado (5–10)',color:'#ffff00'},{label:'Bajo (2–5)',color:'#00ff00'},{label:'Muy bajo (1–2)',color:'#0000ff'}] }},
 
   // ─── Bands 01–16 ───────────────────────────────────────────
   { id:'01', nombre:'1 - Visible: azul', nombreCorto:'1 - Visible: azul', longitud:'0.47 µm',
     tipo:'visible', color:'#60a5fa', descripcion:'Aerosoles · Calidad del aire · 1 km',
-    docUrl:'https://cimss.ssec.wisc.edu/goes/OCLOFactSheetPDFs/ABIQuickGuide_Band01.pdf',
+    docUrl:'https://www.star.nesdis.noaa.gov/GOES/documents/ABIQuickGuide_Band01.pdf',
     ref:{ resolucion:'1 km', notaDiurna:'Solo disponible de día',
-      descripcionLarga:'Canal azul visible a 0.47 µm. Sensible a dispersión de Rayleigh para detectar aerosoles finos y humo. Componente del compuesto GeoColor.',
+      descripcionLarga:'0.47 µm – Banda azul – Resolución 1 km – La banda visible 1 está en la porción azul del espectro. Es particularmente útil para detectar aerosoles atmosféricos como humo y polvo (solo de día). La banda 1 es un canal visible y por lo tanto aparece en negro durante las horas nocturnas.',
       aplicaciones:['Profundidad óptica de aerosoles (AOD)','Humo de incendios','Calidad del aire en ciudades','Nubes de polvo fino'],
-      escala:[{label:'Alta reflectancia',color:'#ffffff'},{label:'Moderada',color:'#888888'},{label:'Baja (océano)',color:'#111144'}] }},
+      escala:[] }},
 
   { id:'02', nombre:'2 - Visible: rojo', nombreCorto:'2 - Visible: rojo', longitud:'0.64 µm',
     tipo:'visible', color:'#f87171', descripcion:'Máxima resolución 0.5 km · Canal principal',
@@ -149,7 +152,7 @@ const CHANNELS: Channel[] = [
     ref:{ resolucion:'0.5 km — única banda a 500 m del ABI', notaDiurna:'Solo disponible de día',
       descripcionLarga:'Único canal a 500 m de resolución. Canal principal para imágenes diurnas. Nieve y nubes son indistinguibles sin IR adicional.',
       aplicaciones:['Imágenes de alta resolución','Morfología de tormentas','Nieve superficial en los Andes','Monitoreo costero'],
-      escala:[{label:'Muy brillante (nubes/nieve)',color:'#ffffff'},{label:'Brillante',color:'#cccccc'},{label:'Moderado (tierra)',color:'#888888'},{label:'Oscuro (océano)',color:'#111111'}] }},
+      escala:[] }},
 
   { id:'03', nombre:'3 - IR Cercano: Veggie', nombreCorto:'3 - IR Cercano: Veggie', longitud:'0.86 µm',
     tipo:'near-ir', color:'#4ade80', descripcion:'Vegetación · Cicatrices · 1 km',
@@ -157,7 +160,7 @@ const CHANNELS: Channel[] = [
     ref:{ resolucion:'1 km', notaDiurna:'Solo disponible de día',
       descripcionLarga:'IR cercano 0.86 µm. Vegetación sana refleja fuertemente. Cicatrices de incendios aparecen muy oscuras. Permite calcular NDVI con B02.',
       aplicaciones:['NDVI y monitoreo de vegetación','Cicatrices de incendios forestales','Masas de agua','Componente de GeoColor sintético'],
-      escala:[{label:'Vegetación densa',color:'#00cc00'},{label:'Vegetación escasa',color:'#668866'},{label:'Nubes',color:'#ffffff'},{label:'Agua',color:'#000033'},{label:'Cicatriz incendio',color:'#111111'}] }},
+      escala:[] }},
 
   { id:'04', nombre:'4 - IR Cercano: cirros', nombreCorto:'4 - IR Cercano: cirros', longitud:'1.37 µm',
     tipo:'near-ir', color:'#a5f3fc', descripcion:'Cirros delgados exclusivamente · 2 km',
@@ -165,7 +168,7 @@ const CHANNELS: Channel[] = [
     ref:{ resolucion:'2 km', notaDiurna:'Solo disponible de día',
       descripcionLarga:'Centrada en absorción de vapor de agua. Solo cirros por encima de la mayor parte del vapor son visibles. La superficie siempre aparece negra.',
       aplicaciones:['Cirros delgados en alta troposfera','Extensión de yunques de cumulonimbus','Nieve en alta montaña andina'],
-      escala:[{label:'Cirros densos',color:'#ffffff'},{label:'Cirros delgados',color:'#888888'},{label:'Todo lo demás (negro)',color:'#000000'}] }},
+      escala:[] }},
 
   { id:'05', nombre:'5 - IR Cercano: nieve/hielo', nombreCorto:'5 - IR Cercano: nieve/hielo', longitud:'1.60 µm',
     tipo:'near-ir', color:'#e0f2fe', descripcion:'Nieve/hielo vs nubes de agua · 1 km',
@@ -173,7 +176,7 @@ const CHANNELS: Channel[] = [
     ref:{ resolucion:'1 km', notaDiurna:'Solo disponible de día',
       descripcionLarga:'Nieve/hielo absorben fuertemente a 1.6 µm (oscuro). Nubes de agua líquida son brillantes. Discriminación perfecta nieve/granizo vs nubes — crítico para los Andes y Patagonia.',
       aplicaciones:['Cobertura nival en los Andes y Patagonia','Discriminar granizo en tormentas','Glaciares patagónicos','Fase de partículas en nubes'],
-      escala:[{label:'Nubes de agua (brillante)',color:'#ffffff'},{label:'Nubes mixtas',color:'#aaaaaa'},{label:'Nieve/hielo (oscuro)',color:'#222266'},{label:'Glaciares',color:'#000044'}] }},
+      escala:[] }},
 
   { id:'06', nombre:'6 - IR Cercano: partículas de nube', nombreCorto:'6 - IR Cercano: partículas de nube', longitud:'2.24 µm',
     tipo:'near-ir', color:'#bfdbfe', descripcion:'Radio efectivo de partículas · Precipitación · 2 km',
@@ -181,88 +184,87 @@ const CHANNELS: Channel[] = [
     ref:{ resolucion:'2 km', notaDiurna:'Solo disponible de día',
       descripcionLarga:'Partículas pequeñas = brillante. Partículas grandes = oscuro. Indicador de potencial de precipitación en nubes convectivas.',
       aplicaciones:['Potencial de precipitación','Tamaño de gotitas en niebla marina','Identificación de nubes con granizo','Propiedades microfísicas para modelos'],
-      escala:[{label:'Partículas pequeñas',color:'#ffffff'},{label:'Partículas medianas',color:'#888888'},{label:'Partículas grandes',color:'#111111'},{label:'Hielo/nieve',color:'#000044'}] }},
+      escala:[] }},
 
   { id:'07', nombre:'7 - IR: onda corta', nombreCorto:'7 - IR: onda corta', longitud:'3.90 µm',
     tipo:'ir', color:'#fb923c', descripcion:'Incendios · Niebla nocturna · Día y noche · 2 km',
-    docUrl:'https://cimss.ssec.wisc.edu/goes/OCLOFactSheetPDFs/ABIQuickGuide_Band07.pdf',
+    docUrl:'https://www.star.nesdis.noaa.gov/GOES/documents/ABIQuickGuide_Band07.pdf',
     ref:{ resolucion:'2 km',
-      descripcionLarga:'Fuegos activos saturan el detector (blanco brillante). La diferencia B07−B13 es el estándar para detectar niebla nocturna y nubes bajas de agua líquida.',
-      aplicaciones:['Fuego activo día y noche','Niebla y nubes bajas nocturnas (B07-B13)','Temperatura de superficies cálidas','Volcanes andinos activos'],
-      escala:[{label:'Fuego activo (saturado)',color:'#ffffff'},{label:'Muy cálido',color:'#ff2200'},{label:'Templado',color:'#ffff00'},{label:'Frío (nubes altas)',color:'#0044ff'}] }},
+      descripcionLarga:'3.9 µm – Banda "Shortwave Window" – Resolución 2 km – La banda 7 tiene una variedad de aplicaciones, incluyendo detección de incendios, recuperación del tamaño de partículas de nubes y diferenciación entre nubes de agua líquida y de hielo. Los puntos calientes de incendios aparecen como píxeles relativamente pequeños de gris oscuro a negro.',
+      aplicaciones:['Detección de incendios','Tamaño de partículas de nubes','Diferenciación nubes de agua líquida vs hielo','Niebla y nubes bajas nocturnas (B07-B13)','Volcanes andinos activos'],
+      escala:[{label:'-83°C',color:'#333333'},{label:'-42°C',color:'#FF0000'},{label:'-42°C',color:'#FF6600'},{label:'-42°C',color:'#FFFF00'},{label:'-13°C',color:'#00FFFF'},{label:'13°C',color:'#CCCCCC'},{label:'38°C',color:'#888888'},{label:'127°C',color:'#333333'}] }},
 
   { id:'08', nombre:'8 - IR: vapor de agua superior', nombreCorto:'8 - IR: vapor de agua superior', longitud:'6.19 µm',
     tipo:'ir', color:'#818cf8', descripcion:'Humedad troposfera alta · 300–600 hPa · 2 km',
-    docUrl:'https://cimss.ssec.wisc.edu/goes/OCLOFactSheetPDFs/ABIQuickGuide_Band08.pdf',
+    docUrl:'https://www.star.nesdis.noaa.gov/GOES/documents/ABIQuickGuide_Band08.pdf',
     ref:{ resolucion:'2 km',
-      descripcionLarga:'Sondea humedad entre ~300–600 hPa. Brillante = húmedo/frío. Oscuro = seco/cálido. Nunca ve la superficie. Sensible al jet stream sobre los Andes.',
-      aplicaciones:['Jet stream sobre Sudamérica','Vorticidad potencial 500/300 hPa','Ondas de Rossby','Frentes en altura'],
-      escala:[{label:'Muy húmedo',color:'#ffffff'},{label:'Húmedo',color:'#8888cc'},{label:'Normal',color:'#444488'},{label:'Seco',color:'#aa4400'},{label:'Muy seco',color:'#220000'}] }},
+      descripcionLarga:'6.2 µm – Banda "Upper-level Water Vapor" – Resolución 2 km – La banda 8 se utiliza para seguimiento de vapor de agua troposférico de nivel superior, identificación de jet stream, pronóstico de trayectoria de huracanes, pronóstico de tormentas de latitudes medias, análisis de tiempo severo, estimación de humedad de nivel medio-superior y detección de turbulencia. Esta banda muestra temperaturas atmosféricas en grados Celsius. Valores en el rango rojo a amarillo representan una atmósfera seca. Valores entre amarillo y blanco, incluyendo azul, representan una atmósfera relativamente húmeda. Valores más fríos que el blanco, incluyendo verde, representan nubes.',
+      aplicaciones:['Seguimiento de vapor de agua troposférico superior','Identificación de jet stream','Pronóstico de trayectoria de huracanes','Pronóstico de tormentas de latitudes medias','Análisis de tiempo severo','Detección de turbulencia'],
+      escala:[{label:'-93°C (nubes)',color:'#00CC66'},{label:'-54°C (nubes)',color:'#00FFCC'},{label:'-30°C (húmedo)',color:'#FFFFFF'},{label:'-18°C',color:'#CCCCFF'},{label:'-5°C (seco)',color:'#FFFF00'},{label:'-5°C (seco)',color:'#FF6600'},{label:'7°C (seco)',color:'#FF0000'},{label:'7°C (muy seco)',color:'#000000'}] }},
 
   { id:'09', nombre:'9 - IR: vapor de agua medio', nombreCorto:'9 - IR: vapor de agua medio', longitud:'6.93 µm',
     tipo:'ir', color:'#a78bfa', descripcion:'Humedad troposfera media · ~500 hPa · 2 km',
-    docUrl:'https://cimss.ssec.wisc.edu/goes/OCLOFactSheetPDFs/ABIQuickGuide_Band09.pdf',
+    docUrl:'https://www.star.nesdis.noaa.gov/GOES/documents/ABIQuickGuide_Band09.pdf',
     ref:{ resolucion:'2 km',
-      descripcionLarga:'Complementa B08 y B10 para perfil vertical de vapor de agua. Útil en frentes fríos sobre la pampa y el SALLJ.',
-      aplicaciones:['Frentes fríos sobre la pampa','Corrientes de bajo nivel (SALLJ)','Predicción de convección en Argentina'],
-      escala:[{label:'Muy húmedo',color:'#ffffff'},{label:'Normal',color:'#444488'},{label:'Seco',color:'#884400'}] }},
+      descripcionLarga:'6.9 µm – Banda "Mid-level Water Vapor" – Resolución 2 km – La banda 9 es la banda de vapor de agua de nivel medio. Se utiliza para seguimiento de vientos de la troposfera media, identificación de jet streams, pronóstico de trayectoria de huracanes y movimiento de tormentas de latitudes medias, monitoreo de potencial de tiempo severo, estimación de humedad de nivel medio y para identificar regiones donde podría existir turbulencia. Las características de la superficie generalmente no son visibles en esta banda. Las temperaturas de brillo muestran enfriamiento debido a la absorción de energía a 6.9 µm por el vapor de agua.',
+      aplicaciones:['Seguimiento de vientos troposféricos medios','Identificación de jet streams','Pronóstico de huracanes y tormentas','Monitoreo de potencial de tiempo severo','Estimación de humedad de nivel medio','Detección de turbulencia'],
+      escala:[{label:'-93°C (nubes)',color:'#00CC66'},{label:'-54°C (nubes)',color:'#00FFCC'},{label:'-30°C (húmedo)',color:'#FFFFFF'},{label:'-18°C',color:'#CCCCFF'},{label:'-5°C (seco)',color:'#FFFF00'},{label:'-5°C (seco)',color:'#FF6600'},{label:'7°C (seco)',color:'#FF0000'},{label:'7°C (muy seco)',color:'#000000'}] }},
 
   { id:'10', nombre:'10 - IR: vapor de agua inferior', nombreCorto:'10 - IR: vapor de agua inferior', longitud:'7.34 µm',
     tipo:'ir', color:'#c4b5fd', descripcion:'Humedad troposfera baja · Capa límite · 2 km',
-    docUrl:'https://cimss.ssec.wisc.edu/goes/OCLOFactSheetPDFs/ABIQuickGuide_Band10.pdf',
+    docUrl:'https://www.star.nesdis.noaa.gov/GOES/documents/ABIQuickGuide_Band10.pdf',
     ref:{ resolucion:'2 km',
-      descripcionLarga:'Sondea troposfera baja (~750–850 hPa). Detecta entrada de aire húmedo del Atlántico (SALLJ) y gradientes de humedad en la pampa.',
-      aplicaciones:['Capa límite sobre pampas','Low-level jet de Sudamérica (SALLJ)','Entrada de viento húmedo del Atlántico'],
-      escala:[{label:'Húmedo/frío',color:'#ffffff'},{label:'Normal',color:'#6688aa'},{label:'Seco/cálido',color:'#884400'}] }},
+      descripcionLarga:'7.3 µm – Banda "Lower-level Water Vapor" – Resolución 2 km – La banda 10 es una banda de vapor de agua, capaz de detectar vapor de agua en las porciones media a inferior de la atmósfera, además de nubes altas. Puede detectar vapor de agua más abajo en la troposfera en comparación con la banda de vapor de agua de los satélites GOES-13 y -15. Esta banda muestra temperaturas atmosféricas en grados Celsius. Valores en el rango rojo a amarillo representan una atmósfera seca. Valores entre amarillo y blanco, incluyendo azul, representan una atmósfera relativamente húmeda. Valores más fríos que el blanco, incluyendo verde, representan nubes.',
+      aplicaciones:['Detección de vapor de agua en troposfera media-baja','Nubes altas','Seguimiento de humedad en capa límite','Complemento de bandas 8 y 9 para perfil vertical de vapor de agua'],
+      escala:[{label:'-93°C (nubes)',color:'#00CC66'},{label:'-54°C (nubes)',color:'#00FFCC'},{label:'-30°C (húmedo)',color:'#FFFFFF'},{label:'-18°C',color:'#CCCCFF'},{label:'-5°C (seco)',color:'#FFFF00'},{label:'-5°C (seco)',color:'#FF6600'},{label:'7°C (seco)',color:'#FF0000'},{label:'7°C (muy seco)',color:'#000000'}] }},
 
   { id:'11', nombre:'11 - IR: fase de cima de nube', nombreCorto:'11 - IR: fase de cima de nube', longitud:'8.44 µm',
     tipo:'ir', color:'#67e8f9', descripcion:'Hielo vs agua líquida · Banda de ozono · 2 km',
-    docUrl:'https://cimss.ssec.wisc.edu/goes/OCLOFactSheetPDFs/ABIQuickGuide_Band11.pdf',
+    docUrl:'https://www.star.nesdis.noaa.gov/GOES/documents/ABIQuickGuide_Band11.pdf',
     ref:{ resolucion:'2 km',
-      descripcionLarga:'Diferencia de emisividad hielo/agua. Usada con B13 para fase de partículas. Sensible a polvo mineral (silicatos tienen emisividad anómala a 8-9 µm).',
-      aplicaciones:['Fase de partículas en cimas de nubes','Complemento del Dust RGB','Diferenciación de tipos de nubes altas'],
-      escala:[{label:'Nubes de hielo',color:'#ccffff'},{label:'Nubes de agua',color:'#aaccff'},{label:'Superficie',color:'#884400'}] }},
+      descripcionLarga:'8.4 µm – Banda "Cloud-top Phase" – Resolución 2 km – La banda 11 se utiliza en combinación con las bandas de 11.2 y 12.3 µm para derivar productos de fase y tipo de nubes. Esta banda es similar a la banda IR "tradicional" de ventana de onda larga, aunque la banda de 8.4 µm asiste en la determinación de las propiedades microfísicas de las nubes.',
+      aplicaciones:['Fase de partículas en cimas de nubes','Tipo de nubes en combinación con B14 y B15','Propiedades microfísicas de nubes'],
+      escala:[{label:'-110°C',color:'#FFFFFF'},{label:'-80°C',color:'#AAAAAA'},{label:'-66°C',color:'#FF0000'},{label:'-63°C',color:'#FF6600'},{label:'-60°C',color:'#FFFF00'},{label:'-57°C',color:'#00FF00'},{label:'-53°C',color:'#0000FF'},{label:'-45°C',color:'#00FFFF'},{label:'-20°C',color:'#CCCCCC'},{label:'6°C',color:'#999999'},{label:'31°C',color:'#555555'},{label:'57°C',color:'#222222'}] }},
 
   { id:'12', nombre:'12 - IR: ozono', nombreCorto:'12 - IR: ozono', longitud:'9.61 µm',
     tipo:'ir', color:'#86efac', descripcion:'Ozono · Tropopausa dinámica · 2 km',
-    docUrl:'https://cimss.ssec.wisc.edu/goes/OCLOFactSheetPDFs/ABIQuickGuide_Band12.pdf',
+    docUrl:'https://www.star.nesdis.noaa.gov/GOES/documents/ABIQuickGuide_Band12.pdf',
     ref:{ resolucion:'2 km',
-      descripcionLarga:'Absorción del O₃. Detecta intrusiones estratosféricas y variaciones del agujero de ozono antártico. Componente del AirMass RGB.',
-      aplicaciones:['Intrusiones estratosféricas','Tropopausa dinámica sobre los Andes','Turbulencia en altura (CAT)','Componente del AirMass RGB'],
-      escala:[{label:'Ozono alto/frío',color:'#ffffff'},{label:'Normal',color:'#88aa88'},{label:'Ozono bajo/cálido',color:'#ff8800'}] }},
+      descripcionLarga:'9.6 µm – Banda "Ozone" – Resolución 2 km – La banda 12 proporcionará información tanto de día como de noche sobre la dinámica de la atmósfera cerca de la tropopausa con alta resolución espacial y temporal. Para escenas de vista despejadas (sin nubes), esta banda es más fría que las bandas de ventana IR debido a la absorción por el ozono.',
+      aplicaciones:['Dinámica atmosférica cerca de la tropopausa','Detección de ozono día y noche','Intrusiones estratosféricas','Componente del AirMass RGB'],
+      escala:[{label:'-110°C',color:'#FFFFFF'},{label:'-80°C',color:'#AAAAAA'},{label:'-66°C',color:'#FF0000'},{label:'-63°C',color:'#FF6600'},{label:'-60°C',color:'#FFFF00'},{label:'-57°C',color:'#00FF00'},{label:'-53°C',color:'#0000FF'},{label:'-45°C',color:'#00FFFF'},{label:'-20°C',color:'#CCCCCC'},{label:'6°C',color:'#999999'},{label:'31°C',color:'#555555'},{label:'57°C',color:'#222222'}] }},
 
   { id:'13', nombre:'13 - IR: onda larga limpia', nombreCorto:'13 - IR: onda larga limpia', longitud:'10.35 µm',
     tipo:'ir', color:'#fcd34d', descripcion:'Canal IR principal · Temperatura de cima · 2 km',
-    docUrl:'https://cimss.ssec.wisc.edu/goes/OCLOFactSheetPDFs/ABIQuickGuide_Band13.pdf',
+    docUrl:'https://www.star.nesdis.noaa.gov/GOES/documents/ABIQuickGuide_Band13.pdf',
     ref:{ resolucion:'2 km',
-      descripcionLarga:'Canal IR principal del ABI. Ventana limpia 10.35 µm. Nubes brillantes = frías = altas. Paleta NOAA con realces de color en temperaturas < -40°C. Base de Sandwich RGB y estimación de lluvia.',
-      receta:'Escala de grises invertida (frío=blanco) con realces: violeta <-60°C / rojo -60/-40°C / naranja -40/-20°C',
-      aplicaciones:['Temperatura de cima estándar','Seguimiento de ciclones y tormentas','Estimación de lluvia (Hydroestimator)','TSM en zonas claras','Base del Sandwich RGB'],
-      escala:[{label:'<-60°C tormentas profundas',color:'#aa00ff'},{label:'-60 a -40°C',color:'#ff0000'},{label:'-40 a -20°C',color:'#ffaa00'},{label:'-20 a 0°C',color:'#ffff00'},{label:'0 a +20°C',color:'#cccccc'},{label:'>+20°C superficie',color:'#884400'}] }},
+      descripcionLarga:'10.3 µm – Banda "Clean" Longwave IR Window – Resolución 2 km – La banda 13 a 10.3 µm es una ventana infrarroja, lo que significa que no es fuertemente afectada por el vapor de agua atmosférico. Este canal es útil para detectar nubes en todo momento del día y la noche y es particularmente útil en la recuperación de la altura de la cima de las nubes.',
+      aplicaciones:['Detección de nubes día y noche','Altura de cima de nubes','Seguimiento de ciclones y tormentas','Estimación de lluvia (Hydroestimator)','Base del Sandwich RGB'],
+      escala:[{label:'-110°C',color:'#FFFFFF'},{label:'-80°C',color:'#AAAAAA'},{label:'-66°C',color:'#FF0000'},{label:'-63°C',color:'#FF6600'},{label:'-60°C',color:'#FFFF00'},{label:'-57°C',color:'#00FF00'},{label:'-53°C',color:'#0000FF'},{label:'-45°C',color:'#00FFFF'},{label:'-20°C',color:'#CCCCCC'},{label:'6°C',color:'#999999'},{label:'31°C',color:'#555555'},{label:'57°C',color:'#222222'}] }},
 
   { id:'14', nombre:'14 - IR: onda larga', nombreCorto:'14 - IR: onda larga', longitud:'11.19 µm',
     tipo:'ir', color:'#fbbf24', descripcion:'TSM · Vientos derivados · Corriente de Malvinas · 2 km',
-    docUrl:'https://cimss.ssec.wisc.edu/goes/OCLOFactSheetPDFs/ABIQuickGuide_Band14.pdf',
+    docUrl:'https://www.star.nesdis.noaa.gov/GOES/documents/ABIQuickGuide_Band14.pdf',
     ref:{ resolucion:'2 km',
-      descripcionLarga:'Combinada con B13 para estimación de TSM corregida. Base para vientos derivados de movimiento (DMW-IR). Análisis de la Corriente de Malvinas y frentes oceánicos.',
-      aplicaciones:['TSM en el Atlántico Sur','Corriente de Malvinas','Vientos derivados DMW-IR','Temperatura de isla de calor urbana'],
-      escala:[{label:'Nubes frías',color:'#8888ff'},{label:'Nubes templadas',color:'#44cc44'},{label:'Superficie cálida',color:'#ff8800'}] }},
+      descripcionLarga:'11.2 µm – Banda IR Longwave Window – Resolución 2 km – La banda tradicional de ventana infrarroja de onda larga, se utiliza para diagnosticar nubes discretas y características organizadas para pronóstico meteorológico general, análisis y aplicaciones de difusión. Las observaciones de este canal de ventana IR caracterizan procesos atmosféricos asociados con ciclones extratropicales y también en tormentas eléctricas individuales y complejos convectivos.',
+      aplicaciones:['Pronóstico meteorológico general','Diagnóstico de nubes discretas','Ciclones extratropicales','Tormentas eléctricas y complejos convectivos','TSM en el Atlántico Sur','Vientos derivados DMW-IR'],
+      escala:[{label:'-110°C',color:'#FFFFFF'},{label:'-80°C',color:'#AAAAAA'},{label:'-66°C',color:'#FF0000'},{label:'-63°C',color:'#FF6600'},{label:'-60°C',color:'#FFFF00'},{label:'-57°C',color:'#00FF00'},{label:'-53°C',color:'#0000FF'},{label:'-45°C',color:'#00FFFF'},{label:'-20°C',color:'#CCCCCC'},{label:'6°C',color:'#999999'},{label:'31°C',color:'#555555'},{label:'57°C',color:'#222222'}] }},
 
   { id:'15', nombre:'15 - IR: onda larga sucia', nombreCorto:'15 - IR: onda larga sucia', longitud:'12.30 µm',
     tipo:'ir', color:'#f97316', descripcion:'Split window · Polvo mineral · TSM corregida · 2 km',
-    docUrl:'https://cimss.ssec.wisc.edu/goes/OCLOFactSheetPDFs/ABIQuickGuide_Band15.pdf',
+    docUrl:'https://www.star.nesdis.noaa.gov/GOES/documents/ABIQuickGuide_Band15.pdf',
     ref:{ resolucion:'2 km',
-      descripcionLarga:'Ventana "sucia". La diferencia B15−B13 (split window) es negativa en polvo mineral — técnica estándar de detección. Mejora la estimación de TSM.',
-      aplicaciones:['Detección de polvo (split window B15-B13)','TSM mejorada','Niebla densa','Ceniza volcánica','Componente del Dust RGB'],
-      escala:[{label:'Nubes frías',color:'#ffffff'},{label:'Polvo mineral',color:'#ff88aa'},{label:'Superficie',color:'#884400'}] }},
+      descripcionLarga:'12.3 µm – Banda "Dirty" Longwave IR Window – Resolución 2 km – La banda 15 a 12.3 µm ofrece monitoreo casi continuo para numerosas aplicaciones, aunque generalmente a través de una diferencia de split window con un canal de ventana más limpio. Estas diferencias pueden estimar mejor la humedad de bajo nivel, ceniza volcánica, polvo/arena en suspensión, temperatura de la superficie del mar y tamaño de partículas de nubes.',
+      aplicaciones:['Humedad de bajo nivel','Ceniza volcánica','Polvo/arena en suspensión','Temperatura de la superficie del mar','Tamaño de partículas de nubes'],
+      escala:[{label:'-110°C',color:'#FFFFFF'},{label:'-80°C',color:'#AAAAAA'},{label:'-66°C',color:'#FF0000'},{label:'-63°C',color:'#FF6600'},{label:'-60°C',color:'#FFFF00'},{label:'-57°C',color:'#00FF00'},{label:'-53°C',color:'#0000FF'},{label:'-45°C',color:'#00FFFF'},{label:'-20°C',color:'#CCCCCC'},{label:'6°C',color:'#999999'},{label:'31°C',color:'#555555'},{label:'57°C',color:'#222222'}] }},
 
   { id:'16', nombre:'16 - IR: CO₂ onda larga', nombreCorto:'16 - IR: CO₂ onda larga', longitud:'13.30 µm',
     tipo:'ir', color:'#ef4444', descripcion:'Altura de cima de nubes · CO₂ troposférico · 2 km',
-    docUrl:'https://cimss.ssec.wisc.edu/goes/OCLOFactSheetPDFs/ABIQuickGuide_Band16.pdf',
+    docUrl:'https://www.star.nesdis.noaa.gov/GOES/documents/ABIQuickGuide_Band16.pdf',
     ref:{ resolucion:'2 km',
-      descripcionLarga:'Absorción del CO₂. Combinado con B13 permite estimar altura de cima de nubes sin sondeos adicionales. Ve capas troposféricas medias-altas.',
-      aplicaciones:['Altura de cima de nubes','Temperatura efectiva de nubes altas','Perfil vertical de temperatura'],
-      escala:[{label:'Nubes muy altas',color:'#ffffff'},{label:'Nubes medias',color:'#888888'},{label:'Troposfera baja',color:'#884400'}] }},
+      descripcionLarga:'13.3 µm – Banda CO₂ Longwave IR – Resolución 2 km – La banda 16 se utiliza para la estimación de la temperatura media del aire troposférico, delineación de la tropopausa, y como parte de productos cuantitativos de nubes para estimación de opacidad de nubes, asignación de altura de cima de nubes en vectores de movimiento de deriva de nubes, y como complemento de las observaciones del Sistema Automatizado de Observación de Superficie (ASOS).',
+      aplicaciones:['Temperatura media del aire troposférico','Delineación de la tropopausa','Opacidad de nubes','Altura de cima de nubes','Vectores de movimiento de deriva de nubes','Complemento de observaciones ASOS'],
+      escala:[{label:'-128°C',color:'#FFFFFF'},{label:'-93°C',color:'#AAAAAA'},{label:'-60°C',color:'#0000CC'},{label:'-30°C',color:'#666666'},{label:'0°C',color:'#CCCCCC'},{label:'30°C',color:'#FFFF00'},{label:'60°C',color:'#FF6600'},{label:'83°C',color:'#FF0000'},{label:'128°C',color:'#222222'}] }},
 ]
 
 const TIPO_LABELS: Record<BandType,string> = { visible:'Visible','near-ir':'IR Cercano',ir:'Infrarrojo',rgb:'RGB' }
@@ -273,6 +275,65 @@ const TIPO_STYLE:  Record<BandType,string>  = {
   rgb:      'border-purple-400/40 bg-purple-400/10 text-purple-300',
 }
 const FRAME_COUNTS = [12,24,36,48,60,72,84,96,120,150,180,240]
+
+// ── Color matching helpers for hover feature ───────────────────
+function hexToRgb(hex: string): [number,number,number] {
+  const h = hex.replace('#','')
+  return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)]
+}
+
+function colorDistance(r1:number,g1:number,b1:number, r2:number,g2:number,b2:number): number {
+  return Math.sqrt((r1-r2)**2 + (g1-g2)**2 + (b1-b2)**2)
+}
+
+function findClosestScaleEntry(r:number, g:number, b:number, escala: ColorEntry[]): ColorEntry {
+  let minDist = Infinity
+  let closest = escala[0]
+  for (const entry of escala) {
+    const [r2,g2,b2] = hexToRgb(entry.color)
+    const d = colorDistance(r,g,b, r2,g2,b2)
+    if (d < minDist) { minDist = d; closest = entry }
+  }
+  return closest
+}
+
+// Extract UTC hour from frame filename (YYYYDDDHHMM)
+function getFrameUtcHour(filename: string): number {
+  return parseInt(filename.slice(7, 9))
+}
+
+// For SSA sector (~UTC-3 to UTC-5), daytime is roughly 10-22 UTC
+function isFrameDaytime(filename: string): boolean {
+  const h = getFrameUtcHour(filename)
+  return h >= 10 && h < 22
+}
+
+// Filter scale entries by day/night prefix for dual-scale channels
+function getActiveScale(escala: ColorEntry[], channelId: string, filename: string): ColorEntry[] {
+  if (channelId !== 'DayNightCloudMicroCombo') return escala
+  const day = isFrameDaytime(filename)
+  const prefix = day ? 'Día:' : 'Noche:'
+  return escala.filter(e => e.label.startsWith(prefix))
+}
+
+// Compute rendered image bounds within an object-contain container
+function getContainedBounds(containerW: number, containerH: number, imgW: number, imgH: number) {
+  const containerAR = containerW / containerH
+  const imgAR = imgW / imgH
+  let renderW: number, renderH: number, offsetX: number, offsetY: number
+  if (imgAR > containerAR) {
+    renderW = containerW
+    renderH = containerW / imgAR
+    offsetX = 0
+    offsetY = (containerH - renderH) / 2
+  } else {
+    renderH = containerH
+    renderW = containerH * imgAR
+    offsetX = (containerW - renderW) / 2
+    offsetY = 0
+  }
+  return { renderW, renderH, offsetX, offsetY }
+}
 
 // ── GOES-R ABI Projection (PUG-L2-Vol5 §4.2.8.2) ─────────────
 // GOES-19 at 75.2°W · SSA sector (Southern South America)
@@ -438,13 +499,33 @@ function ChannelGrid({ onSelect }:{ onSelect:(c:Channel)=>void }) {
 }
 
 function ChannelCard({ channel:ch, onSelect }:{ channel:Channel; onSelect:(c:Channel)=>void }) {
-  const [ok,setOk] = useState(true)
+  const [ok,setOk]           = useState(true)
+  const [lastTs,setLastTs]   = useState<string|null>(null)
   const isGlm = ch.id === 'EXTENT3'
+
   // Thumbnail: use latest symlink from CDN via proxy
   const thumbRaw = isGlm
     ? `${CDN_GLM}/latest.jpg`
     : `${CDN_ABI}/${ch.id}/latest.jpg`
   const thumbSrc = proxy(thumbRaw)
+
+  // Fetch the timestamp of the latest image from the directory listing
+  useEffect(() => {
+    let cancelled = false
+    async function fetchLatest() {
+      try {
+        const res  = await fetch(`/api/goes/imagery-list?band=${ch.id}&count=1`)
+        const data = await res.json()
+        if (cancelled) return
+        const fn: string = data.frames?.[0]
+        if (fn) setLastTs(formatLabel(fn))
+      } catch { /* silent */ }
+    }
+    fetchLatest()
+    // Refresh every 10 min
+    const id = setInterval(fetchLatest, 10 * 60 * 1000)
+    return () => { cancelled = true; clearInterval(id) }
+  }, [ch.id])
 
   return (
     <button onClick={()=>onSelect(ch)}
@@ -458,9 +539,17 @@ function ChannelCard({ channel:ch, onSelect }:{ channel:Channel; onSelect:(c:Cha
           : <div className="flex h-full flex-col items-center justify-center gap-1">
               <span className="text-sm text-text-dim font-mono">{ch.id}</span>
             </div>}
-        <span className={cn('absolute top-1 right-1 badge border text-2xs',TIPO_STYLE[ch.tipo])}>
+        <span className={cn('absolute top-1 right-1 badge border text-2xs backdrop-blur-sm',TIPO_STYLE[ch.tipo], 'bg-black/60')}>
           {TIPO_LABELS[ch.tipo]}
         </span>
+        {/* Last image timestamp overlay */}
+        {lastTs && (
+          <div className="absolute bottom-0 left-0 right-0 bg-black/70 px-1.5 py-0.5">
+            <span className="font-data text-2xs text-accent-cyan tabular-nums leading-none">
+              {lastTs}
+            </span>
+          </div>
+        )}
       </div>
       <div className="flex flex-col gap-0.5 p-2 text-left">
         <span className="text-xs font-semibold leading-tight" style={{color:ch.color}}>{ch.nombreCorto}</span>
@@ -479,7 +568,6 @@ function AnimationView({ channel, onBack }:{ channel:Channel; onBack:()=>void })
   const [idx,setIdx]               = useState(0)
   const [speedMs,setSpeedMs]       = useState(250)
   const [showGrid,setShowGrid]     = useState(false)
-  const [showInfo,setShowInfo]     = useState(false)
   const [frames,setFrames]         = useState<Frame[]>([])
   const [loadedSet,setLoadedSet]   = useState<Set<number>>(new Set())
   const [apiErr,setApiErr]         = useState<string|null>(null)
@@ -489,6 +577,13 @@ function AnimationView({ channel, onBack }:{ channel:Channel; onBack:()=>void })
   // loadKey invalidates markLoaded callbacks from previous loads
   const loadKey  = useRef(0)
   const total    = frames.length
+
+  // ── Hover color picking ─────────────────────────────────────
+  const canvasRef    = useRef<HTMLCanvasElement>(null)
+  const imgContRef   = useRef<HTMLDivElement>(null)
+  const canvasReady  = useRef(false)
+  const [hoverInfo, setHoverInfo] = useState<{x:number;y:number;color:string;label:string;swatch:string}|null>(null)
+  const hasEscala = (channel.ref.escala?.length ?? 0) > 0
 
   // ── Fetch real filenames from CDN directory listing ──────────
   const loadFrames = useCallback(async () => {
@@ -557,6 +652,58 @@ function AnimationView({ channel, onBack }:{ channel:Channel; onBack:()=>void })
   const isGlm   = channel.id === 'EXTENT3'
   const curKey  = loadKey.current
 
+  // ── Draw current frame to hidden canvas for pixel sampling ──
+  useEffect(() => {
+    canvasReady.current = false
+    if (playing || !frame || !hasEscala || !allLoaded) return
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    img.onload = () => {
+      canvas.width = img.naturalWidth
+      canvas.height = img.naturalHeight
+      const ctx = canvas.getContext('2d', { willReadFrequently: true })
+      if (ctx) { ctx.drawImage(img, 0, 0); canvasReady.current = true }
+    }
+    img.src = frame.proxied
+  }, [playing, frame, hasEscala, allLoaded])
+
+  const handleImgMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (playing || !hasEscala || !canvasReady.current) { setHoverInfo(null); return }
+    const canvas = canvasRef.current
+    const container = imgContRef.current
+    if (!canvas || !container || canvas.width === 0) { setHoverInfo(null); return }
+    const rect = container.getBoundingClientRect()
+    const { renderW, renderH, offsetX, offsetY } = getContainedBounds(
+      rect.width, rect.height, canvas.width, canvas.height)
+    const mx = e.clientX - rect.left - offsetX
+    const my = e.clientY - rect.top  - offsetY
+    if (mx < 0 || my < 0 || mx > renderW || my > renderH) { setHoverInfo(null); return }
+    const imgX = Math.min(canvas.width  - 1, Math.round(mx / renderW * canvas.width))
+    const imgY = Math.min(canvas.height - 1, Math.round(my / renderH * canvas.height))
+    const ctx = canvas.getContext('2d', { willReadFrequently: true })
+    if (!ctx) return
+    const p = ctx.getImageData(imgX, imgY, 1, 1).data
+    const curFrame = frames[idx]
+    const activeScale = curFrame
+      ? getActiveScale(channel.ref.escala!, channel.id, curFrame.filename)
+      : channel.ref.escala!
+    if (activeScale.length === 0) { setHoverInfo(null); return }
+    const closest = findClosestScaleEntry(p[0], p[1], p[2], activeScale)
+    // Strip "Día: " / "Noche: " prefix for cleaner display
+    const cleanLabel = closest.label.replace(/^(Día|Noche):\s*/, '')
+    setHoverInfo({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+      color: `rgb(${p[0]},${p[1]},${p[2]})`,
+      label: cleanLabel,
+      swatch: closest.color,
+    })
+  }, [playing, hasEscala, channel.ref.escala, channel.id, frames, idx])
+
+  const handleImgMouseLeave = useCallback(() => setHoverInfo(null), [])
+
   return (
     <div className="space-y-4 pb-8">
       {/* Header */}
@@ -566,33 +713,12 @@ function AnimationView({ channel, onBack }:{ channel:Channel; onBack:()=>void })
           <div className="flex items-center gap-2">
             <h1 className="font-display text-lg font-bold uppercase tracking-widest truncate"
                 style={{color:channel.color}}>{channel.nombre}</h1>
-            <button onClick={()=>setShowInfo(v=>!v)}
-              className={cn('ctrl-btn shrink-0',showInfo&&'active')} title="Información del canal">
-              <Info size={13}/>
-            </button>
           </div>
           <p className="text-xs text-text-muted">
             GOES-19 · SSA{channel.longitud?` · ${channel.longitud}`:''} · {channel.descripcion}
           </p>
         </div>
       </div>
-
-      {showInfo&&(
-        <div className="card space-y-2">
-          <p className="text-sm text-text-secondary">{channel.ref.descripcionLarga}</p>
-          {channel.ref.receta&&(
-            <div className="rounded border border-border bg-background-secondary px-3 py-2">
-              <span className="text-2xs text-text-dim uppercase tracking-wider">Receta: </span>
-              <span className="font-data text-xs text-accent-cyan leading-relaxed">{channel.ref.receta}</span>
-            </div>
-          )}
-          <a href={channel.docUrl} target="_blank" rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 rounded border border-border bg-background-secondary
-                       px-3 py-1.5 text-xs text-text-secondary hover:text-primary transition-colors">
-            <ExternalLink size={11}/> Guía PDF oficial
-          </a>
-        </div>
-      )}
 
       <div className="grid gap-4 lg:grid-cols-[1fr_260px]">
         {/* Left: image + controls */}
@@ -606,8 +732,14 @@ function AnimationView({ channel, onBack }:{ channel:Channel; onBack:()=>void })
           )}
 
           {/* Image */}
-          <div className="relative overflow-hidden rounded-lg border border-border bg-black"
-               style={{aspectRatio: isGlm ? '5/3' : '5/3'}}>
+          <div ref={imgContRef}
+               className="relative overflow-hidden rounded-lg border border-border bg-black"
+               style={{aspectRatio: isGlm ? '5/3' : '5/3'}}
+               onMouseMove={handleImgMouseMove}
+               onMouseLeave={handleImgMouseLeave}>
+
+            {/* Hidden canvas for pixel sampling */}
+            <canvas ref={canvasRef} className="hidden" />
 
             {/* Preload all frames hidden */}
             <div className="hidden">
@@ -652,6 +784,20 @@ function AnimationView({ channel, onBack }:{ channel:Channel; onBack:()=>void })
                 <div className="absolute top-2 right-2 rounded bg-black/80 px-2 py-0.5">
                   <span className="font-data text-xs text-text-secondary">{idx+1}/{total}</span>
                 </div>
+                {/* Hover color tooltip */}
+                {hoverInfo && !playing && (
+                  <div className="pointer-events-none absolute z-20 rounded border border-white/20 bg-black/85 px-2.5 py-1.5 shadow-lg backdrop-blur-sm"
+                    style={{
+                      left: Math.min(hoverInfo.x + 14, (imgContRef.current?.clientWidth ?? 300) - 180),
+                      top:  Math.max(hoverInfo.y - 40, 4),
+                    }}>
+                    <div className="flex items-center gap-2">
+                      <span className="h-3 w-3 shrink-0 rounded border border-white/30"
+                        style={{backgroundColor: hoverInfo.swatch}}/>
+                      <span className="font-data text-xs text-white whitespace-nowrap">{hoverInfo.label}</span>
+                    </div>
+                  </div>
+                )}
               </>
             ) : null}
           </div>
@@ -690,11 +836,21 @@ function AnimationView({ channel, onBack }:{ channel:Channel; onBack:()=>void })
             <div className="h-4 w-px bg-border mx-1"/>
 
             {/* Speed */}
-            <button className="ctrl-btn" onClick={()=>setSpeedMs(s=>Math.min(1000,s+50))}>
+            <button className="ctrl-btn" onClick={()=>{
+              const steps = [1000,500,333,250,200,167,143,125,100,67,50]
+              const i = steps.indexOf(speedMs)
+              if(i>0) setSpeedMs(steps[i-1])
+              else { const prev = [...steps].reverse().find(s=>s>speedMs); if(prev) setSpeedMs(prev) }
+            }}>
               <Minus size={13}/>
             </button>
             <span className="font-data text-xs text-text-muted tabular-nums whitespace-nowrap">{fps} fps</span>
-            <button className="ctrl-btn" onClick={()=>setSpeedMs(s=>Math.max(50,s-50))}>
+            <button className="ctrl-btn" onClick={()=>{
+              const steps = [1000,500,333,250,200,167,143,125,100,67,50]
+              const i = steps.indexOf(speedMs)
+              if(i>=0 && i<steps.length-1) setSpeedMs(steps[i+1])
+              else { const next = steps.find(s=>s<speedMs); if(next) setSpeedMs(next) }
+            }}>
               <Plus size={13}/>
             </button>
 
@@ -800,9 +956,12 @@ function AnimationView({ channel, onBack }:{ channel:Channel; onBack:()=>void })
                 </button>
               </>
             )}
-            <p className="text-2xs text-text-muted pt-1 border-t border-border">GIF animado (últimas 24 h)</p>
-            {(isGlm ? ['1200x720'] : ['1200x720','3600x2160']).map(res=>{
-              const url = isGlm ? `${CDN_GLM}/${res}.gif` : `${CDN_ABI}/${channel.id}/${res}.gif`
+            <p className="text-2xs text-text-muted pt-1 border-t border-border">GIF animado (últimas 4 h)</p>
+            {['900x540'].map(res=>{
+              const gifName = isGlm
+                ? `GOES19-SSA-EXTENT3-${res}.gif`
+                : `GOES19-SSA-${channel.id}-${res}.gif`
+              const url = `${cdnDir(channel.id)}/${gifName}`
               return (
                 <a key={res} href={url} target="_blank" rel="noopener noreferrer"
                   className="flex items-center justify-between rounded border border-border
