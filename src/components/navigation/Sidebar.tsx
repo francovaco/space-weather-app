@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils'
 import {
   Satellite, BookOpen, Activity, Image, Zap, Radio,
   Sun, Wind, Eye, Globe, ChevronDown, ChevronRight,
-  Gauge, Layers, SunDim, BarChart3,
+  Gauge, Layers, SunDim, BarChart3, CloudSun,
 } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 
@@ -79,6 +79,46 @@ const NAV_ITEMS: NavItem[] = [
     label: 'Mapa Solar Sinóptico',
     href: '/solar-synoptic',
     icon: <Globe size={15} />,
+  },
+  {
+    label: 'Clima Espacial',
+    icon: <CloudSun size={15} />,
+    children: [
+      { label: 'Introducción', href: '/space-weather', icon: <CloudSun size={13} /> },
+      {
+        label: 'Impactos',
+        icon: <Zap size={13} />,
+        children: [
+          { label: 'Energía Eléctrica', href: '/space-weather/impacts/electric-power', icon: <Zap size={13} /> },
+          { label: 'Sistemas GPS', href: '/space-weather/impacts/gps', icon: <Globe size={13} /> },
+          { label: 'Radio HF', href: '/space-weather/impacts/hf-radio', icon: <Radio size={13} /> },
+          { label: 'Com. Satelitales', href: '/space-weather/impacts/satellite-communications', icon: <Satellite size={13} /> },
+          { label: 'Arrastre Satelital', href: '/space-weather/impacts/satellite-drag', icon: <Satellite size={13} /> },
+        ],
+      },
+      {
+        label: 'Fenómenos',
+        icon: <Sun size={13} />,
+        children: [
+          { label: 'Aurora', href: '/space-weather/phenomena/aurora', icon: <SunDim size={13} /> },
+          { label: 'Agujeros Coronales', href: '/space-weather/phenomena/coronal-holes', icon: <Sun size={13} /> },
+          { label: 'CME', href: '/space-weather/phenomena/coronal-mass-ejections', icon: <Activity size={13} /> },
+          { label: 'Magnetósfera', href: '/space-weather/phenomena/earths-magnetosphere', icon: <Globe size={13} /> },
+          { label: 'Radio F10.7', href: '/space-weather/phenomena/f107-radio-emissions', icon: <Radio size={13} /> },
+          { label: 'Rayos Cósmicos', href: '/space-weather/phenomena/galactic-cosmic-rays', icon: <Activity size={13} /> },
+          { label: 'Tormentas Geomag.', href: '/space-weather/phenomena/geomagnetic-storms', icon: <Zap size={13} /> },
+          { label: 'Ionósfera', href: '/space-weather/phenomena/ionosphere', icon: <Layers size={13} /> },
+          { label: 'Centelleo Ionosf.', href: '/space-weather/phenomena/ionospheric-scintillation', icon: <Activity size={13} /> },
+          { label: 'Cinturones Radiac.', href: '/space-weather/phenomena/radiation-belts', icon: <Globe size={13} /> },
+          { label: 'Irradiancia EUV', href: '/space-weather/phenomena/solar-euv-irradiance', icon: <Sun size={13} /> },
+          { label: 'Fulguraciones', href: '/space-weather/phenomena/solar-flares', icon: <Zap size={13} /> },
+          { label: 'Tormenta Radiación', href: '/space-weather/phenomena/solar-radiation-storm', icon: <Activity size={13} /> },
+          { label: 'Viento Solar', href: '/space-weather/phenomena/solar-wind', icon: <Wind size={13} /> },
+          { label: 'Manchas Solares', href: '/space-weather/phenomena/sunspots-solar-cycle', icon: <Sun size={13} /> },
+          { label: 'Electrones (TEC)', href: '/space-weather/phenomena/total-electron-content', icon: <BarChart3 size={13} /> },
+        ],
+      },
+    ],
   },
 ]
 
@@ -175,7 +215,9 @@ function NavItemComponent({ item, pathname, collapsed, expanded, onToggle, depth
   const handlePopoverToggle = () => {
     if (!popoverOpen && btnRef.current) {
       const rect = btnRef.current.getBoundingClientRect()
-      setPopoverPos({ top: rect.top, left: rect.right + 4 })
+      // Clamp so popover doesn't overflow viewport bottom
+      const maxTop = window.innerHeight - 320
+      setPopoverPos({ top: Math.min(rect.top, Math.max(8, maxTop)), left: rect.right + 4 })
     }
     setPopoverOpen(v => !v)
   }
@@ -208,13 +250,40 @@ function NavItemComponent({ item, pathname, collapsed, expanded, onToggle, depth
           {popoverOpen && (
             <div
               ref={popoverRef}
-              className="fixed z-[200] min-w-48 rounded-md border border-border bg-background-secondary py-1 shadow-xl"
+              className="fixed z-[200] min-w-48 max-h-[min(70vh,480px)] overflow-y-auto rounded-md border border-border bg-background-secondary py-1 shadow-xl"
               style={{ top: popoverPos.top, left: popoverPos.left }}
             >
               <p className="px-3 py-1.5 text-2xs font-bold uppercase tracking-wider text-text-muted">
                 {item.label}
               </p>
               {item.children!.map((child) => {
+                if (child.children) {
+                  return (
+                    <div key={child.label}>
+                      <p className="px-3 pt-2 pb-1 text-2xs font-bold uppercase tracking-wider text-primary/70">
+                        {child.label}
+                      </p>
+                      {child.children.map((sub) => {
+                        const subActive = sub.href ? pathname === sub.href : false
+                        return (
+                          <Link
+                            key={sub.label}
+                            href={sub.href!}
+                            onClick={() => setPopoverOpen(false)}
+                            className={cn(
+                              'flex items-center gap-2 px-3 py-1.5 text-xs transition-colors',
+                              'hover:bg-border/60 hover:text-text-primary',
+                              subActive ? 'bg-primary/10 text-primary' : 'text-text-secondary'
+                            )}
+                          >
+                            <span className="shrink-0">{sub.icon}</span>
+                            <span>{sub.label}</span>
+                          </Link>
+                        )
+                      })}
+                    </div>
+                  )
+                }
                 const childActive = child.href ? pathname === child.href : false
                 return (
                   <Link
