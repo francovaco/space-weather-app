@@ -18,11 +18,11 @@ interface SuviFrame {
 type Wavelength = '094' | '131' | '171' | '195' | '284'
 
 const WAVELENGTH_TABS: { id: Wavelength; label: string; color: string }[] = [
-  { id: '094', label: '94 Å',  color: '#ef4444' },
-  { id: '131', label: '131 Å', color: '#f97316' },
-  { id: '171', label: '171 Å', color: '#eab308' },
-  { id: '195', label: '195 Å', color: '#22c55e' },
-  { id: '284', label: '284 Å', color: '#3b82f6' },
+  { id: '094', label: '94 Angstroms',  color: '#ef4444' },
+  { id: '131', label: '131 Angstroms', color: '#f97316' },
+  { id: '171', label: '171 Angstroms', color: '#eab308' },
+  { id: '195', label: '195 Angstroms', color: '#22c55e' },
+  { id: '284', label: '284 Angstroms', color: '#3b82f6' },
 ]
 
 const USAGE = [
