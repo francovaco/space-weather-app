@@ -7,6 +7,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
 import { getSuviFrames } from '@/lib/swpc-api'
 import { UsageImpacts } from '@/components/ui/UsageImpacts'
+import { SectionDetails } from '@/components/ui/SectionDetails'
 import { cn } from '@/lib/utils'
 import { Play, Pause, SkipBack, SkipForward, Download } from 'lucide-react'
 
@@ -106,6 +107,22 @@ export function SUVIClient() {
 
       {/* Usage & Impacts */}
       <UsageImpacts usage={USAGE} impacts={IMPACTS} />
+
+      {/* Detalles */}
+      <SectionDetails>
+        <p>
+          El instrumento SUVI (Solar Ultraviolet Imager) a bordo de GOES captura imágenes del Sol completo en seis canales del ultravioleta extremo (EUV). Cada canal está sintonizado a una longitud de onda específica que resalta diferentes temperaturas y estructuras de la atmósfera solar.
+        </p>
+        <p>
+          Los canales disponibles son: 94 Angstroms (regiones de llamarada, ~6.3 MK), 131 Angstroms (corona activa y llamaradas, ~0.4 y 10 MK), 171 Angstroms (corona quieta y bucles coronales, ~0.6 MK), 195 Angstroms (corona y transición, ~1.2 MK), 284 Angstroms (corona activa, ~2.0 MK) y 304 Angstroms (cromosfera y región de transición, ~0.05 MK).
+        </p>
+        <p>
+          SUVI reemplaza al instrumento SXI de satélites GOES anteriores con mayor resolución espacial y temporal. Las imágenes se utilizan para monitorear la actividad solar incluyendo fulguraciones, agujeros coronales, filamentos y prominencias. La cadencia típica es de una imagen cada 4 minutos por canal.
+        </p>
+        <p>
+          <strong>Fuente:</strong> NOAA/SWPC — <em>GOES SUVI Solar Ultraviolet Imager</em>
+        </p>
+      </SectionDetails>
     </div>
   )
 }

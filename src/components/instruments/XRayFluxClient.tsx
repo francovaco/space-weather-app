@@ -7,6 +7,7 @@ import { useState } from 'react'
 import { PlotlyChart, PLOTLY_DARK_LAYOUT, PLOTLY_DEFAULT_CONFIG } from '@/components/charts/PlotlyChart'
 import { TimeRangeSelector } from '@/components/ui/TimeRangeSelector'
 import { UsageImpacts } from '@/components/ui/UsageImpacts'
+import { SectionDetails } from '@/components/ui/SectionDetails'
 import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
 import { getXRayFluxData, timeRangeToParam } from '@/lib/swpc-api'
 import type { TimeRange } from '@/types/swpc'
@@ -197,6 +198,22 @@ export function XRayFluxClient() {
 
       {/* Usage & Impacts */}
       <UsageImpacts usage={USAGE} impacts={IMPACTS} />
+
+      {/* Detalles */}
+      <SectionDetails>
+        <p>
+          El sensor XRS (X-Ray Sensor) del satélite GOES mide el flujo de rayos X solares en dos bandas de longitud de onda: 0.05–0.4 nm (banda corta) y 0.1–0.8 nm (banda larga). Estos datos se utilizan para clasificar las fulguraciones solares en las escalas estándar A, B, C, M y X.
+        </p>
+        <p>
+          Las fulguraciones solares de clase M y X son las más significativas para el clima espacial, ya que pueden provocar apagones de radio de alta frecuencia (HF) en el lado diurno de la Tierra en cuestión de minutos. La escala es logarítmica: cada letra representa un aumento de 10 veces en la intensidad del pico de flujo.
+        </p>
+        <p>
+          El flujo de rayos X de la banda larga (1–8 Å) es el principal indicador utilizado por el SWPC para emitir alertas de fulguraciones. Un evento de clase M5 o superior generalmente dispara una alerta de apagón de radio R1–R2, mientras que un evento X10+ puede producir un apagón R4–R5.
+        </p>
+        <p>
+          <strong>Fuente:</strong> NOAA/SWPC — <em>GOES X-Ray Flux</em>
+        </p>
+      </SectionDetails>
     </div>
   )
 }

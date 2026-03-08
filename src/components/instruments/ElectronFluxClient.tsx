@@ -7,6 +7,7 @@ import { useState } from 'react'
 import { PlotlyChart, PLOTLY_DARK_LAYOUT, PLOTLY_DEFAULT_CONFIG } from '@/components/charts/PlotlyChart'
 import { TimeRangeSelector } from '@/components/ui/TimeRangeSelector'
 import { UsageImpacts } from '@/components/ui/UsageImpacts'
+import { SectionDetails } from '@/components/ui/SectionDetails'
 import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
 import { getElectronFluxData, timeRangeToParam } from '@/lib/swpc-api'
 import type { TimeRange } from '@/types/swpc'
@@ -180,6 +181,22 @@ export function ElectronFluxClient() {
 
       {/* Usage & Impacts */}
       <UsageImpacts usage={USAGE} impacts={IMPACTS} />
+
+      {/* Detalles */}
+      <SectionDetails>
+        <p>
+          El instrumento SEISS (Space Environment In-Situ Suite) a bordo de GOES mide el flujo de electrones energéticos en la órbita geoestacionaria. Los datos de flujo de electrones con energía ≥2 MeV son particularmente importantes para evaluar el riesgo de carga electrostática en satélites.
+        </p>
+        <p>
+          Niveles elevados de electrones energéticos (conocidos como «electrones asesinos») pueden penetrar el blindaje de los satélites y causar acumulación de carga interna, lo que potencialmente provoca descargas electrostáticas y daños a los componentes electrónicos. El umbral de alerta se establece en 1000 pfu (unidades de flujo de partículas).
+        </p>
+        <p>
+          Las tormentas de electrones relativistas suelen producirse 1–3 días después de la llegada de corrientes de viento solar de alta velocidad provenientes de agujeros coronales. Estas tormentas pueden persistir durante varios días y representan un riesgo acumulativo para la electrónica de los satélites.
+        </p>
+        <p>
+          <strong>Fuente:</strong> NOAA/SWPC — <em>GOES Electron Flux</em>
+        </p>
+      </SectionDetails>
     </div>
   )
 }

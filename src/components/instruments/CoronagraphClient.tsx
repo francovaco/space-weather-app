@@ -7,6 +7,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
 import { getCoronagraphFrames } from '@/lib/swpc-api'
 import { UsageImpacts } from '@/components/ui/UsageImpacts'
+import { SectionDetails } from '@/components/ui/SectionDetails'
 import { cn } from '@/lib/utils'
 import type { CoronagraphSource } from '@/types/swpc'
 import { CORONAGRAPH_SOURCES } from '@/types/swpc'
@@ -99,6 +100,22 @@ export function CoronagraphClient() {
 
       {/* Usage & Impacts */}
       <UsageImpacts usage={USAGE} impacts={IMPACTS} />
+
+      {/* Detalles */}
+      <SectionDetails>
+        <p>
+          El coronógrafo CCOR (Compact Coronagraph) de GOES y los coronógrafos LASCO C2/C3 del observatorio SOHO proporcionan imágenes de la corona solar exterior ocultando el disco solar brillante con un disco opaco. Esto permite observar las eyecciones de masa coronal (CME) a medida que se propagan por el espacio.
+        </p>
+        <p>
+          LASCO C2 observa la corona interna de 1.5 a 6 radios solares, mientras que LASCO C3 cubre de 3.7 a 30 radios solares. El coronógrafo compacto CCOR-1 de GOES proporciona una perspectiva complementaria desde la órbita geoestacionaria.
+        </p>
+        <p>
+          Las CME son expulsiones masivas de plasma y campo magnético desde la corona solar. Cuando están dirigidas hacia la Tierra, pueden causar tormentas geomagnéticas severas al interactuar con la magnetosfera terrestre. El tiempo de tránsito tipico de una CME desde el Sol hasta la Tierra es de 1 a 3 días.
+        </p>
+        <p>
+          <strong>Fuente:</strong> NOAA/SWPC — <em>LASCO Coronagraph &amp; GOES CCOR</em>
+        </p>
+      </SectionDetails>
     </div>
   )
 }

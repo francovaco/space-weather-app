@@ -4,6 +4,7 @@
 // Solar Synoptic Map image with auto-refresh and Usage/Impacts
 // ============================================================
 import { UsageImpacts } from '@/components/ui/UsageImpacts'
+import { SectionDetails } from '@/components/ui/SectionDetails'
 import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
 import { getSolarSynopticMap } from '@/lib/swpc-api'
 
@@ -83,6 +84,22 @@ export function SolarSynopticClient() {
 
       {/* Usage & Impacts */}
       <UsageImpacts usage={USAGE} impacts={IMPACTS} />
+
+      {/* Detalles */}
+      <SectionDetails>
+        <p>
+          El Mapa Sinóptico Solar es un dibujo manual elaborado diariamente por los pronosticadores del SWPC de la NOAA, que resume las principales estructuras y fenómenos observados en el disco solar visible. Es una herramienta de referencia fundamental utilizada en los briefings operacionales de clima espacial.
+        </p>
+        <p>
+          El mapa identifica y etiqueta: regiones activas (con su número NOAA), agujeros coronales (regiones oscuras de campo magnético abierto que emiten viento solar rápido), filamentos y prominencias (estructuras de plasma frío suspendidas en la corona), líneas neutras de polaridad magnética, y plages (regiones cromosféricas brillantes asociadas a campos magnéticos intensos).
+        </p>
+        <p>
+          Los pronosticadores utilizan datos de múltiples fuentes para crear el mapa: imágenes del SDO (AIA/HMI), imágenes H-alpha de la red GONG, magnetogramas, e imágenes coronales de SUVI. La posición de cada estructura se registra en coordenadas heliográficas, permitiendo el seguimiento de la rotación solar día a día.
+        </p>
+        <p>
+          <strong>Fuente:</strong> NOAA/SWPC — <em>Solar Synoptic Map</em>
+        </p>
+      </SectionDetails>
     </div>
   )
 }

@@ -7,6 +7,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
 import { getSolarWindFrames } from '@/lib/swpc-api'
 import { UsageImpacts } from '@/components/ui/UsageImpacts'
+import { SectionDetails } from '@/components/ui/SectionDetails'
 import { Play, Pause, SkipBack, SkipForward, Download, Wind } from 'lucide-react'
 import { useSolarWindSpeed } from '@/components/layout/SpaceWeatherBar'
 
@@ -89,6 +90,22 @@ export function SolarWindClient() {
 
       {/* Usage & Impacts */}
       <UsageImpacts usage={USAGE} impacts={IMPACTS} />
+
+      {/* Detalles */}
+      <SectionDetails>
+        <p>
+          El modelo WSA-ENLIL es un modelo magnetohidrodinámico (MHD) tridimensional de la heliosfera interna que simula la propagación del viento solar desde el Sol hasta más allá de la órbita terrestre (~2 AU). WSA (Wang-Sheeley-Arge) proporciona las condiciones de contorno internas a partir de mapas sinópticos del campo magnético solar, y ENLIL resuelve las ecuaciones MHD para propagar las perturbaciones hacia el exterior.
+        </p>
+        <p>
+          Las animaciones muestran la densidad y velocidad del viento solar en el plano eclíptico (vista desde arriba del polo norte solar). Las espirales de color representan la estructura del viento solar: las regiones rojas/amarillas indican alta densidad (asociadas a CMEs o regiones de interacción), mientras las regiones azules representan viento rápido de baja densidad originado en agujeros coronales.
+        </p>
+        <p>
+          Cuando se detecta una CME en imágenes de coronógrafos, los forecasters del SWPC la incorporan al modelo para predecir su tiempo de tránsito hasta la Tierra (típicamente 1-3 días). El modelo es operacional y se ejecuta en el NCEP de la NOAA, proporcionando pronósticos vitales para la predicción de tormentas geomagnéticas.
+        </p>
+        <p>
+          <strong>Fuente:</strong> NOAA/SWPC — <em>WSA-ENLIL Solar Wind Prediction</em>
+        </p>
+      </SectionDetails>
     </div>
   )
 }

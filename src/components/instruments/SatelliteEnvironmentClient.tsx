@@ -7,6 +7,7 @@
 import { useState } from 'react'
 import { PlotlyChart, PLOTLY_DARK_LAYOUT, PLOTLY_DEFAULT_CONFIG } from '@/components/charts/PlotlyChart'
 import { TimeRangeSelector } from '@/components/ui/TimeRangeSelector'
+import { SectionDetails } from '@/components/ui/SectionDetails'
 import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
 import { getProtonFluxData, getElectronFluxData, getXRayFluxData, timeRangeToParam } from '@/lib/swpc-api'
 import type { TimeRange } from '@/types/swpc'
@@ -308,6 +309,22 @@ export function SatelliteEnvironmentClient() {
           <PlotlyChart data={xrayTraces} layout={xrayLayout} config={STATIC_CONFIG} className="min-h-[320px]" />
         )}
       </ChartCard>
+
+      {/* Detalles */}
+      <SectionDetails>
+        <p>
+          La página de Entorno del Satélite proporciona una vista consolidada de las tres mediciones clave del entorno de partículas y radiación en la órbita geoestacionaria del satélite GOES: flujo de protones, flujo de electrones y flujo de rayos X.
+        </p>
+        <p>
+          El flujo de protones muestra partículas energéticas en cuatro bandas (≥10, ≥50, ≥100, ≥500 MeV) con un umbral de evento de 10 pfu que define el inicio de una tormenta de radiación solar (escala S). El flujo de electrones (≥2 MeV) indica el riesgo de carga electrostática en satélites, con umbral de alerta en 1000 pfu.
+        </p>
+        <p>
+          El flujo de rayos X en las bandas 0.05–0.4 nm y 0.1–0.8 nm permite la clasificación de fulguraciones solares (A, B, C, M, X). Juntos, estos indicadores proporcionan una evaluación integral del entorno de radiación espacial que afecta tanto a los satélites como a las comunicaciones terrestres.
+        </p>
+        <p>
+          <strong>Fuente:</strong> NOAA/SWPC — <em>Satellite Environment Overview</em>
+        </p>
+      </SectionDetails>
     </div>
   )
 }

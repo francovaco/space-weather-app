@@ -7,6 +7,7 @@ import { useState } from 'react'
 import { PlotlyChart, PLOTLY_DARK_LAYOUT, PLOTLY_DEFAULT_CONFIG } from '@/components/charts/PlotlyChart'
 import { TimeRangeSelector } from '@/components/ui/TimeRangeSelector'
 import { UsageImpacts } from '@/components/ui/UsageImpacts'
+import { SectionDetails } from '@/components/ui/SectionDetails'
 import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
 import { getMagnetometerData, timeRangeToParam } from '@/lib/swpc-api'
 import type { TimeRange } from '@/types/swpc'
@@ -218,6 +219,22 @@ export function MagnetometerClient() {
 
       {/* Usage & Impacts */}
       <UsageImpacts usage={USAGE} impacts={IMPACTS} />
+
+      {/* Detalles */}
+      <SectionDetails>
+        <p>
+          El magnetómetro a bordo de GOES mide el campo magnético en la órbita geoestacionaria del satélite en tres componentes vectoriales (Hp, He, Hn). El componente Hp es paralelo al eje de rotación terrestre y apunta hacia el polo norte, He apunta radialmente hacia afuera desde la Tierra (perpendicular a Hp), y Hn completa el sistema ortogonal apuntando hacia el este.
+        </p>
+        <p>
+          Estas mediciones son fundamentales para la detección en tiempo real de tormentas geomagnéticas y compresiones de la magnetopausa. Las variaciones abruptas en la componente Hp indican la llegada de eyecciones de masa coronal (CME) o corrientes de choque del viento solar.
+        </p>
+        <p>
+          Los datos se actualizan cada minuto con resolución temporal de 1 segundo promediada. Las mediciones de campo magnético total (Bt) se calculan como la magnitud del vector resultante de las tres componentes.
+        </p>
+        <p>
+          <strong>Fuente:</strong> NOAA/SWPC — <em>GOES Magnetometer</em>
+        </p>
+      </SectionDetails>
     </div>
   )
 }

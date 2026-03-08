@@ -7,6 +7,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
 import { getDRAPFrames } from '@/lib/swpc-api'
 import { UsageImpacts } from '@/components/ui/UsageImpacts'
+import { SectionDetails } from '@/components/ui/SectionDetails'
 import { Play, Pause, SkipBack, SkipForward, Download } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -82,6 +83,22 @@ export function DRAPClient() {
 
       {/* Usage & Impacts */}
       <UsageImpacts usage={USAGE} impacts={IMPACTS} />
+
+      {/* Detalles */}
+      <SectionDetails>
+        <p>
+          D-RAP (D-Region Absorption Predictions) modela la absorción de ondas de radio de alta frecuencia (HF) causada por la ionización incrementada en la región D de la ionósfera (altitud 60-90 km). Este producto es generado por el SWPC de la NOAA y se actualiza cada minuto.
+        </p>
+        <p>
+          La vista global muestra la Máxima Frecuencia Afectada (HAF) en MHz: frecuencias por debajo de este valor sufren absorción significativa (1 dB o más) para señales HF de paso vertical. Las vistas polares muestran la absorción en decibelios (dB) a 10 MHz, detallando la intensidad de absorción en las regiones de casquete polar.
+        </p>
+        <p>
+          Las principales fuentes de ionización que causan absorción en la región D son las fulguraciones solares de rayos X (que producen Eventos de Apagón de Radio de Onda Corta — SWF) y los eventos de protones solares energéticos (que causan Absorción en el Casquete Polar — PCA). El modelo D-RAP combina mediciones de rayos X del sensor XRS y datos de protones del sensor SEISS de GOES.
+        </p>
+        <p>
+          <strong>Fuente:</strong> NOAA/SWPC — <em>D-Region Absorption Predictions</em>
+        </p>
+      </SectionDetails>
     </div>
   )
 }

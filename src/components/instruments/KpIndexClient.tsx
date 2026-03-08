@@ -6,6 +6,7 @@
 // ============================================================
 import { PlotlyChart, PLOTLY_DARK_LAYOUT, PLOTLY_DEFAULT_CONFIG } from '@/components/charts/PlotlyChart'
 import { UsageImpacts } from '@/components/ui/UsageImpacts'
+import { SectionDetails } from '@/components/ui/SectionDetails'
 import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
 import Link from 'next/link'
 
@@ -251,6 +252,22 @@ export function KpIndexClient() {
 
       {/* Usage & Impacts */}
       <UsageImpacts usage={USAGE} impacts={IMPACTS} />
+
+      {/* Detalles */}
+      <SectionDetails>
+        <p>
+          El índice Kp es una medida global de la actividad geomagnética basada en fluctuaciones del campo magnético observadas por una red de 13 estaciones de observación geomagética distribuidas entre las latitudes 44°N y 60°N. Fue desarrollado por Julius Bartels en 1938 y se reporta en una escala cuasi-logarítmica de 0 a 9.
+        </p>
+        <p>
+          Valores de Kp de 0 a 3 indican condiciones geomagnéticas quietas. Un Kp de 4 se considera inestable, y valores de 5 a 9 indican tormentas geomagnéticas de intensidad creciente, correspondiéndose con las escalas G1 a G5 del SWPC (Kp5=G1 menor, Kp6=G2 moderada, Kp7=G3 fuerte, Kp8=G4 severa, Kp9=G5 extrema).
+        </p>
+        <p>
+          El índice se calcula cada 3 horas (8 valores al día) y el SWPC provee un índice Kp estimado en tiempo real basado en datos de magnetómetros. También se publica el índice ap, que es la equivalencia lineal del Kp y permite promediar para calcular el índice Ap diario.
+        </p>
+        <p>
+          <strong>Fuente:</strong> NOAA/SWPC — <em>Planetary K-Index</em>
+        </p>
+      </SectionDetails>
     </div>
   )
 }

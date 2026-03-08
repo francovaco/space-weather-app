@@ -7,6 +7,7 @@ import { useState } from 'react'
 import { PlotlyChart, PLOTLY_DARK_LAYOUT, PLOTLY_DEFAULT_CONFIG } from '@/components/charts/PlotlyChart'
 import { TimeRangeSelector } from '@/components/ui/TimeRangeSelector'
 import { UsageImpacts } from '@/components/ui/UsageImpacts'
+import { SectionDetails } from '@/components/ui/SectionDetails'
 import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
 import { getProtonFluxData, timeRangeToParam } from '@/lib/swpc-api'
 import type { TimeRange } from '@/types/swpc'
@@ -187,6 +188,22 @@ export function ProtonFluxClient() {
 
       {/* Usage & Impacts */}
       <UsageImpacts usage={USAGE} impacts={IMPACTS} />
+
+      {/* Detalles */}
+      <SectionDetails>
+        <p>
+          El instrumento SEISS de GOES mide el flujo integral de protones energéticos en cuatro bandas de energía: ≥10 MeV, ≥50 MeV, ≥100 MeV y ≥500 MeV. Un evento de protones solares (SPE) se define cuando el flujo integral de protones ≥10 MeV supera las 10 pfu (unidades de flujo de partículas) durante al menos 15 minutos consecutivos.
+        </p>
+        <p>
+          Los eventos de protones solares están asociados a fulguraciones solares intensas y eyecciones de masa coronal (CME). Los protones acelerados en estos eventos pueden viajar a velocidades cercanas a la de la luz y alcanzar la Tierra en menos de una hora.
+        </p>
+        <p>
+          Las tormentas de radiación solar se clasifican de S1 a S5 según la escala NOAA. Un evento S1 (menor) comienza en 10 pfu, mientras que un evento S5 (extremo) supera las 100.000 pfu. Los eventos fuertes pueden causar absorción en casquetes polares (PCA), degradar las comunicaciones HF transpolare y aumentar la dosis de radiación para tripulaciones aéreas en rutas de alta latitud.
+        </p>
+        <p>
+          <strong>Fuente:</strong> NOAA/SWPC — <em>GOES Proton Flux</em>
+        </p>
+      </SectionDetails>
     </div>
   )
 }

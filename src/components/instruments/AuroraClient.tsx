@@ -7,6 +7,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
 import { getAuroraFrames } from '@/lib/swpc-api'
 import { UsageImpacts } from '@/components/ui/UsageImpacts'
+import { SectionDetails } from '@/components/ui/SectionDetails'
 import { Play, Pause, SkipBack, SkipForward, Download } from 'lucide-react'
 
 interface AuroraFrame {
@@ -56,6 +57,22 @@ export function AuroraClient() {
 
       {/* Shared Usage & Impacts */}
       <UsageImpacts usage={USAGE} impacts={IMPACTS} />
+
+      {/* Detalles */}
+      <SectionDetails>
+        <p>
+          El pronóstico de aurora de 30 minutos se genera a partir del modelo OVATION Prime, desarrollado por la NOAA. Este modelo empírico estima la probabilidad de observar aurora visible desde el suelo, basándose en mediciones en tiempo real del viento solar obtenidas por el satélite DSCOVR en el punto de Lagrange L1.
+        </p>
+        <p>
+          Las imágenes muestran la distribución geográfica de la probabilidad de aurora tanto para el hemisferio norte (aurora boreal) como para el hemisferio sur (aurora austral). El óvalo auroral —la zona de máxima probabilidad— se expande hacia latitudes más bajas durante tormentas geomagnéticas intensas.
+        </p>
+        <p>
+          El modelo OVATION utiliza como entrada principal la componente Bz del campo magnético interplanetario (IMF) y la velocidad del viento solar para calcular el acoplamiento magnetosférico. Cuando Bz es negativo (orientación sur), la reconexión magnética en el lado diurno permite mayor entrada de energía, expandiendo e intensificando el óvalo auroral.
+        </p>
+        <p>
+          <strong>Fuente:</strong> NOAA/SWPC — <em>OVATION Aurora Forecast Model</em>
+        </p>
+      </SectionDetails>
     </div>
   )
 }
