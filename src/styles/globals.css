@@ -148,11 +148,7 @@
     @apply mb-2 font-display text-xs uppercase tracking-wider text-accent-cyan;
   }
   .info-block-list {
-    @apply space-y-1 text-xs text-text-secondary;
-  }
-  .info-block-list li::before {
-    content: '› ';
-    @apply text-text-muted;
+    @apply space-y-1 text-xs text-text-secondary list-none;
   }
 }
 
@@ -167,6 +163,32 @@
   .plotly-dark .js-plotly-plot .plotly .bg {
     fill: transparent !important;
   }
+}
+
+/* Plotly modebar — horizontal bar pinned at top of chart */
+.plotly-dark .modebar-container {
+  position: absolute !important;
+  top: 2px !important;
+  right: 2px !important;
+  left: auto !important;
+  z-index: 10 !important;
+}
+.plotly-dark .modebar-container .modebar {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  background: rgba(6,10,18,0.75) !important;
+  border-radius: 4px !important;
+  padding: 2px 4px !important;
+}
+.plotly-dark .modebar-container .modebar-group {
+  display: inline-flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+}
+.plotly-dark .modebar-container .modebar-btn {
+  display: inline-block !important;
 }
 
 /* ============================================================

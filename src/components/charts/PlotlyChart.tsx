@@ -21,7 +21,7 @@ export const PLOTLY_DARK_LAYOUT: Partial<Plotly.Layout> = {
   plot_bgcolor: 'rgba(11,18,32,0.9)',
   font: {
     family: 'JetBrains Mono, Space Mono, monospace',
-    size: 10,
+    size: 12,
     color: '#94a3b8',
   },
   xaxis: {
@@ -29,28 +29,28 @@ export const PLOTLY_DARK_LAYOUT: Partial<Plotly.Layout> = {
     linecolor: '#1e2d42',
     tickcolor: '#1e2d42',
     zerolinecolor: '#1e2d42',
-    tickfont: { size: 9, color: '#64748b' },
+    tickfont: { size: 11, color: '#64748b' },
   },
   yaxis: {
     gridcolor: 'rgba(30,45,66,0.8)',
     linecolor: '#1e2d42',
     tickcolor: '#1e2d42',
     zerolinecolor: 'rgba(30,45,66,0.5)',
-    tickfont: { size: 9, color: '#64748b' },
+    tickfont: { size: 11, color: '#64748b' },
     exponentformat: 'e',
   },
   legend: {
     bgcolor: 'rgba(6,10,18,0.8)',
     bordercolor: '#1e2d42',
     borderwidth: 1,
-    font: { size: 9, color: '#94a3b8' },
+    font: { size: 11, color: '#94a3b8' },
   },
   margin: { l: 60, r: 20, t: 30, b: 50 },
   hovermode: 'x unified',
   hoverlabel: {
     bgcolor: 'rgba(6,10,18,0.95)',
     bordercolor: '#1e2d42',
-    font: { size: 10, color: '#e2e8f0', family: 'JetBrains Mono, monospace' },
+    font: { size: 11, color: '#e2e8f0', family: 'JetBrains Mono, monospace' },
   },
 }
 
@@ -59,6 +59,7 @@ export const PLOTLY_DEFAULT_CONFIG: Partial<Plotly.Config> = {
   modeBarButtonsToRemove: [
     'select2d', 'lasso2d', 'toggleSpikelines',
     'hoverClosestCartesian', 'hoverCompareCartesian',
+    'toImage',
   ],
   displaylogo: false,
   responsive: true,
@@ -86,7 +87,25 @@ export function PlotlyChart({ data, layout, config, className, style }: PlotlyCh
         yaxis: { ...PLOTLY_DARK_LAYOUT.yaxis, ...layout?.yaxis },
       }
 
-      const mergedConfig = { ...PLOTLY_DEFAULT_CONFIG, ...config }
+      // Custom silent download button replacing built-in toImage
+      const downloadBtn: Plotly.ModeBarButton = {
+        name: 'downloadImage',
+        title: 'Descargar imagen',
+        icon: Plotly.Icons['camera'],
+        click: async (gd: HTMLElement) => {
+          const url = await Plotly.toImage(gd, { format: 'png', width: 1920, height: 720 })
+          const a = document.createElement('a')
+          a.href = url
+          a.download = 'chart.png'
+          a.click()
+        },
+      }
+
+      const baseConfig = { ...PLOTLY_DEFAULT_CONFIG, ...config }
+      const mergedConfig: Partial<Plotly.Config> = {
+        ...baseConfig,
+        modeBarButtonsToAdd: [downloadBtn, ...(baseConfig.modeBarButtonsToAdd ?? [])],
+      }
 
       await Plotly.react(containerRef.current!, data, mergedLayout, mergedConfig)
     }

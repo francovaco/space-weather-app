@@ -11,7 +11,7 @@ import {
   Sun, Wind, Eye, Globe, ChevronDown, ChevronRight,
   Gauge, Layers, SunDim,
 } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 
 interface NavItem {
   label: string
@@ -144,6 +144,31 @@ function NavItemComponent({ item, pathname, collapsed, expanded, onToggle, depth
   const isActive = item.href ? pathname === item.href : false
   const isExpanded = expanded.includes(item.label)
   const hasChildren = !!item.children?.length
+  const [popoverOpen, setPopoverOpen] = useState(false)
+  const popoverRef = useRef<HTMLDivElement>(null)
+  const btnRef = useRef<HTMLButtonElement>(null)
+  const [popoverPos, setPopoverPos] = useState({ top: 0, left: 0 })
+
+  // Close popover on outside click
+  useEffect(() => {
+    if (!popoverOpen) return
+    function handleClick(e: MouseEvent) {
+      if (popoverRef.current && !popoverRef.current.contains(e.target as Node) &&
+          btnRef.current && !btnRef.current.contains(e.target as Node)) {
+        setPopoverOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [popoverOpen])
+
+  const handlePopoverToggle = () => {
+    if (!popoverOpen && btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect()
+      setPopoverPos({ top: rect.top, left: rect.right + 4 })
+    }
+    setPopoverOpen(v => !v)
+  }
 
   const baseClass = cn(
     'flex items-center gap-2 rounded px-2 py-1.5 text-xs transition-colors w-full',
@@ -155,18 +180,60 @@ function NavItemComponent({ item, pathname, collapsed, expanded, onToggle, depth
   )
 
   if (hasChildren) {
+    // Collapsed: show popover on click (fixed position to escape overflow)
+    if (collapsed) {
+      return (
+        <li>
+          <button
+            ref={btnRef}
+            className={baseClass}
+            onClick={handlePopoverToggle}
+            title={item.label}
+          >
+            <span className="shrink-0">{item.icon}</span>
+          </button>
+          {popoverOpen && (
+            <div
+              ref={popoverRef}
+              className="fixed z-[200] min-w-48 rounded-md border border-border bg-background-secondary py-1 shadow-xl"
+              style={{ top: popoverPos.top, left: popoverPos.left }}
+            >
+              <p className="px-3 py-1.5 text-2xs font-bold uppercase tracking-wider text-text-muted">
+                {item.label}
+              </p>
+              {item.children!.map((child) => {
+                const childActive = child.href ? pathname === child.href : false
+                return (
+                  <Link
+                    key={child.label}
+                    href={child.href!}
+                    onClick={() => setPopoverOpen(false)}
+                    className={cn(
+                      'flex items-center gap-2 px-3 py-1.5 text-xs transition-colors',
+                      'hover:bg-border/60 hover:text-text-primary',
+                      childActive ? 'bg-primary/10 text-primary' : 'text-text-secondary'
+                    )}
+                  >
+                    <span className="shrink-0">{child.icon}</span>
+                    <span>{child.label}</span>
+                  </Link>
+                )
+              })}
+            </div>
+          )}
+        </li>
+      )
+    }
+
+    // Expanded sidebar: normal accordion
     return (
       <li>
         <button className={baseClass} onClick={() => onToggle(item.label)}>
           <span className="shrink-0">{item.icon}</span>
-          {!collapsed && (
-            <>
-              <span className="flex-1 text-left">{item.label}</span>
-              {isExpanded ? <ChevronDown size={11} /> : <ChevronRight size={11} />}
-            </>
-          )}
+          <span className="flex-1 text-left">{item.label}</span>
+          {isExpanded ? <ChevronDown size={11} /> : <ChevronRight size={11} />}
         </button>
-        {!collapsed && isExpanded && (
+        {isExpanded && (
           <ul className="mt-0.5 space-y-0.5">
             {item.children!.map((child) => (
               <NavItemComponent
@@ -187,7 +254,7 @@ function NavItemComponent({ item, pathname, collapsed, expanded, onToggle, depth
 
   return (
     <li>
-      <Link href={item.href!} className={baseClass}>
+      <Link href={item.href!} className={baseClass} title={collapsed ? item.label : undefined}>
         <span className="shrink-0">{item.icon}</span>
         {!collapsed && (
           <>
