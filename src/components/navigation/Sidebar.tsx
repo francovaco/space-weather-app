@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils'
 import {
   Satellite, BookOpen, Activity, Image, Zap, Radio,
   Sun, Wind, Eye, Globe, ChevronDown, ChevronRight,
-  Gauge, Layers, SunDim,
+  Gauge, Layers, SunDim, BarChart3,
 } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 
@@ -54,6 +54,11 @@ const NAV_ITEMS: NavItem[] = [
       { label: 'Coronógrafo', href: '/instruments/coronagraph', icon: <Eye size={13} /> },
       { label: 'Entorno Satélite', href: '/instruments/satellite-environment', icon: <Layers size={13} /> },
     ],
+  },
+  {
+    label: 'Índice Kp',
+    href: '/instruments/kp-index',
+    icon: <BarChart3 size={15} />,
   },
   {
     label: 'Pronóstico de Aurora',

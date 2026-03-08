@@ -63,6 +63,7 @@ export const PLOTLY_DEFAULT_CONFIG: Partial<Plotly.Config> = {
   ],
   displaylogo: false,
   responsive: true,
+  locale: 'es',
 }
 
 export function PlotlyChart({ data, layout, config, className, style }: PlotlyChartProps) {
@@ -76,6 +77,49 @@ export function PlotlyChart({ data, layout, config, className, style }: PlotlyCh
     ;(async () => {
       const Plotly = await import('plotly.js-dist-min')
       if (cancelled) return
+
+      // Register Spanish locale for modebar tooltips
+      Plotly.register({
+        moduleType: 'locale',
+        name: 'es',
+        dictionary: {
+          'Zoom In': 'Acercar',
+          'Zoom Out': 'Alejar',
+          'Reset axes': 'Restablecer ejes',
+          'Toggle Spike Lines': 'Alternar líneas guía',
+          'Show closest data on hover': 'Mostrar dato más cercano',
+          'Compare data on hover': 'Comparar datos',
+          'Pan': 'Desplazar',
+          'Zoom': 'Zoom',
+          'Box Select': 'Selección rectangular',
+          'Lasso Select': 'Selección lazo',
+          'Orbital rotation': 'Rotación orbital',
+          'Turntable rotation': 'Rotación de plato',
+          'Reset camera to default': 'Restablecer cámara',
+          'Reset camera to last save': 'Restablecer cámara al último guardado',
+          'Autoscale': 'Autoescalar',
+          'Reset': 'Restablecer',
+          'Download plot as a png': 'Descargar gráfico como PNG',
+          'Download plot': 'Descargar gráfico',
+          'Edit in Chart Studio': 'Editar en Chart Studio',
+          'Produced with Plotly.js': 'Creado con Plotly.js',
+          'Click to enter Colorscale title': 'Clic para ingresar título de escala de color',
+          'Click to enter Plot title': 'Clic para ingresar título del gráfico',
+          'Click to enter X axis title': 'Clic para ingresar título del eje X',
+          'Click to enter Y axis title': 'Clic para ingresar título del eje Y',
+          'new text': 'nuevo texto',
+          'Trace': 'Traza',
+          'trace': 'traza',
+        },
+        format: {
+          days: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
+          shortDays: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'],
+          months: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
+          shortMonths: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+          date: '%d/%m/%Y',
+        },
+      } as never)
+
       plotRef.current = Plotly
       readyRef.current = true
       // Trigger initial render
@@ -102,6 +146,17 @@ export function PlotlyChart({ data, layout, config, className, style }: PlotlyCh
     const mergedConfig = buildConfig(Plotly, config)
     Plotly.react(containerRef.current, data, mergedLayout, mergedConfig)
   }, [data, layout, config])
+
+  // Prevent page scroll when scrolling over chart (for scroll-zoom)
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const handler = (e: WheelEvent) => {
+      if (el.querySelector('.plotly')) e.preventDefault()
+    }
+    el.addEventListener('wheel', handler, { passive: false })
+    return () => el.removeEventListener('wheel', handler)
+  }, [])
 
   return (
     <div
