@@ -5,9 +5,10 @@
 // Mirrors SWPC NOAA scales: R (Radio), S (Solar), G (Geomagnetic)
 // ============================================================
 import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
-import { ChevronDown, ChevronUp } from 'lucide-react'
+import { ChevronDown, ChevronUp, ExternalLink } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { create } from 'zustand'
+import Link from 'next/link'
 
 // ── Shared open/close state ──
 const useConditionsStore = create<{ open: boolean; toggle: () => void }>((set) => ({
@@ -176,6 +177,14 @@ export function SpaceWeatherBar() {
           />
         ))}
       </div>
+      <div className="mt-2 flex justify-end">
+        <Link
+          href="/noaa-scales"
+          className="inline-flex items-center gap-1 text-2xs text-accent-cyan hover:underline"
+        >
+          Explicación de Escalas NOAA <ExternalLink size={10} />
+        </Link>
+      </div>
     </div>
   )
 }
@@ -216,58 +225,76 @@ function ScaleCard({
   const c = scaleColor(level)
   const desc = SCALE_DESCRIPTIONS[type][level] ?? ''
 
+  const days = [day1, day2, day3]
+
   return (
     <div className="rounded-md border border-border bg-background-card p-3">
+      {/* Header */}
       <div className="flex items-center justify-between mb-2">
-        <span className="section-label">{TYPE_LABELS[type]}</span>
+        <span className="section-label">{TYPE_LABELS[type]} ({type})</span>
         <span className={cn('rounded px-1.5 py-0.5 text-2xs font-bold', c.bg, c.text)}>
           {level === '0' ? 'Normal' : `${type}${level}`}
         </span>
       </div>
 
-      <p className="text-2xs text-text-secondary mb-2">{desc}</p>
+      <p className="text-2xs text-text-secondary mb-3">{desc}</p>
 
-      {/* Forecast row */}
-      <div className="flex items-center gap-2 mt-1">
-        <span className="text-2xs text-text-dim">Pronóstico:</span>
-        <ForecastDay label="Hoy" data={day1?.[type]} type={type} />
-        <ForecastDay label={day2?.DateStamp?.slice(5) ?? '—'} data={day2?.[type]} type={type} />
-        <ForecastDay label={day3?.DateStamp?.slice(5) ?? '—'} data={day3?.[type]} type={type} />
+      {/* Forecast table */}
+      <div className="border-t border-border/50 pt-2">
+        <span className="text-2xs font-semibold text-text-muted uppercase tracking-wider">Pronóstico</span>
+        <div className="mt-1.5 grid grid-cols-3 gap-2">
+          {days.map((day, i) => {
+            const dateLabel = day?.DateStamp
+              ? fmtDate(day.DateStamp)
+              : '—'
+            return (
+              <div key={i} className="flex flex-col gap-1 rounded bg-background-secondary/50 px-2 py-1.5">
+                <span className="text-2xs font-semibold text-text-muted text-center">
+                  {i === 0 ? 'Hoy' : dateLabel}
+                </span>
+                {type === 'R' && (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <span className="text-2xs text-text-dim">R1-R2</span>
+                      <span className="text-2xs font-bold text-text-secondary">{day?.R.MinorProb ?? '—'}%</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-2xs text-text-dim">R3-R5</span>
+                      <span className="text-2xs font-bold text-text-secondary">{day?.R.MajorProb ?? '—'}%</span>
+                    </div>
+                  </>
+                )}
+                {type === 'S' && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-2xs text-text-dim">S1+</span>
+                    <span className="text-2xs font-bold text-text-secondary">{day?.S.Prob ?? '—'}%</span>
+                  </div>
+                )}
+                {type === 'G' && (() => {
+                  const gl = day?.[type].Scale ?? '0'
+                  const gc = scaleColor(gl)
+                  return (
+                    <div className="flex items-center justify-center">
+                      <span className={cn('rounded px-2 py-0.5 text-2xs font-bold', gc.bg, gc.text)}>
+                        {gl === '0' ? 'Ninguno' : `G${gl}`}
+                      </span>
+                    </div>
+                  )
+                })()}
+              </div>
+            )
+          })}
+        </div>
       </div>
-
-      {/* Probabilities for R and S */}
-      {type === 'R' && day1?.R.MinorProb && (
-        <div className="mt-1.5 flex gap-3 text-2xs text-text-dim">
-          <span>Prob. menor: {day1.R.MinorProb}%</span>
-          <span>Prob. mayor: {day1.R.MajorProb}%</span>
-        </div>
-      )}
-      {type === 'S' && day1?.S.Prob && (
-        <div className="mt-1.5 text-2xs text-text-dim">
-          Prob. tormenta: {day1.S.Prob}%
-        </div>
-      )}
     </div>
   )
 }
 
-function ForecastDay({
-  label,
-  data,
-  type,
-}: {
-  label: string
-  data?: ScaleEntry
-  type: string
-}) {
-  const level = data?.Scale ?? '0'
-  const c = scaleColor(level)
-  return (
-    <div className="flex items-center gap-1">
-      <span className="text-2xs text-text-dim">{label}</span>
-      <span className={cn('inline-block h-2 w-2 rounded-full', level === '0' ? 'bg-accent-green/60' : c.bg.replace('/20', ''))}
-        title={`${type}${level}`}
-      />
-    </div>
-  )
+function fmtDate(dateStamp: string) {
+  const MONTHS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
+  const parts = dateStamp.split('-')
+  if (parts.length < 3) return dateStamp
+  const m = parseInt(parts[1], 10) - 1
+  const d = parts[2]
+  return `${d} ${MONTHS[m] ?? parts[1]}`
 }
