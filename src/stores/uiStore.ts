@@ -67,10 +67,14 @@ export const useUIStore = create<UIStore>()(
 
 /** True once Zustand has rehydrated from localStorage */
 export function useUIHydrated() {
-  const [hydrated, setHydrated] = useState(useUIStore.persist.hasHydrated())
+  const [hydrated, setHydrated] = useState(false)
   useEffect(() => {
-    if (hydrated) return
-    return useUIStore.persist.onFinishHydration(() => setHydrated(true))
-  }, [hydrated])
+    // persist middleware may not exist during SSR/SSG
+    if (useUIStore.persist?.hasHydrated?.()) {
+      setHydrated(true)
+      return
+    }
+    return useUIStore.persist?.onFinishHydration?.(() => setHydrated(true))
+  }, [])
   return hydrated
 }
