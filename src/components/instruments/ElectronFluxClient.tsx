@@ -83,13 +83,14 @@ export function ElectronFluxClient() {
   const thresholdAnnotation: Partial<Plotly.Annotations> = {
     xref: 'paper',
     yref: 'y',
-    x: 1,
-    y: ALERT_THRESHOLD,
-    text: 'Umbral SWPC Alert (1000)',
+    x: 0,
+    y: 3,
+    text: 'Umbral de alerta SWPC (1000 pfu)',
     showarrow: false,
-    font: { size: 9, color: '#f59e0b' },
-    xanchor: 'right',
-    yshift: -10,
+    font: { size: 11, color: '#f59e0b' },
+    xanchor: 'left',
+    yanchor: 'bottom',
+    yshift: 2,
   }
 
   const layout: Partial<Plotly.Layout> = {

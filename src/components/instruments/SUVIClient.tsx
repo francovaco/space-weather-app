@@ -116,29 +116,74 @@ export function SUVIClient() {
 
 function SuviPlayer({ frames }: { frames: SuviFrame[] }) {
   const [idx, setIdx] = useState(0)
-  const [playing, setPlaying] = useState(true)
+  const [playing, setPlaying] = useState(false)
+  const [loaded, setLoaded] = useState(false)
+  const [loadProgress, setLoadProgress] = useState(0)
+  const [activeFrames, setActiveFrames] = useState<SuviFrame[]>([])
   const FPS_STEPS = [1, 2, 3, 4, 5, 8, 10, 15, 20]
   const [fpsIdx, setFpsIdx] = useState(3) // default 4 fps
   const speedMs = Math.round(1000 / FPS_STEPS[fpsIdx])
   const imgRef = useRef<HTMLImageElement>(null)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  const total = frames.length
-  const current = frames[Math.min(idx, total - 1)]
+  const total = activeFrames.length
+  const current = activeFrames[Math.min(idx, Math.max(0, total - 1))]
 
-  // Reset index when frames change (new wavelength)
+  // Reset when frames change (new wavelength)
   useEffect(() => {
     setIdx(0)
+    setPlaying(false)
+    setLoaded(false)
+    setLoadProgress(0)
+    setActiveFrames([])
   }, [frames])
 
-  // Preload frames ahead
+  // Preload frames in batches, filter failures, then auto-play
   useEffect(() => {
-    for (let i = 0; i < Math.min(6, total); i++) {
-      const ahead = (idx + i) % total
-      const img = new Image()
-      img.src = frames[ahead].url
+    let cancelled = false
+    const BATCH = 8
+    const ok: (SuviFrame | null)[] = new Array(frames.length).fill(null)
+    let doneCount = 0
+
+    async function preloadAll() {
+      for (let i = 0; i < frames.length; i += BATCH) {
+        if (cancelled) return
+        const batch = frames.slice(i, i + BATCH)
+        await Promise.all(
+          batch.map((f, bi) => new Promise<void>((resolve) => {
+            const img = new Image()
+            img.onload = () => {
+              ok[i + bi] = f
+              doneCount++
+              if (!cancelled) setLoadProgress(Math.round((doneCount / frames.length) * 100))
+              resolve()
+            }
+            img.onerror = () => {
+              doneCount++
+              if (!cancelled) setLoadProgress(Math.round((doneCount / frames.length) * 100))
+              resolve()
+            }
+            img.src = f.url
+          }))
+        )
+      }
+
+      if (!cancelled) {
+        const valid = ok.filter((f): f is SuviFrame => f !== null)
+        if (valid.length > 0) {
+          setActiveFrames(valid)
+          setLoaded(true)
+          setPlaying(true)
+        } else {
+          setActiveFrames(frames)
+          setLoaded(true)
+        }
+      }
     }
-  }, [idx, frames, total])
+
+    preloadAll()
+    return () => { cancelled = true }
+  }, [frames])
 
   // Play/pause loop
   useEffect(() => {
@@ -166,6 +211,24 @@ function SuviPlayer({ frames }: { frames: SuviFrame[] }) {
 
   return (
     <div className="flex flex-col gap-3">
+      {/* Loading progress */}
+      {!loaded && (
+        <div className="flex flex-col items-center justify-center py-16 gap-3">
+          <div className="flex items-center gap-2 text-xs text-text-muted">
+            <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-accent-cyan border-t-transparent" />
+            Precargando imágenes… {loadProgress}%
+          </div>
+          <div className="h-1 w-48 overflow-hidden rounded-full bg-border">
+            <div
+              className="h-full bg-accent-cyan transition-all duration-200"
+              style={{ width: `${loadProgress}%` }}
+            />
+          </div>
+        </div>
+      )}
+
+      {loaded && current && (
+        <>
       {/* Image */}
       <div className="relative mx-auto bg-black" style={{ maxWidth: 600 }}>
         <img
@@ -228,6 +291,8 @@ function SuviPlayer({ frames }: { frames: SuviFrame[] }) {
           {idx + 1}/{total}
         </span>
       </div>
+      </>
+      )}
     </div>
   )
 }
