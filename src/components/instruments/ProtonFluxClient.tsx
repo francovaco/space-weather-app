@@ -77,6 +77,7 @@ export function ProtonFluxClient() {
 
   const layout: Partial<Plotly.Layout> = {
     ...PLOTLY_DARK_LAYOUT,
+    uirevision: range,
     title: {
       text: 'GOES Flujo Integral de Protones',
       font: { size: 14, color: '#e2e8f0', family: 'JetBrains Mono, monospace' },

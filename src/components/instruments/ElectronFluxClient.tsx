@@ -94,6 +94,7 @@ export function ElectronFluxClient() {
 
   const layout: Partial<Plotly.Layout> = {
     ...PLOTLY_DARK_LAYOUT,
+    uirevision: range,
     title: {
       text: 'GOES-19 Flujo Integral de Electrones',
       font: { size: 14, color: '#e2e8f0', family: 'JetBrains Mono, monospace' },

@@ -68,56 +68,39 @@ export const PLOTLY_DEFAULT_CONFIG: Partial<Plotly.Config> = {
 export function PlotlyChart({ data, layout, config, className, style }: PlotlyChartProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const plotRef = useRef<typeof import('plotly.js-dist-min') | null>(null)
+  const readyRef = useRef(false)
 
+  // One-time Plotly import
   useEffect(() => {
     let cancelled = false
-
-    async function initPlot() {
-      if (!containerRef.current) return
-
-      // Lazy import to avoid SSR bundle issues
+    ;(async () => {
       const Plotly = await import('plotly.js-dist-min')
       if (cancelled) return
       plotRef.current = Plotly
-
-      const mergedLayout: Partial<Plotly.Layout> = {
-        ...PLOTLY_DARK_LAYOUT,
-        ...layout,
-        xaxis: { ...PLOTLY_DARK_LAYOUT.xaxis, ...layout?.xaxis },
-        yaxis: { ...PLOTLY_DARK_LAYOUT.yaxis, ...layout?.yaxis },
+      readyRef.current = true
+      // Trigger initial render
+      if (containerRef.current) {
+        const mergedLayout = buildLayout(layout)
+        const mergedConfig = buildConfig(Plotly, config)
+        await Plotly.react(containerRef.current, data, mergedLayout, mergedConfig)
       }
-
-      // Custom silent download button replacing built-in toImage
-      const downloadBtn: Plotly.ModeBarButton = {
-        name: 'downloadImage',
-        title: 'Descargar imagen',
-        icon: Plotly.Icons['camera'],
-        click: async (gd: HTMLElement) => {
-          const url = await Plotly.toImage(gd, { format: 'png', width: 1920, height: 720 })
-          const a = document.createElement('a')
-          a.href = url
-          a.download = 'chart.png'
-          a.click()
-        },
-      }
-
-      const baseConfig = { ...PLOTLY_DEFAULT_CONFIG, ...config }
-      const mergedConfig: Partial<Plotly.Config> = {
-        ...baseConfig,
-        modeBarButtonsToAdd: [downloadBtn, ...(baseConfig.modeBarButtonsToAdd ?? [])],
-      }
-
-      await Plotly.react(containerRef.current!, data, mergedLayout, mergedConfig)
-    }
-
-    initPlot()
-
+    })()
     return () => {
       cancelled = true
       if (containerRef.current && plotRef.current) {
         plotRef.current.purge(containerRef.current)
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Update plot when data/layout/config change (without purge)
+  useEffect(() => {
+    if (!readyRef.current || !plotRef.current || !containerRef.current) return
+    const Plotly = plotRef.current
+    const mergedLayout = buildLayout(layout)
+    const mergedConfig = buildConfig(Plotly, config)
+    Plotly.react(containerRef.current, data, mergedLayout, mergedConfig)
   }, [data, layout, config])
 
   return (
@@ -127,4 +110,36 @@ export function PlotlyChart({ data, layout, config, className, style }: PlotlyCh
       style={style}
     />
   )
+}
+
+function buildLayout(layout?: Partial<Plotly.Layout>): Partial<Plotly.Layout> {
+  return {
+    ...PLOTLY_DARK_LAYOUT,
+    ...layout,
+    xaxis: { ...PLOTLY_DARK_LAYOUT.xaxis, ...layout?.xaxis },
+    yaxis: { ...PLOTLY_DARK_LAYOUT.yaxis, ...layout?.yaxis },
+  }
+}
+
+function buildConfig(
+  Plotly: typeof import('plotly.js-dist-min'),
+  config?: Partial<Plotly.Config>,
+): Partial<Plotly.Config> {
+  const downloadBtn: Plotly.ModeBarButton = {
+    name: 'downloadImage',
+    title: 'Descargar imagen',
+    icon: Plotly.Icons['camera'],
+    click: async (gd: HTMLElement) => {
+      const url = await Plotly.toImage(gd, { format: 'png', width: 1920, height: 720 })
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'chart.png'
+      a.click()
+    },
+  }
+  const baseConfig = { ...PLOTLY_DEFAULT_CONFIG, ...config }
+  return {
+    ...baseConfig,
+    modeBarButtonsToAdd: [downloadBtn, ...(baseConfig.modeBarButtonsToAdd ?? [])],
+  }
 }
