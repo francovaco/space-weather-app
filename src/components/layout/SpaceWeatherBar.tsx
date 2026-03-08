@@ -95,16 +95,40 @@ export function useNoaaScales() {
   })
 }
 
+// ── Solar Wind Speed ──
+
+interface SolarWindSpeed {
+  WindSpeed: string
+  TimeStamp: string
+}
+
+function fetchWindSpeed(): Promise<SolarWindSpeed> {
+  return fetch('/api/swpc/solar-wind-speed').then((r) => {
+    if (!r.ok) throw new Error('fetch failed')
+    return r.json()
+  })
+}
+
+export function useSolarWindSpeed() {
+  return useAutoRefresh<SolarWindSpeed>({
+    queryKey: ['solar-wind-speed'],
+    fetcher: fetchWindSpeed,
+    intervalMs: REFRESH_INTERVALS.ONE_MIN,
+  })
+}
+
 // ── Pills for the TopBar ──
 
 export function SpaceWeatherPills() {
   const { data } = useNoaaScales()
+  const { data: wind } = useSolarWindSpeed()
   const { open, toggle } = useConditionsStore()
 
   const current = data?.['0']
   const rLevel = current?.R.Scale ?? '0'
   const sLevel = current?.S.Scale ?? '0'
   const gLevel = current?.G.Scale ?? '0'
+  const windSpeed = wind?.WindSpeed
 
   return (
     <button
@@ -116,6 +140,8 @@ export function SpaceWeatherPills() {
       <ScalePill type="R" level={rLevel} />
       <ScalePill type="S" level={sLevel} />
       <ScalePill type="G" level={gLevel} />
+      <span className="h-4 w-px bg-border" />
+      <WindSpeedPill speed={windSpeed} />
       {open
         ? <ChevronUp size={11} className="text-text-muted ml-0.5" />
         : <ChevronDown size={11} className="text-text-muted ml-0.5" />}
@@ -160,6 +186,15 @@ function ScalePill({ type, level }: { type: string; level: string | null }) {
   return (
     <span className={cn('inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-2xs font-bold', c.bg, c.text)}>
       {type}{n}
+    </span>
+  )
+}
+
+function WindSpeedPill({ speed }: { speed?: string }) {
+  return (
+    <span className="inline-flex items-center gap-1 rounded bg-accent-cyan/15 px-1.5 py-0.5 text-2xs font-bold text-accent-cyan">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2"/><path d="M9.6 4.6A2 2 0 1 1 11 8H2"/><path d="M12.6 19.4A2 2 0 1 0 14 16H2"/></svg>
+      {speed ? `${speed} km/s` : '— km/s'}
     </span>
   )
 }

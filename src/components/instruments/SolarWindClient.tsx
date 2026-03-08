@@ -7,7 +7,8 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
 import { getSolarWindFrames } from '@/lib/swpc-api'
 import { UsageImpacts } from '@/components/ui/UsageImpacts'
-import { Play, Pause, SkipBack, SkipForward, Download } from 'lucide-react'
+import { Play, Pause, SkipBack, SkipForward, Download, Wind } from 'lucide-react'
+import { useSolarWindSpeed } from '@/components/layout/SpaceWeatherBar'
 
 interface EnlilFrame {
   url: string
@@ -41,17 +42,29 @@ export function SolarWindClient() {
     fetcher: () => getSolarWindFrames() as Promise<EnlilFrame[]>,
     intervalMs: REFRESH_INTERVALS.ONE_MIN,
   })
+  const { data: wind } = useSolarWindSpeed()
 
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div>
-        <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">
-          Predicción de Viento Solar WSA-ENLIL
-        </h1>
-        <p className="mt-1 text-xs text-text-muted">
-          Modelo de propagación del viento solar · Predicción de llegada de CMEs · Actualización cada 1 min
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">
+            Predicción de Viento Solar WSA-ENLIL
+          </h1>
+          <p className="mt-1 text-xs text-text-muted">
+            Modelo de propagación del viento solar · Predicción de llegada de CMEs · Actualización cada 1 min
+          </p>
+        </div>
+        <div className="flex items-center gap-2 rounded-md border border-border bg-background-card px-3 py-2 shrink-0">
+          <Wind size={14} className="text-accent-cyan" />
+          <div className="flex flex-col items-end">
+            <span className="section-label text-text-muted">Velocidad Actual</span>
+            <span className="font-display text-lg font-bold tabular-nums text-accent-cyan">
+              {wind?.WindSpeed ? `${wind.WindSpeed} km/s` : '— km/s'}
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* Animation player */}
