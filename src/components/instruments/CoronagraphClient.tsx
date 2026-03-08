@@ -10,7 +10,7 @@ import { UsageImpacts } from '@/components/ui/UsageImpacts'
 import { cn } from '@/lib/utils'
 import type { CoronagraphSource } from '@/types/swpc'
 import { CORONAGRAPH_SOURCES } from '@/types/swpc'
-import { Play, Pause, SkipBack, SkipForward, RefreshCw } from 'lucide-react'
+import { Play, Pause, SkipBack, SkipForward, RefreshCw, Download } from 'lucide-react'
 
 interface CoronaFrame {
   url: string
@@ -285,6 +285,23 @@ function CoronagraphPlayer({ frames }: { frames: CoronaFrame[] }) {
         <span className="ml-auto data-value text-text-muted">
           {idx + 1}/{total}
         </span>
+
+        <div className="h-4 w-px bg-border" />
+
+        {/* Download current frame */}
+        <button
+          className="ctrl-btn"
+          onClick={() => {
+            const a = document.createElement('a')
+            a.href = current.url
+            a.download = current.url.split('/').pop() || 'frame.jpg'
+            a.target = '_blank'
+            a.click()
+          }}
+          title="Descargar imagen actual"
+        >
+          <Download size={13} />
+        </button>
       </div>
       </>
       )}

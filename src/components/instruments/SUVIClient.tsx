@@ -8,7 +8,7 @@ import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
 import { getSuviFrames } from '@/lib/swpc-api'
 import { UsageImpacts } from '@/components/ui/UsageImpacts'
 import { cn } from '@/lib/utils'
-import { Play, Pause, SkipBack, SkipForward } from 'lucide-react'
+import { Play, Pause, SkipBack, SkipForward, Download } from 'lucide-react'
 
 interface SuviFrame {
   url: string
@@ -290,6 +290,23 @@ function SuviPlayer({ frames }: { frames: SuviFrame[] }) {
         <span className="ml-auto data-value text-text-muted">
           {idx + 1}/{total}
         </span>
+
+        <div className="h-4 w-px bg-border" />
+
+        {/* Download current frame */}
+        <button
+          className="ctrl-btn"
+          onClick={() => {
+            const a = document.createElement('a')
+            a.href = current.url
+            a.download = current.url.split('/').pop() || 'frame.jpg'
+            a.target = '_blank'
+            a.click()
+          }}
+          title="Descargar imagen actual"
+        >
+          <Download size={13} />
+        </button>
       </div>
       </>
       )}
