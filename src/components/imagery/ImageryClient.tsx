@@ -80,7 +80,7 @@ const CHANNELS: Channel[] = [
       aplicaciones:['Nubes y frentes sinópticos','Humo y aerosoles','Hielo marino y nieve','Ciclones tropicales','Florescencia de algas'],
       escala:[{label:'Nubes altas frías',color:'#ffffff'},{label:'Nubes medias',color:'#c8d0e0'},{label:'Océano claro',color:'#3a6ea8'},{label:'Vegetación',color:'#3a7a3a'},{label:'Suelo/desierto',color:'#c8a040'},{label:'Noche (IR)',color:'#1a2a4a'}] }},
 
-  { id:'AirMass', nombre:'Air Mass RGB', nombreCorto:'Air Mass',
+  { id:'AirMass', nombre:'Air Mass RGB', nombreCorto:'Air Mass RGB',
     tipo:'rgb', color:'#a78bfa', descripcion:'Masas de aire · Tropopausa dinámica · Jet stream',
     docUrl:'https://www.star.nesdis.noaa.gov/GOES/documents/QuickGuide_GOESR_AirMassRGB_final.pdf',
     ref:{ frecuencia:'Cada 10 min · Sector SSA',
@@ -89,7 +89,7 @@ const CHANNELS: Channel[] = [
       aplicaciones:['Masas de aire polar vs tropical','Tropopausa dinámica','Vorticidad potencial','Jet stream sobre los Andes','Ciclogénesis explosiva'],
       escala:[{label:'Aire polar estratosférico',color:'#ff4444'},{label:'Aire polar troposférico',color:'#aa44aa'},{label:'Aire tropical húmedo',color:'#44aa44'},{label:'Nubes convectivas profundas',color:'#222244'},{label:'Cielo seco en altura',color:'#ff8844'}] }},
 
-  { id:'DayNightCloudMicroCombo', nombre:'Día/Noche Micro Combo', nombreCorto:'Día/Noche',
+  { id:'DayNightCloudMicroCombo', nombre:'Día/Noche Micro Combo RGB', nombreCorto:'Día/Noche Micro Combo RGB',
     tipo:'rgb', color:'#6366f1', descripcion:'Microfísica diurna · Niebla nocturna',
     docUrl:'https://www.star.nesdis.noaa.gov/GOES/documents/ABIQuickGuide_DayNightCloudMicroCombo.pdf',
     ref:{ frecuencia:'Cada 10 min · Sector SSA',
@@ -98,7 +98,7 @@ const CHANNELS: Channel[] = [
       aplicaciones:['Niebla y nubes bajas nocturnas','Fase de partículas (gotitas vs hielo)','Niebla costera Pacífico/Atlántico','Potencial de precipitación','Inversiones térmicas en valles'],
       escala:[{label:'Agua líquida (día)',color:'#aa44ff'},{label:'Hielo (día)',color:'#ffffff'},{label:'Niebla/nubes bajas (noche)',color:'#ffaa00'},{label:'Cielo claro noche',color:'#2244aa'}] }},
 
-  { id:'Dust', nombre:'Polvo RGB', nombreCorto:'Polvo',
+  { id:'Dust', nombre:'Polvo RGB', nombreCorto:'Polvo RGB',
     tipo:'rgb', color:'#d97706', descripcion:'Polvo patagónico · Tolvaneras · Aerosoles gruesos',
     docUrl:'https://www.star.nesdis.noaa.gov/GOES/documents/QuickGuide_Dust_RGB.pdf',
     ref:{ frecuencia:'Cada 10 min · Sector SSA',
@@ -107,7 +107,7 @@ const CHANNELS: Channel[] = [
       aplicaciones:['Polvo patagónico (viento zonda)','Tolvaneras en zonas áridas','Polvo del Atacama','Transporte de aerosoles sobre el océano','Calidad del aire'],
       escala:[{label:'Polvo denso',color:'#ff88aa'},{label:'Polvo moderado',color:'#ffaacc'},{label:'Sin polvo',color:'#224422'},{label:'Nubes de hielo altas',color:'#ff2222'},{label:'Nubes de agua',color:'#ffffff'}] }},
 
-  { id:'FireTemperature', nombre:'Temperatura de Incendios', nombreCorto:'Incendios',
+  { id:'FireTemperature', nombre:'Temperatura de Incendios RGB', nombreCorto:'Temperatura de Incendios RGB',
     tipo:'rgb', color:'#ef4444', descripcion:'Temperatura y extensión de incendios activos',
     docUrl:'https://www.star.nesdis.noaa.gov/GOES/documents/QuickGuide_Fire_Temperature_RGB.pdf',
     ref:{ frecuencia:'Cada 10 min · Sector SSA',
@@ -116,7 +116,7 @@ const CHANNELS: Channel[] = [
       aplicaciones:['Incendios forestales y de pastizales','Volcanes activos andinos','Quemas agrícolas en la pampa','Temperatura del frente de fuego'],
       escala:[{label:'Fuego >600°C (saturado)',color:'#ffffff'},{label:'Fuego caliente',color:'#ffff00'},{label:'Fuego moderado',color:'#ff4400'},{label:'Humo denso',color:'#884422'},{label:'Sin actividad ígnea',color:'#224422'}] }},
 
-  { id:'Sandwich', nombre:'Sandwich RGB', nombreCorto:'Sandwich',
+  { id:'Sandwich', nombre:'Sandwich RGB', nombreCorto:'Sandwich RGB',
     tipo:'rgb', color:'#f97316', descripcion:'Bandas 3 + 13 · Textura visible + temperatura IR',
     docUrl:'https://www.star.nesdis.noaa.gov/GOES/documents/SandwichProduct.pdf',
     ref:{ frecuencia:'Cada 10 min · Sector SSA',
@@ -125,7 +125,7 @@ const CHANNELS: Channel[] = [
       aplicaciones:['Tormentas convectivas con detalle','Temperatura de cima con textura','Nubes bajas y niebla','Ciclones tropicales'],
       escala:[{label:'Nubes muy frías (<-60°C)',color:'#ff2222'},{label:'Nubes frías',color:'#ffaa00'},{label:'Nubes templadas',color:'#44cc44'},{label:'Nubes cálidas bajas',color:'#2244ff'}] }},
 
-  { id:'EXTENT3', nombre:'GLM Densidad de Rayos', nombreCorto:'GLM Rayos',
+  { id:'EXTENT3', nombre:'GLM Densidad de Destellos', nombreCorto:'GLM Densidad de Destellos',
     tipo:'rgb', color:'#facc15', descripcion:'Destellos GLM + GeoColor · Tormentas eléctricas',
     docUrl:'https://www.star.nesdis.noaa.gov/GOES/documents/GLM_Quick_Guides_May_2019.pdf',
     ref:{ frecuencia:'Cada 10 min · Sector SSA',
@@ -135,7 +135,7 @@ const CHANNELS: Channel[] = [
       escala:[{label:'Alta densidad de rayos',color:'#ff0000'},{label:'Media densidad',color:'#ffaa00'},{label:'Baja densidad',color:'#ffff00'},{label:'Fondo GeoColor',color:'#3a6ea8'}] }},
 
   // ─── Bands 01–16 ───────────────────────────────────────────
-  { id:'01', nombre:'Banda 1 — Azul Visible', nombreCorto:'B01 Azul', longitud:'0.47 µm',
+  { id:'01', nombre:'1 - Visible: azul', nombreCorto:'1 - Visible: azul', longitud:'0.47 µm',
     tipo:'visible', color:'#60a5fa', descripcion:'Aerosoles · Calidad del aire · 1 km',
     docUrl:'https://cimss.ssec.wisc.edu/goes/OCLOFactSheetPDFs/ABIQuickGuide_Band01.pdf',
     ref:{ resolucion:'1 km', notaDiurna:'Solo disponible de día',
@@ -143,7 +143,7 @@ const CHANNELS: Channel[] = [
       aplicaciones:['Profundidad óptica de aerosoles (AOD)','Humo de incendios','Calidad del aire en ciudades','Nubes de polvo fino'],
       escala:[{label:'Alta reflectancia',color:'#ffffff'},{label:'Moderada',color:'#888888'},{label:'Baja (océano)',color:'#111144'}] }},
 
-  { id:'02', nombre:'Banda 2 — Rojo Visible', nombreCorto:'B02 Rojo', longitud:'0.64 µm',
+  { id:'02', nombre:'2 - Visible: rojo', nombreCorto:'2 - Visible: rojo', longitud:'0.64 µm',
     tipo:'visible', color:'#f87171', descripcion:'Máxima resolución 0.5 km · Canal principal',
     docUrl:'https://cimss.ssec.wisc.edu/goes/OCLOFactSheetPDFs/ABIQuickGuide_Band02.pdf',
     ref:{ resolucion:'0.5 km — única banda a 500 m del ABI', notaDiurna:'Solo disponible de día',
@@ -151,7 +151,7 @@ const CHANNELS: Channel[] = [
       aplicaciones:['Imágenes de alta resolución','Morfología de tormentas','Nieve superficial en los Andes','Monitoreo costero'],
       escala:[{label:'Muy brillante (nubes/nieve)',color:'#ffffff'},{label:'Brillante',color:'#cccccc'},{label:'Moderado (tierra)',color:'#888888'},{label:'Oscuro (océano)',color:'#111111'}] }},
 
-  { id:'03', nombre:'Banda 3 — Vegetación', nombreCorto:'B03 Veggie', longitud:'0.86 µm',
+  { id:'03', nombre:'3 - IR Cercano: Veggie', nombreCorto:'3 - IR Cercano: Veggie', longitud:'0.86 µm',
     tipo:'near-ir', color:'#4ade80', descripcion:'Vegetación · Cicatrices · 1 km',
     docUrl:'https://cimss.ssec.wisc.edu/goes/OCLOFactSheetPDFs/ABIQuickGuide_Band03.pdf',
     ref:{ resolucion:'1 km', notaDiurna:'Solo disponible de día',
@@ -159,7 +159,7 @@ const CHANNELS: Channel[] = [
       aplicaciones:['NDVI y monitoreo de vegetación','Cicatrices de incendios forestales','Masas de agua','Componente de GeoColor sintético'],
       escala:[{label:'Vegetación densa',color:'#00cc00'},{label:'Vegetación escasa',color:'#668866'},{label:'Nubes',color:'#ffffff'},{label:'Agua',color:'#000033'},{label:'Cicatriz incendio',color:'#111111'}] }},
 
-  { id:'04', nombre:'Banda 4 — Cirros', nombreCorto:'B04 Cirros', longitud:'1.37 µm',
+  { id:'04', nombre:'4 - IR Cercano: cirros', nombreCorto:'4 - IR Cercano: cirros', longitud:'1.37 µm',
     tipo:'near-ir', color:'#a5f3fc', descripcion:'Cirros delgados exclusivamente · 2 km',
     docUrl:'https://cimss.ssec.wisc.edu/goes/OCLOFactSheetPDFs/ABIQuickGuide_Band04.pdf',
     ref:{ resolucion:'2 km', notaDiurna:'Solo disponible de día',
@@ -167,7 +167,7 @@ const CHANNELS: Channel[] = [
       aplicaciones:['Cirros delgados en alta troposfera','Extensión de yunques de cumulonimbus','Nieve en alta montaña andina'],
       escala:[{label:'Cirros densos',color:'#ffffff'},{label:'Cirros delgados',color:'#888888'},{label:'Todo lo demás (negro)',color:'#000000'}] }},
 
-  { id:'05', nombre:'Banda 5 — Nieve / Hielo', nombreCorto:'B05 Nieve', longitud:'1.60 µm',
+  { id:'05', nombre:'5 - IR Cercano: nieve/hielo', nombreCorto:'5 - IR Cercano: nieve/hielo', longitud:'1.60 µm',
     tipo:'near-ir', color:'#e0f2fe', descripcion:'Nieve/hielo vs nubes de agua · 1 km',
     docUrl:'https://cimss.ssec.wisc.edu/goes/OCLOFactSheetPDFs/ABIQuickGuide_Band05.pdf',
     ref:{ resolucion:'1 km', notaDiurna:'Solo disponible de día',
@@ -175,7 +175,7 @@ const CHANNELS: Channel[] = [
       aplicaciones:['Cobertura nival en los Andes y Patagonia','Discriminar granizo en tormentas','Glaciares patagónicos','Fase de partículas en nubes'],
       escala:[{label:'Nubes de agua (brillante)',color:'#ffffff'},{label:'Nubes mixtas',color:'#aaaaaa'},{label:'Nieve/hielo (oscuro)',color:'#222266'},{label:'Glaciares',color:'#000044'}] }},
 
-  { id:'06', nombre:'Banda 6 — Partículas en Nubes', nombreCorto:'B06 Part.', longitud:'2.24 µm',
+  { id:'06', nombre:'6 - IR Cercano: partículas de nube', nombreCorto:'6 - IR Cercano: partículas de nube', longitud:'2.24 µm',
     tipo:'near-ir', color:'#bfdbfe', descripcion:'Radio efectivo de partículas · Precipitación · 2 km',
     docUrl:'https://cimss.ssec.wisc.edu/goes/OCLOFactSheetPDFs/ABIQuickGuide_Band06.pdf',
     ref:{ resolucion:'2 km', notaDiurna:'Solo disponible de día',
@@ -183,7 +183,7 @@ const CHANNELS: Channel[] = [
       aplicaciones:['Potencial de precipitación','Tamaño de gotitas en niebla marina','Identificación de nubes con granizo','Propiedades microfísicas para modelos'],
       escala:[{label:'Partículas pequeñas',color:'#ffffff'},{label:'Partículas medianas',color:'#888888'},{label:'Partículas grandes',color:'#111111'},{label:'Hielo/nieve',color:'#000044'}] }},
 
-  { id:'07', nombre:'Banda 7 — Ventana Onda Corta', nombreCorto:'B07 OC', longitud:'3.90 µm',
+  { id:'07', nombre:'7 - IR: onda corta', nombreCorto:'7 - IR: onda corta', longitud:'3.90 µm',
     tipo:'ir', color:'#fb923c', descripcion:'Incendios · Niebla nocturna · Día y noche · 2 km',
     docUrl:'https://cimss.ssec.wisc.edu/goes/OCLOFactSheetPDFs/ABIQuickGuide_Band07.pdf',
     ref:{ resolucion:'2 km',
@@ -191,7 +191,7 @@ const CHANNELS: Channel[] = [
       aplicaciones:['Fuego activo día y noche','Niebla y nubes bajas nocturnas (B07-B13)','Temperatura de superficies cálidas','Volcanes andinos activos'],
       escala:[{label:'Fuego activo (saturado)',color:'#ffffff'},{label:'Muy cálido',color:'#ff2200'},{label:'Templado',color:'#ffff00'},{label:'Frío (nubes altas)',color:'#0044ff'}] }},
 
-  { id:'08', nombre:'Banda 8 — Vapor de Agua Alto', nombreCorto:'B08 VA Alto', longitud:'6.19 µm',
+  { id:'08', nombre:'8 - IR: vapor de agua superior', nombreCorto:'8 - IR: vapor de agua superior', longitud:'6.19 µm',
     tipo:'ir', color:'#818cf8', descripcion:'Humedad troposfera alta · 300–600 hPa · 2 km',
     docUrl:'https://cimss.ssec.wisc.edu/goes/OCLOFactSheetPDFs/ABIQuickGuide_Band08.pdf',
     ref:{ resolucion:'2 km',
@@ -199,7 +199,7 @@ const CHANNELS: Channel[] = [
       aplicaciones:['Jet stream sobre Sudamérica','Vorticidad potencial 500/300 hPa','Ondas de Rossby','Frentes en altura'],
       escala:[{label:'Muy húmedo',color:'#ffffff'},{label:'Húmedo',color:'#8888cc'},{label:'Normal',color:'#444488'},{label:'Seco',color:'#aa4400'},{label:'Muy seco',color:'#220000'}] }},
 
-  { id:'09', nombre:'Banda 9 — Vapor de Agua Medio', nombreCorto:'B09 VA Med', longitud:'6.93 µm',
+  { id:'09', nombre:'9 - IR: vapor de agua medio', nombreCorto:'9 - IR: vapor de agua medio', longitud:'6.93 µm',
     tipo:'ir', color:'#a78bfa', descripcion:'Humedad troposfera media · ~500 hPa · 2 km',
     docUrl:'https://cimss.ssec.wisc.edu/goes/OCLOFactSheetPDFs/ABIQuickGuide_Band09.pdf',
     ref:{ resolucion:'2 km',
@@ -207,7 +207,7 @@ const CHANNELS: Channel[] = [
       aplicaciones:['Frentes fríos sobre la pampa','Corrientes de bajo nivel (SALLJ)','Predicción de convección en Argentina'],
       escala:[{label:'Muy húmedo',color:'#ffffff'},{label:'Normal',color:'#444488'},{label:'Seco',color:'#884400'}] }},
 
-  { id:'10', nombre:'Banda 10 — Vapor de Agua Bajo', nombreCorto:'B10 VA Bajo', longitud:'7.34 µm',
+  { id:'10', nombre:'10 - IR: vapor de agua inferior', nombreCorto:'10 - IR: vapor de agua inferior', longitud:'7.34 µm',
     tipo:'ir', color:'#c4b5fd', descripcion:'Humedad troposfera baja · Capa límite · 2 km',
     docUrl:'https://cimss.ssec.wisc.edu/goes/OCLOFactSheetPDFs/ABIQuickGuide_Band10.pdf',
     ref:{ resolucion:'2 km',
@@ -215,7 +215,7 @@ const CHANNELS: Channel[] = [
       aplicaciones:['Capa límite sobre pampas','Low-level jet de Sudamérica (SALLJ)','Entrada de viento húmedo del Atlántico'],
       escala:[{label:'Húmedo/frío',color:'#ffffff'},{label:'Normal',color:'#6688aa'},{label:'Seco/cálido',color:'#884400'}] }},
 
-  { id:'11', nombre:'Banda 11 — Fase de Cima de Nubes', nombreCorto:'B11 Fase', longitud:'8.44 µm',
+  { id:'11', nombre:'11 - IR: fase de cima de nube', nombreCorto:'11 - IR: fase de cima de nube', longitud:'8.44 µm',
     tipo:'ir', color:'#67e8f9', descripcion:'Hielo vs agua líquida · Banda de ozono · 2 km',
     docUrl:'https://cimss.ssec.wisc.edu/goes/OCLOFactSheetPDFs/ABIQuickGuide_Band11.pdf',
     ref:{ resolucion:'2 km',
@@ -223,7 +223,7 @@ const CHANNELS: Channel[] = [
       aplicaciones:['Fase de partículas en cimas de nubes','Complemento del Dust RGB','Diferenciación de tipos de nubes altas'],
       escala:[{label:'Nubes de hielo',color:'#ccffff'},{label:'Nubes de agua',color:'#aaccff'},{label:'Superficie',color:'#884400'}] }},
 
-  { id:'12', nombre:'Banda 12 — Ozono', nombreCorto:'B12 Ozono', longitud:'9.61 µm',
+  { id:'12', nombre:'12 - IR: ozono', nombreCorto:'12 - IR: ozono', longitud:'9.61 µm',
     tipo:'ir', color:'#86efac', descripcion:'Ozono · Tropopausa dinámica · 2 km',
     docUrl:'https://cimss.ssec.wisc.edu/goes/OCLOFactSheetPDFs/ABIQuickGuide_Band12.pdf',
     ref:{ resolucion:'2 km',
@@ -231,7 +231,7 @@ const CHANNELS: Channel[] = [
       aplicaciones:['Intrusiones estratosféricas','Tropopausa dinámica sobre los Andes','Turbulencia en altura (CAT)','Componente del AirMass RGB'],
       escala:[{label:'Ozono alto/frío',color:'#ffffff'},{label:'Normal',color:'#88aa88'},{label:'Ozono bajo/cálido',color:'#ff8800'}] }},
 
-  { id:'13', nombre:'Banda 13 — IR Limpia Onda Larga', nombreCorto:'B13 IR Limpia', longitud:'10.35 µm',
+  { id:'13', nombre:'13 - IR: onda larga limpia', nombreCorto:'13 - IR: onda larga limpia', longitud:'10.35 µm',
     tipo:'ir', color:'#fcd34d', descripcion:'Canal IR principal · Temperatura de cima · 2 km',
     docUrl:'https://cimss.ssec.wisc.edu/goes/OCLOFactSheetPDFs/ABIQuickGuide_Band13.pdf',
     ref:{ resolucion:'2 km',
@@ -240,7 +240,7 @@ const CHANNELS: Channel[] = [
       aplicaciones:['Temperatura de cima estándar','Seguimiento de ciclones y tormentas','Estimación de lluvia (Hydroestimator)','TSM en zonas claras','Base del Sandwich RGB'],
       escala:[{label:'<-60°C tormentas profundas',color:'#aa00ff'},{label:'-60 a -40°C',color:'#ff0000'},{label:'-40 a -20°C',color:'#ffaa00'},{label:'-20 a 0°C',color:'#ffff00'},{label:'0 a +20°C',color:'#cccccc'},{label:'>+20°C superficie',color:'#884400'}] }},
 
-  { id:'14', nombre:'Banda 14 — Ventana IR Onda Larga', nombreCorto:'B14 IR Ventana', longitud:'11.19 µm',
+  { id:'14', nombre:'14 - IR: onda larga', nombreCorto:'14 - IR: onda larga', longitud:'11.19 µm',
     tipo:'ir', color:'#fbbf24', descripcion:'TSM · Vientos derivados · Corriente de Malvinas · 2 km',
     docUrl:'https://cimss.ssec.wisc.edu/goes/OCLOFactSheetPDFs/ABIQuickGuide_Band14.pdf',
     ref:{ resolucion:'2 km',
@@ -248,7 +248,7 @@ const CHANNELS: Channel[] = [
       aplicaciones:['TSM en el Atlántico Sur','Corriente de Malvinas','Vientos derivados DMW-IR','Temperatura de isla de calor urbana'],
       escala:[{label:'Nubes frías',color:'#8888ff'},{label:'Nubes templadas',color:'#44cc44'},{label:'Superficie cálida',color:'#ff8800'}] }},
 
-  { id:'15', nombre:'Banda 15 — Ventana OL Sucia', nombreCorto:'B15 IR Sucia', longitud:'12.30 µm',
+  { id:'15', nombre:'15 - IR: onda larga sucia', nombreCorto:'15 - IR: onda larga sucia', longitud:'12.30 µm',
     tipo:'ir', color:'#f97316', descripcion:'Split window · Polvo mineral · TSM corregida · 2 km',
     docUrl:'https://cimss.ssec.wisc.edu/goes/OCLOFactSheetPDFs/ABIQuickGuide_Band15.pdf',
     ref:{ resolucion:'2 km',
@@ -256,7 +256,7 @@ const CHANNELS: Channel[] = [
       aplicaciones:['Detección de polvo (split window B15-B13)','TSM mejorada','Niebla densa','Ceniza volcánica','Componente del Dust RGB'],
       escala:[{label:'Nubes frías',color:'#ffffff'},{label:'Polvo mineral',color:'#ff88aa'},{label:'Superficie',color:'#884400'}] }},
 
-  { id:'16', nombre:'Banda 16 — CO₂ IR Onda Larga', nombreCorto:'B16 CO₂', longitud:'13.30 µm',
+  { id:'16', nombre:'16 - IR: CO₂ onda larga', nombreCorto:'16 - IR: CO₂ onda larga', longitud:'13.30 µm',
     tipo:'ir', color:'#ef4444', descripcion:'Altura de cima de nubes · CO₂ troposférico · 2 km',
     docUrl:'https://cimss.ssec.wisc.edu/goes/OCLOFactSheetPDFs/ABIQuickGuide_Band16.pdf',
     ref:{ resolucion:'2 km',
@@ -275,14 +275,14 @@ const TIPO_STYLE:  Record<BandType,string>  = {
 const FRAME_COUNTS = [12,24,36,48,60,72,84,96,120,150,180,240]
 
 // ── GOES-R ABI Projection (PUG-L2-Vol5 §4.2.8.2) ─────────────
-// Projects geodetic lat/lon → SSA sector pixel coordinates
-// GOES-19 at 75.2°W, SSA sector scan-angle bounds calibrated empirically
+// GOES-19 at 75.2°W · SSA sector (Southern South America)
+// Scan-angle bounds derived from sector definition metadata
 const GR = {
   Re: 6378.137, Rp: 6356.7523, H: 42164.16,
   lam0: -75.2 * Math.PI / 180,
-  // SSA sector scan-angle bounds (radians)
-  X_MIN: -0.0751, X_MAX: 0.0977,
-  Y_MIN: -0.1589, Y_MAX: -0.0552,
+  // SSA scan-angle bounds (radians) — calibrated to 3600×2160 image
+  X_MIN: -0.101523, X_MAX:  0.066818,
+  Y_MIN: -0.157217, Y_MAX: -0.055493,
   W: 3600, HT: 2160,
 }
 
@@ -295,71 +295,104 @@ function goesProject(latDeg: number, lonDeg: number): [number,number] | null {
   const Sx = H - r_c * Math.cos(phi_c) * Math.cos(lam - lam0)
   const Sy = -r_c * Math.cos(phi_c) * Math.sin(lam - lam0)
   const Sz = r_c * Math.sin(phi_c)
-  if (H*(H-Sx) < Sy**2 + (Re/Rp)**2 * Sz**2) return null // behind Earth
+  if (H*(H-Sx) < Sy**2 + (Re/Rp)**2 * Sz**2) return null
   const x = Math.asin(-Sy / Math.sqrt(Sx**2 + Sy**2 + Sz**2))
   const y = Math.atan(Sz / Sx)
   if (x < X_MIN || x > X_MAX || y < Y_MIN || y > Y_MAX) return null
   return [(x-X_MIN)/(X_MAX-X_MIN)*W, (Y_MAX-y)/(Y_MAX-Y_MIN)*HT]
 }
 
+interface GridLine { d: string; label: string }
+
 function buildGridPaths() {
   type Seg = [number,number][]
   const flush = (cur: Seg, out: Seg[]) => { if(cur.length>1) out.push([...cur]); cur.length=0 }
-  const toD = (seg: Seg) => seg.map((p,i)=>`${i?'L':'M'}${p[0].toFixed(0)},${p[1].toFixed(0)}`).join('')
+  const toD   = (seg: Seg) => seg.map((p,i)=>`${i?'L':'M'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join('')
 
-  const latLines: {d:string; label:string; lx:number; ly:number}[] = []
-  const lonLines: {d:string; label:string; lx:number; ly:number}[] = []
+  const latLines: GridLine[] = []
+  const lonLines: GridLine[] = []
 
-  // Latitude parallels every 10°
-  for(let lat=10; lat>=-60; lat-=10) {
+  // Latitude parallels 10°N … 60°S every 10°
+  for (let lat = 10; lat >= -60; lat -= 10) {
     const segs: Seg[] = []; const cur: Seg = []
-    for(let lon=-105; lon<=-20; lon+=0.25) {
-      const p=goesProject(lat,lon); p ? cur.push(p) : flush(cur,segs)
+    for (let lon = -115; lon <= -10; lon += 0.2) {
+      const p = goesProject(lat, lon); p ? cur.push(p) : flush(cur, segs)
     }
-    flush(cur,segs)
+    flush(cur, segs)
     segs.forEach(seg => {
-      const mid = seg[Math.floor(seg.length/2)]
-      latLines.push({ d:toD(seg), label:`${lat}°`, lx:mid[0], ly:mid[1] })
+      // Pin label to left edge: use the leftmost point of this segment
+      const leftmost = seg.reduce((a,b) => a[0]<b[0] ? a : b)
+      latLines.push({ d: toD(seg), label: `${lat}°` })
+      // attach label coords via dataset trick — embed in path comment
+      latLines[latLines.length-1] = { d: toD(seg), label: `${lat}°`, lx: leftmost[0], ly: leftmost[1] } as GridLine & {lx:number;ly:number}
     })
   }
 
-  // Longitude meridians every 10°
-  for(let lon=-100; lon<=-30; lon+=10) {
+  // Longitude meridians 100°W … 30°W every 10°
+  for (let lon = -100; lon <= -30; lon += 10) {
     const segs: Seg[] = []; const cur: Seg = []
-    for(let lat=15; lat>=-65; lat-=0.25) {
-      const p=goesProject(lat,lon); p ? cur.push(p) : flush(cur,segs)
+    for (let lat = 15; lat >= -65; lat -= 0.2) {
+      const p = goesProject(lat, lon); p ? cur.push(p) : flush(cur, segs)
     }
-    flush(cur,segs)
+    flush(cur, segs)
     segs.forEach(seg => {
-      const mid = seg[Math.floor(seg.length/2)]
-      lonLines.push({ d:toD(seg), label:`${Math.abs(lon)}°O`, lx:mid[0], ly:mid[1] })
+      // Pin label to top edge: use the topmost point (smallest y)
+      const topmost = seg.reduce((a,b) => a[1]<b[1] ? a : b)
+      lonLines.push({ d: toD(seg), label: `${Math.abs(lon)}°O`, lx: topmost[0], ly: topmost[1] } as GridLine & {lx:number;ly:number})
     })
   }
 
   return { latLines, lonLines }
 }
 
+type GridLineExt = GridLine & { lx: number; ly: number }
+
 function GeoGrid() {
   const { latLines, lonLines } = useMemo(buildGridPaths, [])
+  // One label per unique lat/lon value, deduplicated
+  const shownLat = new Set<string>()
+  const shownLon = new Set<string>()
+
+  const STROKE_W = 3
+  const FONT     = 44
+  const OUTLINE  = 10
+
   return (
     <svg className="pointer-events-none absolute inset-0 h-full w-full"
-         viewBox={`0 0 ${GR.W} ${GR.HT}`} preserveAspectRatio="xMidYMid meet">
-      <g stroke="rgba(255,255,255,0.55)" strokeWidth="1.5" fill="none" strokeDasharray="8,6">
-        {latLines.map(l=><path key={l.d.slice(0,20)} d={l.d}/>)}
-        {lonLines.map(l=><path key={l.d.slice(0,20)} d={l.d}/>)}
+         viewBox={`0 0 ${GR.W} ${GR.HT}`} preserveAspectRatio="none">
+      {/* Dashed yellow grid lines */}
+      <g stroke="rgba(255,210,0,0.75)" strokeWidth={STROKE_W} fill="none" strokeDasharray="18,12">
+        {latLines.map((l,i)=><path key={`ll${i}`} d={l.d}/>)}
+        {lonLines.map((l,i)=><path key={`lo${i}`} d={l.d}/>)}
       </g>
-      {/* Latitude labels on left edge */}
-      {latLines.map(l=>(
-        <text key={`tl${l.label}`} x={l.lx+6} y={l.ly-4}
-          fill="rgba(255,255,255,0.85)" fontSize="28" fontFamily="monospace"
-          textAnchor="start">{l.label}</text>
-      ))}
-      {/* Longitude labels on top edge */}
-      {lonLines.map(l=>(
-        <text key={`tlo${l.label}`} x={l.lx} y={l.ly+32}
-          fill="rgba(255,255,255,0.85)" fontSize="28" fontFamily="monospace"
-          textAnchor="middle">{l.label}</text>
-      ))}
+      {/* Latitude labels — left edge, one per degree */}
+      {(latLines as GridLineExt[]).map((l,i)=>{
+        if (shownLat.has(l.label)) return null
+        shownLat.add(l.label)
+        return (
+          <text key={`tl${i}`}
+            x={Math.max(l.lx, 12)} y={l.ly - 8}
+            fill="rgba(255,210,0,1)" fontSize={FONT} fontFamily="monospace" fontWeight="bold"
+            textAnchor="start"
+            style={{paintOrder:'stroke' as never, stroke:'rgba(0,0,0,0.85)', strokeWidth:OUTLINE}}>
+            {l.label}
+          </text>
+        )
+      })}
+      {/* Longitude labels — top edge, one per degree */}
+      {(lonLines as GridLineExt[]).map((l,i)=>{
+        if (shownLon.has(l.label)) return null
+        shownLon.add(l.label)
+        return (
+          <text key={`tlo${i}`}
+            x={l.lx} y={Math.max(l.ly + FONT, FONT + 8)}
+            fill="rgba(255,210,0,1)" fontSize={FONT} fontFamily="monospace" fontWeight="bold"
+            textAnchor="middle"
+            style={{paintOrder:'stroke' as never, stroke:'rgba(0,0,0,0.85)', strokeWidth:OUTLINE}}>
+            {l.label}
+          </text>
+        )
+      })}
     </svg>
   )
 }
@@ -451,35 +484,38 @@ function AnimationView({ channel, onBack }:{ channel:Channel; onBack:()=>void })
   const [loadedSet,setLoadedSet]   = useState<Set<number>>(new Set())
   const [apiErr,setApiErr]         = useState<string|null>(null)
   const [fetching,setFetching]     = useState(false)
-  const rockDir = useRef<1|-1>(1)
-  const ticker  = useRef<ReturnType<typeof setInterval>|null>(null)
-  const total   = frames.length
+  const rockDir  = useRef<1|-1>(1)
+  const ticker   = useRef<ReturnType<typeof setInterval>|null>(null)
+  // loadKey invalidates markLoaded callbacks from previous loads
+  const loadKey  = useRef(0)
+  const total    = frames.length
 
   // ── Fetch real filenames from CDN directory listing ──────────
   const loadFrames = useCallback(async () => {
+    const myKey = ++loadKey.current  // this load's generation
     setFetching(true)
     setApiErr(null)
+    setFrames([])
     setLoadedSet(new Set())
     setPlaying(false)
     setIdx(0)
     try {
-      const res = await fetch(`/api/goes/imagery-list?band=${channel.id}&count=${frameCount}`)
+      const res  = await fetch(`/api/goes/imagery-list?band=${channel.id}&count=${frameCount}`)
       const data = await res.json()
+      if (myKey !== loadKey.current) return  // stale — another load started
       if (!res.ok || !data.frames?.length) {
         setApiErr(data.error ?? `Sin imágenes (HTTP ${res.status})`)
-        setFrames([])
       } else {
         setFrames(data.frames.map((fn: string) => filenameToFrame(fn, channel.id)))
       }
     } catch (e) {
+      if (myKey !== loadKey.current) return
       setApiErr(String(e))
-      setFrames([])
     } finally {
-      setFetching(false)
+      if (myKey === loadKey.current) setFetching(false)
     }
   }, [channel.id, frameCount])
 
-  // Load on mount and when channel/count changes
   useEffect(() => { loadFrames() }, [loadFrames])
 
   // Auto-refresh every 10 min
@@ -488,10 +524,10 @@ function AnimationView({ channel, onBack }:{ channel:Channel; onBack:()=>void })
     return () => clearInterval(id)
   }, [loadFrames])
 
-  // Auto-play once first frame loads
+  // Auto-play only when ALL frames have finished loading (or erroring)
   useEffect(() => {
-    if (loadedSet.size >= 1 && !playing && frames.length > 0) setPlaying(true)
-  }, [loadedSet.size]) // eslint-disable-line react-hooks/exhaustive-deps
+    if (total > 0 && loadedSet.size >= total && !playing) setPlaying(true)
+  }, [loadedSet.size, total]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Playback ticker
   useEffect(() => {
@@ -509,14 +545,17 @@ function AnimationView({ channel, onBack }:{ channel:Channel; onBack:()=>void })
     return () => { if (ticker.current) clearInterval(ticker.current) }
   }, [playing, speedMs, playMode, total])
 
-  const markLoaded = useCallback((i: number) => {
+  const markLoaded = useCallback((i: number, key: number) => {
+    if (key !== loadKey.current) return  // discard stale callbacks
     setLoadedSet(prev => { const s = new Set(prev); s.add(i); return s })
   }, [])
 
-  const frame    = frames[idx]
-  const fps      = Math.round(1000 / speedMs)
-  const loadPct  = total > 0 ? Math.round((loadedSet.size / total) * 100) : 0
-  const isGlm    = channel.id === 'EXTENT3'
+  const frame   = frames[idx]
+  const fps     = Math.round(1000 / speedMs)
+  const loadPct = total > 0 ? Math.round((loadedSet.size / total) * 100) : 0
+  const allLoaded = total > 0 && loadedSet.size >= total
+  const isGlm   = channel.id === 'EXTENT3'
+  const curKey  = loadKey.current
 
   return (
     <div className="space-y-4 pb-8">
@@ -524,24 +563,17 @@ function AnimationView({ channel, onBack }:{ channel:Channel; onBack:()=>void })
       <div className="flex items-center gap-3">
         <button onClick={onBack} className="ctrl-btn"><ChevronLeft size={16}/></button>
         <div className="flex-1 min-w-0">
-          <h1 className="font-display text-lg font-bold uppercase tracking-widest truncate"
-              style={{color:channel.color}}>{channel.nombre}</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="font-display text-lg font-bold uppercase tracking-widest truncate"
+                style={{color:channel.color}}>{channel.nombre}</h1>
+            <button onClick={()=>setShowInfo(v=>!v)}
+              className={cn('ctrl-btn shrink-0',showInfo&&'active')} title="Información del canal">
+              <Info size={13}/>
+            </button>
+          </div>
           <p className="text-xs text-text-muted">
             GOES-19 · SSA{channel.longitud?` · ${channel.longitud}`:''} · {channel.descripcion}
           </p>
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <select value={frameCount} onChange={e=>setFrameCount(Number(e.target.value))}
-            className="rounded border border-border bg-background-secondary px-2 py-1 text-xs text-text-secondary">
-            {FRAME_COUNTS.map(n=><option key={n} value={n}>{n} imágenes</option>)}
-          </select>
-          <button onClick={loadFrames} className={cn('ctrl-btn',fetching&&'opacity-50')}
-            disabled={fetching} title="Actualizar">
-            <RefreshCw size={13} className={fetching?'animate-spin':''}/>
-          </button>
-          <button onClick={()=>setShowInfo(v=>!v)} className={cn('ctrl-btn',showInfo&&'active')}>
-            <Info size={13}/>
-          </button>
         </div>
       </div>
 
@@ -580,8 +612,8 @@ function AnimationView({ channel, onBack }:{ channel:Channel; onBack:()=>void })
             {/* Preload all frames hidden */}
             <div className="hidden">
               {frames.map((f,i)=>(
-                <img key={f.proxied} src={f.proxied} alt=""
-                  onLoad={()=>markLoaded(i)} onError={()=>markLoaded(i)}/>
+                <img key={`${curKey}-${f.proxied}`} src={f.proxied} alt=""
+                  onLoad={()=>markLoaded(i, curKey)} onError={()=>markLoaded(i, curKey)}/>
               ))}
             </div>
 
@@ -594,13 +626,18 @@ function AnimationView({ channel, onBack }:{ channel:Channel; onBack:()=>void })
                   <RefreshCw size={13}/> Reintentar
                 </button>
               </div>
-            ) : fetching || loadedSet.size === 0 ? (
+            ) : fetching ? (
+              <div className="flex h-full flex-col items-center justify-center gap-3">
+                <RefreshCw size={24} className="animate-spin text-primary"/>
+                <span className="text-sm text-text-muted">Consultando directorio NOAA…</span>
+              </div>
+            ) : !allLoaded ? (
               <div className="flex h-full flex-col items-center justify-center gap-3">
                 <RefreshCw size={24} className="animate-spin text-primary"/>
                 <span className="text-sm text-text-muted">
-                  {fetching ? 'Obteniendo lista de imágenes…' : 'Cargando imágenes del satélite…'}
+                  Precargando imágenes {loadedSet.size}/{total}…
                 </span>
-                <span className="text-xs text-text-dim">NOAA GOES-19 CDN</span>
+                <span className="text-xs text-text-dim">La animación iniciará cuando estén listas</span>
               </div>
             ) : frame ? (
               <>
@@ -635,10 +672,12 @@ function AnimationView({ channel, onBack }:{ channel:Channel; onBack:()=>void })
 
           {/* Controls bar */}
           <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-background-secondary px-3 py-2">
+            {/* Playback */}
             <button className="ctrl-btn" onClick={()=>{setPlaying(false);setIdx(i=>Math.max(0,i-1))}}>
               <SkipBack size={14}/>
             </button>
-            <button className={cn('ctrl-btn',playing&&'active')} onClick={()=>setPlaying(v=>!v)}>
+            <button className={cn('ctrl-btn',playing&&'active')} onClick={()=>setPlaying(v=>!v)}
+              disabled={!allLoaded}>
               {playing?<Pause size={14}/>:<Play size={14}/>}
             </button>
             <button className="ctrl-btn" onClick={()=>{setPlaying(false);setIdx(i=>Math.min(total-1,i+1))}}>
@@ -647,7 +686,10 @@ function AnimationView({ channel, onBack }:{ channel:Channel; onBack:()=>void })
             <button className="ctrl-btn" onClick={()=>setIdx(total-1)} title="Último frame">
               <RotateCcw size={14}/>
             </button>
+
             <div className="h-4 w-px bg-border mx-1"/>
+
+            {/* Speed */}
             <button className="ctrl-btn" onClick={()=>setSpeedMs(s=>Math.min(1000,s+50))}>
               <Minus size={13}/>
             </button>
@@ -655,29 +697,37 @@ function AnimationView({ channel, onBack }:{ channel:Channel; onBack:()=>void })
             <button className="ctrl-btn" onClick={()=>setSpeedMs(s=>Math.max(50,s-50))}>
               <Plus size={13}/>
             </button>
+
             <div className="h-4 w-px bg-border mx-1"/>
+
+            {/* Mode */}
             <select value={playMode} onChange={e=>setPlayMode(e.target.value as PlayMode)}
               className="rounded border border-border bg-background px-2 py-1 text-xs text-text-secondary">
               <option value="loop">Loop</option>
               <option value="rock">Vaivén</option>
             </select>
+
+            {/* Grid toggle */}
             <button className={cn('ctrl-btn',showGrid&&'active')} onClick={()=>setShowGrid(v=>!v)}
-              title="Mostrar grilla">
+              title="Grilla lat/lon">
               <Grid3x3 size={14}/>
             </button>
-            <div className="ml-auto">
-              <button className="ctrl-btn" disabled={!frame}
-                onClick={()=>{
-                  if (!frame) return
-                  const a = document.createElement('a')
-                  a.href = frame.rawUrl
-                  a.download = frame.filename
-                  a.target = '_blank'
-                  a.click()
-                }}>
-                <Download size={13}/>
-              </button>
-            </div>
+
+            <div className="h-4 w-px bg-border mx-1"/>
+
+            {/* Frame count selector */}
+            <select value={frameCount} onChange={e=>setFrameCount(Number(e.target.value))}
+              className="rounded border border-border bg-background px-2 py-1 text-xs text-text-secondary"
+              title="Cantidad de imágenes">
+              {FRAME_COUNTS.map(n=><option key={n} value={n}>{n} img</option>)}
+            </select>
+
+            {/* Reload */}
+            <button onClick={loadFrames}
+              className={cn('ctrl-btn',fetching&&'opacity-50')}
+              disabled={fetching} title="Recargar imágenes">
+              <RefreshCw size={13} className={fetching?'animate-spin':''}/>
+            </button>
           </div>
 
           <BandReferencePanel channel={channel}/>
