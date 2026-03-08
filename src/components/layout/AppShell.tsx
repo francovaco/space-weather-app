@@ -4,6 +4,7 @@
 // ============================================================
 import { Sidebar } from '@/components/navigation/Sidebar'
 import { TopBar } from '@/components/layout/TopBar'
+import { SpaceWeatherBar } from '@/components/layout/SpaceWeatherBar'
 import { useUIStore } from '@/stores/uiStore'
 import { cn } from '@/lib/utils'
 
@@ -24,6 +25,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       >
         {/* Top bar with clocks */}
         <TopBar />
+
+        {/* Space weather conditions bar */}
+        <SpaceWeatherBar />
 
         {/* Page content */}
         <main className="flex-1 overflow-y-auto p-4">

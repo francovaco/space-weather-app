@@ -7,6 +7,7 @@ import { useUIStore } from '@/stores/uiStore'
 import { cn } from '@/lib/utils'
 import { Menu, Satellite } from 'lucide-react'
 import { formatInTimeZone } from 'date-fns-tz'
+import { SpaceWeatherPills } from '@/components/layout/SpaceWeatherBar'
 
 export function TopBar() {
   const clocks = useClocks()
@@ -34,6 +35,9 @@ export function TopBar() {
           <span className="text-2xs text-text-muted">Clima Espacial</span>
         </div>
       </div>
+
+      {/* Center: space weather conditions pills */}
+      <SpaceWeatherPills />
 
       {/* Right: dual clocks — suppressHydrationWarning prevents React complaining
           about the ── placeholder vs real time on first paint */}
