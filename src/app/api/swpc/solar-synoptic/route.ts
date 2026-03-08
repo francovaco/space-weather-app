@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server'
 
-const SYNOPTIC_URL = 'https://services.swpc.noaa.gov/images/solar-synoptic-map.gif'
+const SYNOPTIC_URL = 'https://services.swpc.noaa.gov/images/synoptic-map.jpg'
 
 export async function GET() {
-  // Return the image URL for client-side rendering
   return NextResponse.json({
     url: SYNOPTIC_URL,
     updated: new Date().toISOString(),

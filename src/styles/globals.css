@@ -174,21 +174,38 @@
   z-index: 10 !important;
 }
 .plotly-dark .modebar-container .modebar {
-  display: flex !important;
+  display: inline-flex !important;
   flex-direction: row !important;
   flex-wrap: nowrap !important;
   align-items: center !important;
-  background: rgba(6,10,18,0.75) !important;
-  border-radius: 4px !important;
-  padding: 2px 4px !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  gap: 4px !important;
 }
 .plotly-dark .modebar-container .modebar-group {
   display: inline-flex !important;
   flex-direction: row !important;
   align-items: center !important;
+  background: rgba(6,10,18,0.75) !important;
+  border-radius: 4px !important;
+  padding: 3px !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+.plotly-dark .modebar-container .modebar-group:empty {
+  display: none !important;
 }
 .plotly-dark .modebar-container .modebar-btn {
-  display: inline-block !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 2px !important;
+}
+.plotly-dark .modebar-container .modebar-btn svg {
+  width: 20px !important;
+  height: 20px !important;
 }
 
 /* ============================================================
