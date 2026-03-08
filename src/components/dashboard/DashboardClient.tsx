@@ -78,7 +78,7 @@ function kpDescription(kp: number): { sub: string; color: string } {
 
 function goesStatusLabel(color: string): { label: string; statusColor: string; sub: string } {
   switch (color) {
-    case 'GREEN':  return { label: 'NOMINAL', statusColor: 'text-green-400', sub: 'Instrumentos operativos' }
+    case 'GREEN':  return { label: 'NORMAL', statusColor: 'text-green-400', sub: 'Instrumentos operativos' }
     case 'YELLOW': return { label: 'PRECAUCIÓN', statusColor: 'text-yellow-400', sub: 'Anomalía menor reportada' }
     case 'ORANGE': return { label: 'DEGRADADO', statusColor: 'text-accent-orange', sub: 'Rendimiento degradado' }
     case 'RED':    return { label: 'CRÍTICO', statusColor: 'text-red-500', sub: 'Interrupción de servicio' }
