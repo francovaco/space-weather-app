@@ -15,6 +15,75 @@ interface AuroraFrame {
   time_tag: string
 }
 
+// ───────────────────────────────────────────────
+// Aurora color scale: green → yellow → red
+// [r, g, b, probability%, energy ergs/cm²]
+// Extracted from OVATION PNG gradient bar
+// ───────────────────────────────────────────────
+const AURORA_SCALE: [number, number, number, number, number][] = [
+  [ 28, 211,  30, 10, 0.0],
+  [ 23, 228,  13, 14, 0.5],
+  [ 31, 232,  10, 18, 0.8],
+  [ 37, 241,   6, 22, 1.1],
+  [ 46, 247,   3, 26, 1.3],
+  [ 57, 254,   0, 30, 1.5],
+  [ 98, 254,   0, 34, 1.7],
+  [136, 255,   0, 38, 1.9],
+  [181, 255,   1, 42, 2.1],
+  [223, 254,   0, 46, 2.3],
+  [255, 251,   0, 50, 2.5],
+  [255, 231,   1, 54, 2.8],
+  [254, 215,   0, 58, 3.0],
+  [255, 196,   0, 62, 3.2],
+  [255, 180,   0, 66, 3.4],
+  [255, 163,   0, 68, 3.6],
+  [255, 144,   1, 72, 3.8],
+  [254, 125,   0, 76, 4.0],
+  [254,  72,   0, 80, 4.2],
+  [255,  17,   0, 84, 4.5],
+  [248,   2,   0, 86, 4.7],
+  [239,   0,   0, 88, 4.8],
+  [213,   0,   0, 90, 5.0],
+]
+
+function proxyUrl(url: string) {
+  return `/api/goes/img-proxy?url=${encodeURIComponent(url)}`
+}
+
+function colorDist(r1: number, g1: number, b1: number, r2: number, g2: number, b2: number) {
+  return Math.sqrt((r1 - r2) ** 2 + (g1 - g2) ** 2 + (b1 - b2) ** 2)
+}
+
+function matchAuroraValue(r: number, g: number, b: number): { prob: number; ergs: number } | null {
+  // White/bright gray = text/labels
+  if (r > 200 && g > 200 && b > 200) return null
+  // Very dark = space/ocean background
+  if (r + g + b < 60) return null
+  // Blue-dominant = ocean/space background
+  if (b > r + 20 && b > g + 20) return null
+  // Gray/brown with low saturation = land/coast (all channels close together)
+  const max = Math.max(r, g, b)
+  const min = Math.min(r, g, b)
+  if (max - min < 40 && max < 200) return null
+
+  let minDist = Infinity
+  let best: { prob: number; ergs: number } | null = null
+  for (const [sr, sg, sb, prob, ergs] of AURORA_SCALE) {
+    const d = colorDist(r, g, b, sr, sg, sb)
+    if (d < minDist) { minDist = d; best = { prob, ergs } }
+  }
+  if (minDist > 70) return null
+  return best
+}
+
+function getContainedBounds(cW: number, cH: number, iW: number, iH: number) {
+  const cAR = cW / cH, iAR = iW / iH
+  let rW: number, rH: number, oX: number, oY: number
+  if (iAR > cAR) { rW = cW; rH = cW / iAR; oX = 0; oY = (cH - rH) / 2 }
+  else { rH = cH; rW = cH * iAR; oX = (cW - rW) / 2; oY = 0 }
+  return { rW, rH, oX, oY }
+}
+
 const USAGE = [
   'Pronóstico a corto plazo (30 min) de la probabilidad de aurora visible',
   'Planificación de observaciones de aurora boreal y austral',
@@ -130,6 +199,12 @@ function AuroraPlayer({ frames }: { frames: AuroraFrame[] }) {
   const imgRef = useRef<HTMLImageElement>(null)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
+  // Hover color picking
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const imgContRef = useRef<HTMLDivElement>(null)
+  const canvasReady = useRef(false)
+  const [hoverInfo, setHoverInfo] = useState<{ x: number; y: number; prob: number; ergs: number; rgb: string } | null>(null)
+
   const total = activeFrames.length
   const current = activeFrames[Math.min(idx, Math.max(0, total - 1))]
 
@@ -202,6 +277,51 @@ function AuroraPlayer({ frames }: { frames: AuroraFrame[] }) {
     }
   }, [playing, speedMs, total])
 
+  // Draw current frame to hidden canvas for pixel sampling when paused
+  useEffect(() => {
+    canvasReady.current = false
+    if (playing || !current) return
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    img.onload = () => {
+      canvas.width = img.naturalWidth
+      canvas.height = img.naturalHeight
+      const ctx = canvas.getContext('2d', { willReadFrequently: true })
+      if (ctx) { ctx.drawImage(img, 0, 0); canvasReady.current = true }
+    }
+    img.src = proxyUrl(current.url)
+  }, [playing, current])
+
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (playing || !canvasReady.current) { setHoverInfo(null); return }
+    const canvas = canvasRef.current
+    const container = imgContRef.current
+    if (!canvas || !container || canvas.width === 0) { setHoverInfo(null); return }
+    const rect = container.getBoundingClientRect()
+    const { rW, rH, oX, oY } = getContainedBounds(rect.width, rect.height, canvas.width, canvas.height)
+    const mx = e.clientX - rect.left - oX
+    const my = e.clientY - rect.top - oY
+    if (mx < 0 || my < 0 || mx > rW || my > rH) { setHoverInfo(null); return }
+    const imgX = Math.min(canvas.width - 1, Math.round((mx / rW) * canvas.width))
+    const imgY = Math.min(canvas.height - 1, Math.round((my / rH) * canvas.height))
+    const ctx = canvas.getContext('2d', { willReadFrequently: true })
+    if (!ctx) return
+    const p = ctx.getImageData(imgX, imgY, 1, 1).data
+    const match = matchAuroraValue(p[0], p[1], p[2])
+    if (!match) { setHoverInfo(null); return }
+    setHoverInfo({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+      prob: match.prob,
+      ergs: match.ergs,
+      rgb: `rgb(${p[0]},${p[1]},${p[2]})`,
+    })
+  }, [playing])
+
+  const handleMouseLeave = useCallback(() => setHoverInfo(null), [])
+
   const prev = useCallback(() => setIdx((i) => (i - 1 + total) % total), [total])
   const next = useCallback(() => setIdx((i) => (i + 1) % total), [total])
 
@@ -234,7 +354,14 @@ function AuroraPlayer({ frames }: { frames: AuroraFrame[] }) {
       {loaded && current && (
         <>
           {/* Image */}
-          <div className="relative mx-auto w-full bg-black">
+          <div
+            ref={imgContRef}
+            className="relative mx-auto w-full bg-black"
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+            style={{ cursor: !playing ? 'crosshair' : undefined }}
+          >
+            <canvas ref={canvasRef} className="hidden" />
             <img
               ref={imgRef}
               src={current.url}
@@ -246,6 +373,26 @@ function AuroraPlayer({ frames }: { frames: AuroraFrame[] }) {
             <div className="absolute bottom-2 right-2 rounded bg-black/60 px-2 py-0.5 font-data text-2xs text-text-secondary">
               {fmtTime(current.time_tag)}
             </div>
+            {/* Hover tooltip */}
+            {hoverInfo && !playing && (
+              <div
+                className="pointer-events-none absolute z-20 rounded border border-white/20 bg-black/85 px-2.5 py-1.5 shadow-lg backdrop-blur-sm"
+                style={{
+                  left: Math.min(hoverInfo.x + 14, (imgContRef.current?.clientWidth ?? 300) - 180),
+                  top: Math.max(hoverInfo.y - 40, 4),
+                }}
+              >
+                <div className="flex items-center gap-2">
+                  <span
+                    className="h-3 w-3 shrink-0 rounded border border-white/30"
+                    style={{ backgroundColor: hoverInfo.rgb }}
+                  />
+                  <span className="font-data text-xs text-white whitespace-nowrap">
+                    {hoverInfo.prob}% — {hoverInfo.ergs.toFixed(1)} ergs/cm²
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Timeline slider */}
