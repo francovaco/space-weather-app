@@ -57,6 +57,10 @@ export const getSuviFrames = (wavelength: string) =>
 export const getDRAPFrames = (view: 'global' | 'north-pole' | 'south-pole') =>
   apiFetch(`${BASE}/d-rap?view=${view}`)
 
+// --- WAM-IPE (Whole Atmosphere Model - Ionosphere Plasmasphere Electrodynamics) ---
+export const getWAMIPEFrames = (view: 'neutral-nowcast' | 'ionosphere-nowcast' | 'neutral-forecast' | 'ionosphere-forecast') =>
+  apiFetch(`${BASE}/wam-ipe?view=${view}`)
+
 /** 
  * Map UI time range to SWPC API range string
  * SWPC endpoints use: 1-hour, 6-hour, 1-day, 3-day, 7-day

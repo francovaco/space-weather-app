@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils'
 import {
   Satellite, BookOpen, Activity, Image, Zap, Radio,
   Sun, Wind, Eye, Globe, ChevronDown, ChevronRight,
-  Gauge, Layers, SunDim, BarChart3, CloudSun,
+  Gauge, Layers, SunDim, BarChart3, CloudSun, BrainCircuit,
 } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 
@@ -69,6 +69,11 @@ const NAV_ITEMS: NavItem[] = [
     label: 'D-RAP Absorción HF',
     href: '/d-rap',
     icon: <Radio size={15} />,
+  },
+  {
+    label: 'WAM-IPE Atmósfera/Ionósfera',
+    href: '/wam-ipe',
+    icon: <BrainCircuit size={15} />,
   },
   {
     label: 'Viento Solar',
