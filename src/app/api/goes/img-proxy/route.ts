@@ -6,10 +6,11 @@ export async function GET(req: NextRequest) {
   const raw = req.nextUrl.searchParams.get('url')
   if (!raw) return new NextResponse('missing url', { status: 400 })
 
-  // Only allow NOAA CDN
+  // Only allow NOAA domains
+  const ALLOWED_HOSTS = ['cdn.star.nesdis.noaa.gov', 'services.swpc.noaa.gov']
   try {
     const { hostname } = new URL(raw)
-    if (hostname !== 'cdn.star.nesdis.noaa.gov')
+    if (!ALLOWED_HOSTS.includes(hostname))
       return new NextResponse('domain not allowed', { status: 403 })
   } catch {
     return new NextResponse('invalid url', { status: 400 })

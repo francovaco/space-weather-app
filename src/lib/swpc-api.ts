@@ -53,6 +53,10 @@ export const getCoronagraphFrames = (source: string) =>
 export const getSuviFrames = (wavelength: string) =>
   apiFetch(`${BASE}/suvi?wavelength=${wavelength}`)
 
+// --- D-RAP (D-Region Absorption Predictions) ---
+export const getDRAPFrames = (view: 'global' | 'north-pole' | 'south-pole') =>
+  apiFetch(`${BASE}/d-rap?view=${view}`)
+
 /** 
  * Map UI time range to SWPC API range string
  * SWPC endpoints use: 1-hour, 6-hour, 1-day, 3-day, 7-day

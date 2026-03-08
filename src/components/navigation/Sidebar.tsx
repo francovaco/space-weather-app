@@ -66,6 +66,11 @@ const NAV_ITEMS: NavItem[] = [
     icon: <SunDim size={15} />,
   },
   {
+    label: 'D-RAP Absorción HF',
+    href: '/d-rap',
+    icon: <Radio size={15} />,
+  },
+  {
     label: 'Viento Solar',
     href: '/solar-wind',
     icon: <Wind size={15} />,
