@@ -335,126 +335,15 @@ function getContainedBounds(containerW: number, containerH: number, imgW: number
   return { renderW, renderH, offsetX, offsetY }
 }
 
-// ── GOES-R ABI Projection (PUG-L2-Vol5 §4.2.8.2) ─────────────
-// GOES-19 at 75.2°W · SSA sector (Southern South America)
-// Scan-angle bounds derived from sector definition metadata
-const GR = {
-  Re: 6378.137, Rp: 6356.7523, H: 42164.16,
-  lam0: -75.2 * Math.PI / 180,
-  // SSA scan-angle bounds (radians) — calibrated to 3600×2160 image
-  X_MIN: -0.101523, X_MAX:  0.066818,
-  Y_MIN: -0.157217, Y_MAX: -0.055493,
-  W: 3600, HT: 2160,
-}
-
-function goesProject(latDeg: number, lonDeg: number): [number,number] | null {
-  const phi = latDeg * Math.PI / 180
-  const lam = lonDeg * Math.PI / 180
-  const { Re, Rp, H, lam0, X_MIN, X_MAX, Y_MIN, Y_MAX, W, HT } = GR
-  const phi_c = Math.atan((Rp/Re)**2 * Math.tan(phi))
-  const r_c   = Rp / Math.sqrt(1 - (1-(Rp/Re)**2) * Math.cos(phi_c)**2)
-  const Sx = H - r_c * Math.cos(phi_c) * Math.cos(lam - lam0)
-  const Sy = -r_c * Math.cos(phi_c) * Math.sin(lam - lam0)
-  const Sz = r_c * Math.sin(phi_c)
-  if (H*(H-Sx) < Sy**2 + (Re/Rp)**2 * Sz**2) return null
-  const x = Math.asin(-Sy / Math.sqrt(Sx**2 + Sy**2 + Sz**2))
-  const y = Math.atan(Sz / Sx)
-  if (x < X_MIN || x > X_MAX || y < Y_MIN || y > Y_MAX) return null
-  return [(x-X_MIN)/(X_MAX-X_MIN)*W, (Y_MAX-y)/(Y_MAX-Y_MIN)*HT]
-}
-
-interface GridLine { d: string; label: string }
-
-function buildGridPaths() {
-  type Seg = [number,number][]
-  const flush = (cur: Seg, out: Seg[]) => { if(cur.length>1) out.push([...cur]); cur.length=0 }
-  const toD   = (seg: Seg) => seg.map((p,i)=>`${i?'L':'M'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join('')
-
-  const latLines: GridLine[] = []
-  const lonLines: GridLine[] = []
-
-  // Latitude parallels 10°N … 60°S every 10°
-  for (let lat = 10; lat >= -60; lat -= 10) {
-    const segs: Seg[] = []; const cur: Seg = []
-    for (let lon = -115; lon <= -10; lon += 0.2) {
-      const p = goesProject(lat, lon); p ? cur.push(p) : flush(cur, segs)
-    }
-    flush(cur, segs)
-    segs.forEach(seg => {
-      // Pin label to left edge: use the leftmost point of this segment
-      const leftmost = seg.reduce((a,b) => a[0]<b[0] ? a : b)
-      latLines.push({ d: toD(seg), label: `${lat}°` })
-      // attach label coords via dataset trick — embed in path comment
-      latLines[latLines.length-1] = { d: toD(seg), label: `${lat}°`, lx: leftmost[0], ly: leftmost[1] } as GridLine & {lx:number;ly:number}
-    })
-  }
-
-  // Longitude meridians 100°W … 30°W every 10°
-  for (let lon = -100; lon <= -30; lon += 10) {
-    const segs: Seg[] = []; const cur: Seg = []
-    for (let lat = 15; lat >= -65; lat -= 0.2) {
-      const p = goesProject(lat, lon); p ? cur.push(p) : flush(cur, segs)
-    }
-    flush(cur, segs)
-    segs.forEach(seg => {
-      // Pin label to top edge: use the topmost point (smallest y)
-      const topmost = seg.reduce((a,b) => a[1]<b[1] ? a : b)
-      lonLines.push({ d: toD(seg), label: `${Math.abs(lon)}°O`, lx: topmost[0], ly: topmost[1] } as GridLine & {lx:number;ly:number})
-    })
-  }
-
-  return { latLines, lonLines }
-}
-
-type GridLineExt = GridLine & { lx: number; ly: number }
-
+// ── Grid overlay — NOAA official lat/lon grid for G19 SSA sector ──
 function GeoGrid() {
-  const { latLines, lonLines } = useMemo(buildGridPaths, [])
-  // One label per unique lat/lon value, deduplicated
-  const shownLat = new Set<string>()
-  const shownLon = new Set<string>()
-
-  const STROKE_W = 3
-  const FONT     = 44
-  const OUTLINE  = 10
-
   return (
-    <svg className="pointer-events-none absolute inset-0 h-full w-full"
-         viewBox={`0 0 ${GR.W} ${GR.HT}`} preserveAspectRatio="none">
-      {/* Dashed yellow grid lines */}
-      <g stroke="rgba(255,210,0,0.75)" strokeWidth={STROKE_W} fill="none" strokeDasharray="18,12">
-        {latLines.map((l,i)=><path key={`ll${i}`} d={l.d}/>)}
-        {lonLines.map((l,i)=><path key={`lo${i}`} d={l.d}/>)}
-      </g>
-      {/* Latitude labels — left edge, one per degree */}
-      {(latLines as GridLineExt[]).map((l,i)=>{
-        if (shownLat.has(l.label)) return null
-        shownLat.add(l.label)
-        return (
-          <text key={`tl${i}`}
-            x={Math.max(l.lx, 12)} y={l.ly - 8}
-            fill="rgba(255,210,0,1)" fontSize={FONT} fontFamily="monospace" fontWeight="bold"
-            textAnchor="start"
-            style={{paintOrder:'stroke' as never, stroke:'rgba(0,0,0,0.85)', strokeWidth:OUTLINE}}>
-            {l.label}
-          </text>
-        )
-      })}
-      {/* Longitude labels — top edge, one per degree */}
-      {(lonLines as GridLineExt[]).map((l,i)=>{
-        if (shownLon.has(l.label)) return null
-        shownLon.add(l.label)
-        return (
-          <text key={`tlo${i}`}
-            x={l.lx} y={Math.max(l.ly + FONT, FONT + 8)}
-            fill="rgba(255,210,0,1)" fontSize={FONT} fontFamily="monospace" fontWeight="bold"
-            textAnchor="middle"
-            style={{paintOrder:'stroke' as never, stroke:'rgba(0,0,0,0.85)', strokeWidth:OUTLINE}}>
-            {l.label}
-          </text>
-        )
-      })}
-    </svg>
+    <img
+      src="/assets/g19_ssa_grid_1800x1080_yellow.gif"
+      alt="Lat/Lon grid"
+      className="pointer-events-none absolute inset-0 h-full w-full object-contain"
+      draggable={false}
+    />
   )
 }
 
