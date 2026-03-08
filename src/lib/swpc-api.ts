@@ -34,6 +34,9 @@ export const getProtonFluxData = (range: string = '1-hour') =>
 export const getAuroraForecast = () =>
   apiFetch(`${BASE}/aurora`)
 
+export const getAuroraFrames = (pole: 'north' | 'south') =>
+  apiFetch(`${BASE}/aurora?pole=${pole}`)
+
 // --- Solar Wind (WSA-ENLIL) ---
 export const getSolarWindFrames = () =>
   apiFetch(`${BASE}/solar-wind`)
