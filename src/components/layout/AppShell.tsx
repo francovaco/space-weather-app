@@ -5,11 +5,15 @@
 import { Sidebar } from '@/components/navigation/Sidebar'
 import { TopBar } from '@/components/layout/TopBar'
 import { SpaceWeatherBar } from '@/components/layout/SpaceWeatherBar'
-import { useUIStore } from '@/stores/uiStore'
+import { useUIStore, useUIHydrated } from '@/stores/uiStore'
 import { cn } from '@/lib/utils'
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { sidebarOpen } = useUIStore()
+  const hydrated = useUIHydrated()
+
+  // Don't render layout until Zustand has rehydrated from localStorage
+  if (!hydrated) return null
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">

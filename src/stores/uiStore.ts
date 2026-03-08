@@ -3,6 +3,7 @@
 // ============================================================
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { useState, useEffect } from 'react'
 import type { TimeRange } from '@/types/swpc'
 import type { ABIBand, GOESSector, ImageResolution } from '@/types/goes'
 
@@ -63,3 +64,13 @@ export const useUIStore = create<UIStore>()(
     }
   )
 )
+
+/** True once Zustand has rehydrated from localStorage */
+export function useUIHydrated() {
+  const [hydrated, setHydrated] = useState(useUIStore.persist.hasHydrated())
+  useEffect(() => {
+    if (hydrated) return
+    return useUIStore.persist.onFinishHydration(() => setHydrated(true))
+  }, [hydrated])
+  return hydrated
+}

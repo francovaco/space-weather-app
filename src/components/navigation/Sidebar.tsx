@@ -102,7 +102,7 @@ export function Sidebar() {
       )}
     >
       {/* Logo area */}
-      <div className="flex h-14 items-center border-b border-border px-3">
+      <Link href="/" className="flex h-14 items-center border-b border-border px-3 hover:bg-border/40 transition-colors">
         {sidebarOpen ? (
           <span className="font-display text-xs font-bold uppercase tracking-widest text-primary">
             Monitor Espacial
@@ -110,7 +110,7 @@ export function Sidebar() {
         ) : (
           <Activity size={18} className="mx-auto text-primary" />
         )}
-      </div>
+      </Link>
 
       {/* Nav items */}
       <nav className="flex-1 overflow-y-auto py-3">
