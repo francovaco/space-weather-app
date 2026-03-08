@@ -171,12 +171,15 @@ function NavItemComponent({ item, pathname, collapsed, expanded, onToggle, depth
   }
 
   const baseClass = cn(
-    'flex items-center gap-2 rounded px-2 py-1.5 text-xs transition-colors w-full',
+    'flex items-center rounded text-xs transition-colors',
     'hover:bg-border/60 hover:text-text-primary',
     isActive
       ? 'bg-primary/10 text-primary'
       : 'text-text-secondary',
-    depth > 0 && 'pl-5'
+    collapsed && depth === 0
+      ? 'h-9 w-9 justify-center mx-auto'
+      : 'gap-2 px-2 py-1.5 w-full',
+    depth > 0 && !collapsed && 'pl-5'
   )
 
   if (hasChildren) {

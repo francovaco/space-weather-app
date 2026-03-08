@@ -132,7 +132,7 @@ function StatusCard({ label, value, sub, color, icon, href }: StatusCardProps) {
   return (
     <a
       href={href}
-      className="card flex flex-col gap-2 transition-colors hover:border-border-accent"
+      className="card flex flex-col gap-2 transition-all hover:border-border-accent hover:shadow-glow-blue"
     >
       <div className="flex items-center justify-between">
         <span className="section-label">{label}</span>
