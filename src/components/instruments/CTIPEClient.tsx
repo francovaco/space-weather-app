@@ -19,22 +19,22 @@ import { cn } from '@/lib/utils'
 interface ColorPoint { r: number; g: number; b: number; val: number }
 
 // Scale based on CTIPe-TEC visualization (0 to 130 TECU)
-// Refined based on reference image ticks
+// Refined based on reference image ticks for maximum precision
 const CTIPE_SCALE: ColorPoint[] = [
-  { r: 0, g: 0, b: 100, val: 0 },      // Dark Blue (0)
-  { r: 0, g: 0, b: 180, val: 10 },     // Navy (10)
-  { r: 0, g: 0, b: 255, val: 20 },     // Blue (20)
-  { r: 0, g: 85, b: 255, val: 30 },    // Medium Blue (30)
-  { r: 0, g: 170, b: 255, val: 40 },   // Light Blue (40)
-  { r: 0, g: 255, b: 255, val: 50 },   // Cyan (50)
-  { r: 0, g: 255, b: 170, val: 60 },   // Seafoam (60)
-  { r: 0, g: 255, b: 0, val: 70 },     // Green (70)
-  { r: 128, g: 255, b: 0, val: 80 },   // Yellow-Green (80)
-  { r: 255, g: 255, b: 0, val: 90 },   // Yellow (90)
-  { r: 255, g: 192, b: 0, val: 100 },  // Orange-Yellow (100)
-  { r: 255, g: 128, b: 0, val: 110 },  // Orange (110)
-  { r: 255, g: 64, b: 0, val: 120 },   // Red-Orange (120)
-  { r: 255, g: 0, b: 0, val: 130 },    // Red (130)
+  { r: 0, g: 0, b: 100, val: 0 },      // 0: Deep Blue
+  { r: 0, g: 0, b: 180, val: 10 },     // 10: Navy
+  { r: 0, g: 0, b: 255, val: 20 },     // 20: Blue
+  { r: 0, g: 100, b: 255, val: 30 },    // 30: Mid Blue
+  { r: 0, g: 180, b: 255, val: 40 },    // 40: Sky Blue
+  { r: 0, g: 255, b: 255, val: 50 },    // 50: Cyan
+  { r: 0, g: 255, b: 150, val: 60 },    // 60: Teal / Seafoam
+  { r: 0, g: 255, b: 0, val: 70 },      // 70: Pure Green
+  { r: 150, g: 255, b: 0, val: 80 },    // 80: Lime / Yellow-Green
+  { r: 255, g: 255, b: 0, val: 90 },    // 90: Yellow
+  { r: 255, g: 190, b: 0, val: 100 },   // 100: Amber / Yellow-Orange
+  { r: 255, g: 110, b: 0, val: 110 },   // 110: Orange
+  { r: 255, g: 50, b: 0, val: 120 },    // 120: Red-Orange
+  { r: 255, g: 0, b: 0, val: 130 },     // 130: Red
 ]
 
 function colorDist(r1: number, g1: number, b1: number, r2: number, g2: number, b2: number) {
@@ -42,41 +42,57 @@ function colorDist(r1: number, g1: number, b1: number, r2: number, g2: number, b
 }
 
 function matchScaleValue(r: number, g: number, b: number): number | null {
-  // 1. Try exact or very close match
-  let minDist = Infinity
-  let bestPoint: ColorPoint | null = null
-  let secondBestPoint: ColorPoint | null = null
-
-  for (const p of CTIPE_SCALE) {
-    const d = colorDist(r, g, b, p.r, p.g, p.b)
-    if (d < minDist) {
-      minDist = d
-      secondBestPoint = bestPoint
-      bestPoint = p
+  const findBest = (cr: number, cg: number, cb: number) => {
+    let minDist = Infinity
+    let best: ColorPoint | null = null
+    let second: ColorPoint | null = null
+    for (const p of CTIPE_SCALE) {
+      const d = colorDist(cr, cg, cb, p.r, p.g, p.b)
+      if (d < minDist) {
+        minDist = d
+        second = best
+        best = p
+      }
     }
+    return { dist: minDist, best, second }
   }
 
-  // If distance is too far, it might be a map border, label or background land
-  if (minDist > 100) return null
+  // 1. Try direct match
+  const original = findBest(r, g, b)
   
-  // Background/Ocean is usually dark blue or black in these maps
+  // 2. Handle shaded/darkened areas (common in forecast maps)
+  // If no good match, try boosting brightness if it's not too desaturated
+  let match = original
+  const max = Math.max(r, g, b)
+  const min = Math.min(r, g, b)
+  const saturation = max > 0 ? (max - min) / max : 0
+
+  if (original.dist > 70 && max > 10 && saturation > 0.2) {
+    const factor = 240 / max
+    const boosted = findBest(
+      Math.min(255, r * factor),
+      Math.min(255, g * factor),
+      Math.min(255, b * factor)
+    )
+    if (boosted.dist < original.dist) match = boosted
+  }
+
+  // Final check for validity
+  if (match.dist > 110) return null
   if (r < 15 && g < 15 && b < 15) return 0
+  if (!match.best) return null
 
-  if (!bestPoint) return null
-
-  // If we are between two points, we can do a simple weighted average if they are close enough
-  // to improve accuracy in gradients (common in forecast maps)
-  if (secondBestPoint && minDist > 10) {
-    const dist2 = colorDist(r, g, b, secondBestPoint.r, secondBestPoint.g, secondBestPoint.b)
-    if (dist2 < 120) {
-      const totalDist = minDist + dist2
-      const weight1 = 1 - (minDist / totalDist)
-      const weight2 = 1 - (dist2 / totalDist)
-      return Math.round(bestPoint.val * weight1 + secondBestPoint.val * weight2)
+  // Interpolate between the two closest points for a smoother reading
+  if (match.second && match.dist > 5) {
+    const d2 = colorDist(r, g, b, match.second.r, match.second.g, match.second.b)
+    if (d2 < 140) {
+      const w1 = 1 - (match.dist / (match.dist + d2))
+      const w2 = 1 - (d2 / (match.dist + d2))
+      return Math.round(match.best.val * w1 + match.second.val * w2)
     }
   }
 
-  return bestPoint.val
+  return match.best.val
 }
 
 function getContainedBounds(cW: number, cH: number, iW: number, iH: number) {
