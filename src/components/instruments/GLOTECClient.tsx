@@ -2,7 +2,7 @@
 // ============================================================
 // src/components/instruments/GLOTECClient.tsx
 // GloTEC (Global Total Electron Content) — Atlantic/Pacific
-// animation player with 3 map types per view
+// animation player with 3 map types per view + Mouse Hover
 // ============================================================
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
@@ -11,6 +11,120 @@ import { UsageImpacts } from '@/components/ui/UsageImpacts'
 import { SectionDetails } from '@/components/ui/SectionDetails'
 import { Play, Pause, SkipBack, SkipForward, Download } from 'lucide-react'
 import { cn } from '@/lib/utils'
+
+// ───────────────────────────────────────────────
+// Color Scales & Helpers
+// ───────────────────────────────────────────────
+
+interface ColorPoint { r: number; g: number; b: number; val: number }
+
+// Approximate scales based on standard SWPC GloTEC visualizations
+const SCALES: Record<string, { unit: string; points: ColorPoint[] }> = {
+  tec: {
+    unit: 'TECU',
+    points: [
+      { r: 35, g: 25, b: 75, val: 0 },      // Dark Purple
+      { r: 55, g: 65, b: 190, val: 10 },    // Blue
+      { r: 65, g: 145, b: 240, val: 20 },   // Sky Blue
+      { r: 50, g: 225, b: 215, val: 30 },   // Cyan
+      { r: 90, g: 245, b: 140, val: 40 },   // Light Green
+      { r: 155, g: 255, b: 75, val: 50 },   // Electric Lime
+      { r: 225, g: 255, b: 60, val: 60 },   // Yellow-Green
+      { r: 255, g: 210, b: 50, val: 70 },   // Golden Yellow
+      { r: 255, g: 125, b: 30, val: 80 },   // Dark Orange
+      { r: 215, g: 45, b: 15, val: 90 },    // Red-Orange
+      { r: 125, g: 0, b: 0, val: 100 },     // Deep Red
+    ]
+  },
+  anomaly: {
+    unit: 'ΔTECU',
+    points: [
+      { r: 35, g: 0, b: 55, val: -30 },     // Dark Purple
+      { r: 90, g: 60, b: 130, val: -20 },   // Purple
+      { r: 175, g: 165, b: 200, val: -10 }, // Lavender
+      { r: 255, g: 255, b: 255, val: 0 },    // White (Neutral)
+      { r: 250, g: 190, b: 125, val: 10 },  // Peach
+      { r: 215, g: 115, b: 0, val: 20 },    // Orange
+      { r: 135, g: 55, b: 0, val: 30 },     // Dark Orange
+    ]
+  },
+  ray: {
+    unit: 'Rayos/Vóxel',
+    points: [
+      { r: 255, g: 255, b: 220, val: 0.0 }, // Light Yellow / Cream
+      { r: 190, g: 235, b: 150, val: 0.5 }, // Pale Green
+      { r: 140, g: 210, b: 110, val: 1.0 }, // Light Green
+      { r: 85, g: 175, b: 85, val: 1.5 },   // Green
+      { r: 40, g: 130, b: 65, val: 2.0 },   // Medium-Dark Green
+      { r: 15, g: 90, b: 45, val: 2.5 },    // Dark Green
+      { r: 0, g: 55, b: 25, val: 3.0 },     // Deep Dark Green
+    ]
+  }
+}
+
+function colorDist(r1: number, g1: number, b1: number, r2: number, g2: number, b2: number) {
+  return Math.sqrt((r1 - r2) ** 2 + (g1 - g2) ** 2 + (b1 - b2) ** 2)
+}
+
+function matchScaleValue(r: number, g: number, b: number, type: GLOTECType): number | null {
+  const scale = SCALES[type]
+  
+  // Helper to find closest point in a list
+  const findBest = (cr: number, cg: number, cb: number) => {
+    let minDist = Infinity
+    let closestVal = 0
+    for (const p of scale.points) {
+      const d = colorDist(cr, cg, cb, p.r, p.g, p.b)
+      if (d < minDist) {
+        minDist = d
+        closestVal = p.val
+      }
+    }
+    return { dist: minDist, val: closestVal }
+  }
+
+  // 1. Try exact match first
+  const original = findBest(r, g, b)
+  if (original.dist < 70) return original.val
+
+  // 2. Try matching with "brightness boost" to handle night-side shading
+  // We normalize the pixel to a target brightness if it's not too dark or desaturated
+  const max = Math.max(r, g, b)
+  const min = Math.min(r, g, b)
+  const saturation = max > 0 ? (max - min) / max : 0
+
+  // Only boost if there's enough color information (saturation) and it's not pure black
+  if (max > 15 && saturation > 0.15) {
+    const factor = 220 / max
+    const br = Math.min(255, r * factor)
+    const bg = Math.min(255, g * factor)
+    const bb = Math.min(255, b * factor)
+    
+    const boosted = findBest(br, bg, bb)
+    if (boosted.dist < 100) return boosted.val
+  }
+
+  // 3. Fallback for very dark values (often 0 in these maps)
+  if (max < 15) return 0
+
+  return null
+}
+
+function getContainedBounds(cW: number, cH: number, iW: number, iH: number) {
+  const cAR = cW / cH, iAR = iW / iH
+  let rW: number, rH: number, oX: number, oY: number
+  if (iAR > cAR) { rW = cW; rH = cW / iAR; oX = 0; oY = (cH - rH) / 2 }
+  else { rH = cH; rW = cH * iAR; oX = (cW - rW) / 2; oY = 0 }
+  return { rW, rH, oX, oY }
+}
+
+function proxyUrl(url: string) {
+  return `/api/goes/img-proxy?url=${encodeURIComponent(url)}`
+}
+
+// ───────────────────────────────────────────────
+// Main Component
+// ───────────────────────────────────────────────
 
 interface GLOTECFrame {
   url: string
@@ -26,16 +140,16 @@ const VIEW_TABS: { key: GLOTECView; label: string }[] = [
 ]
 
 const TYPE_TABS: { key: GLOTECType; label: string; desc: string }[] = [
-  { key: 'tec', label: 'Contenido Electrones (TEC)', desc: 'TEC Total en tiempo real' },
-  { key: 'anomaly', label: 'Anomalía de TEC', desc: 'Diferencia respecto a la media de 10 días' },
-  { key: 'ray', label: 'Ray Tracing / MUF', desc: 'Radio-propagación y Frecuencia Máxima Utilizable' },
+  { key: 'tec', label: 'Contenido de Electrones (TEC)', desc: 'TEC Total en tiempo real' },
+  { key: 'anomaly', label: 'Anomalía de TEC', desc: 'Desviación respecto a la media de 10 días' },
+  { key: 'ray', label: 'Trazado de Rayos / MUF', desc: 'Propagación de radio y conteo de rayos por vóxel' },
 ]
 
 const USAGE = [
   'Monitoreo del Contenido Total de Electrones (TEC) a escala global en tiempo real',
   'Cálculo de retardos en señales de satélite para corrección de errores GPS/GNSS',
   'Identificación de anomalías ionosféricas mediante el mapa de anomalías de 10 días',
-  'Análisis de condiciones para radio-propagación HF usando mapas de Ray Tracing',
+  'Análisis de condiciones para radio-propagación HF usando mapas de trazado de rayos',
   'Soporte para operaciones de aviación que dependen de sistemas de navegación satelital',
   'Referencia para estudios de clima espacial y acoplamiento termósfera-ionósfera',
 ]
@@ -174,6 +288,12 @@ function GLOTECPlayer({ frames, type }: { frames: GLOTECFrame[]; type: GLOTECTyp
   const imgRef = useRef<HTMLImageElement>(null)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
+  // Hover feature refs
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const imgContRef = useRef<HTMLDivElement>(null)
+  const canvasReady = useRef(false)
+  const [hoverInfo, setHoverInfo] = useState<{ x: number; y: number; value: number; rgb: string } | null>(null)
+
   const total = activeFrames.length
   const current = activeFrames[Math.min(idx, Math.max(0, total - 1))]
 
@@ -183,7 +303,8 @@ function GLOTECPlayer({ frames, type }: { frames: GLOTECFrame[]; type: GLOTECTyp
     setLoaded(false)
     setLoadProgress(0)
     setActiveFrames([])
-  }, [frames])
+    setHoverInfo(null)
+  }, [frames, type])
 
   useEffect(() => {
     let cancelled = false
@@ -211,7 +332,8 @@ function GLOTECPlayer({ frames, type }: { frames: GLOTECFrame[]; type: GLOTECTyp
                   if (!cancelled) setLoadProgress(Math.round((doneCount / frames.length) * 100))
                   resolve()
                 }
-                img.src = f.url
+                // Use proxy to allow canvas reading
+                img.src = proxyUrl(f.url)
               })
           )
         )
@@ -248,6 +370,58 @@ function GLOTECPlayer({ frames, type }: { frames: GLOTECFrame[]; type: GLOTECTyp
     }
   }, [playing, speedMs, total])
 
+  // Draw current frame to hidden canvas for pixel sampling
+  useEffect(() => {
+    canvasReady.current = false
+    if (playing || !current) return
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    img.onload = () => {
+      canvas.width = img.naturalWidth
+      canvas.height = img.naturalHeight
+      const ctx = canvas.getContext('2d', { willReadFrequently: true })
+      if (ctx) { ctx.drawImage(img, 0, 0); canvasReady.current = true }
+    }
+    img.src = proxyUrl(current.url)
+  }, [playing, current])
+
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (playing || !canvasReady.current) { setHoverInfo(null); return }
+    const canvas = canvasRef.current
+    const container = imgContRef.current
+    if (!canvas || !container || canvas.width === 0) { setHoverInfo(null); return }
+    
+    const rect = container.getBoundingClientRect()
+    const { rW, rH, oX, oY } = getContainedBounds(rect.width, rect.height, canvas.width, canvas.height)
+    
+    const mx = e.clientX - rect.left - oX
+    const my = e.clientY - rect.top - oY
+    
+    if (mx < 0 || my < 0 || mx > rW || my > rH) { setHoverInfo(null); return }
+    
+    const imgX = Math.min(canvas.width - 1, Math.round((mx / rW) * canvas.width))
+    const imgY = Math.min(canvas.height - 1, Math.round((my / rH) * canvas.height))
+    
+    const ctx = canvas.getContext('2d', { willReadFrequently: true })
+    if (!ctx) return
+    
+    const p = ctx.getImageData(imgX, imgY, 1, 1).data
+    const value = matchScaleValue(p[0], p[1], p[2], type)
+    
+    if (value === null) { setHoverInfo(null); return }
+    
+    setHoverInfo({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+      value,
+      rgb: `rgb(${p[0]},${p[1]},${p[2]})`,
+    })
+  }, [playing, type])
+
+  const handleMouseLeave = useCallback(() => setHoverInfo(null), [])
+
   const prev = useCallback(() => setIdx((i) => (i - 1 + total) % total), [total])
   const next = useCallback(() => setIdx((i) => (i + 1) % total), [total])
 
@@ -278,17 +452,46 @@ function GLOTECPlayer({ frames, type }: { frames: GLOTECFrame[]; type: GLOTECTyp
 
       {loaded && current && (
         <>
-          <div className="relative mx-auto max-h-[60vh] bg-black flex items-center justify-center">
+          <div 
+            ref={imgContRef}
+            className="relative mx-auto max-h-[60vh] bg-black flex items-center justify-center select-none"
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+            style={{ cursor: !playing ? 'crosshair' : 'default' }}
+          >
+            <canvas ref={canvasRef} className="hidden" />
             <img
               ref={imgRef}
-              src={current.url}
+              src={proxyUrl(current.url)}
               alt={`GloTEC ${type} output`}
               className="max-h-[60vh] w-auto object-contain"
               draggable={false}
             />
+            {/* Timestamp */}
             <div className="absolute bottom-2 right-2 rounded bg-black/60 px-2 py-0.5 font-data text-2xs text-text-secondary">
               {fmtTime(current.time_tag)}
             </div>
+
+            {/* Hover Tooltip */}
+            {hoverInfo && !playing && (
+              <div
+                className="pointer-events-none absolute z-20 rounded border border-white/20 bg-black/85 px-2.5 py-1.5 shadow-lg backdrop-blur-sm"
+                style={{
+                  left: Math.min(hoverInfo.x + 14, (imgContRef.current?.clientWidth ?? 300) - 140),
+                  top: Math.max(hoverInfo.y - 40, 4),
+                }}
+              >
+                <div className="flex items-center gap-2">
+                  <span
+                    className="h-3 w-3 shrink-0 rounded border border-white/30"
+                    style={{ backgroundColor: hoverInfo.rgb }}
+                  />
+                  <span className="font-data text-xs text-white whitespace-nowrap">
+                    {hoverInfo.value > 0 && type === 'anomaly' ? '+' : ''}{hoverInfo.value} {SCALES[type].unit}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
 
           <input
