@@ -193,9 +193,6 @@ export function ElectronFluxClient() {
         <p>
           Las tormentas de electrones relativistas suelen producirse 1–3 días después de la llegada de corrientes de viento solar de alta velocidad provenientes de agujeros coronales. Estas tormentas pueden persistir durante varios días y representan un riesgo acumulativo para la electrónica de los satélites.
         </p>
-        <p>
-          <strong>Fuente:</strong> NOAA/SWPC — <em>GOES Electron Flux</em>
-        </p>
       </SectionDetails>
     </div>
   )

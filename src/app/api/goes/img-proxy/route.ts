@@ -6,25 +6,23 @@ export async function GET(req: NextRequest) {
   const raw = req.nextUrl.searchParams.get('url')
   if (!raw) return new NextResponse('missing url', { status: 400 })
 
-  // Only allow NOAA domains
-  const ALLOWED_HOSTS = ['cdn.star.nesdis.noaa.gov', 'services.swpc.noaa.gov']
   try {
     const { hostname } = new URL(raw)
-    if (!ALLOWED_HOSTS.includes(hostname))
-      return new NextResponse('domain not allowed', { status: 403 })
-  } catch {
-    return new NextResponse('invalid url', { status: 400 })
-  }
+    const isNoaa = hostname.endsWith('.noaa.gov')
+    
+    const headers: Record<string, string> = {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+      'Accept': 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
+      'Accept-Language': 'en-US,en;q=0.9',
+    }
 
-  try {
+    if (isNoaa) {
+      headers['Referer'] = 'https://www.star.nesdis.noaa.gov/'
+      headers['Origin'] = 'https://www.star.nesdis.noaa.gov'
+    }
+
     const upstream = await fetch(raw, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-        'Referer':    'https://www.star.nesdis.noaa.gov/',
-        'Origin':     'https://www.star.nesdis.noaa.gov',
-        'Accept':     'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.9',
-      },
+      headers,
       cache: 'no-store',
     })
 

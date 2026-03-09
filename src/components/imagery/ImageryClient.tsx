@@ -390,6 +390,8 @@ function ChannelGrid({ onSelect }:{ onSelect:(c:Channel)=>void }) {
 function ChannelCard({ channel:ch, onSelect }:{ channel:Channel; onSelect:(c:Channel)=>void }) {
   const [ok,setOk]           = useState(true)
   const [lastTs,setLastTs]   = useState<string|null>(null)
+  const [visible, setVisible] = useState(false)
+  const cardRef = useRef<HTMLButtonElement>(null)
   const isGlm = ch.id === 'EXTENT3'
 
   // Thumbnail: use latest symlink from CDN via proxy
@@ -398,8 +400,24 @@ function ChannelCard({ channel:ch, onSelect }:{ channel:Channel; onSelect:(c:Cha
     : `${CDN_ABI}/${ch.id}/latest.jpg`
   const thumbSrc = proxy(thumbRaw)
 
-  // Fetch the timestamp of the latest image from the directory listing
+  // Use IntersectionObserver to only fetch data when visible
   useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true)
+          observer.disconnect()
+        }
+      },
+      { threshold: 0.1 }
+    )
+    if (cardRef.current) observer.observe(cardRef.current)
+    return () => observer.disconnect()
+  }, [])
+
+  // Fetch the timestamp of the latest image only when visible
+  useEffect(() => {
+    if (!visible) return
     let cancelled = false
     async function fetchLatest() {
       try {
@@ -414,15 +432,18 @@ function ChannelCard({ channel:ch, onSelect }:{ channel:Channel; onSelect:(c:Cha
     // Refresh every 10 min
     const id = setInterval(fetchLatest, 10 * 60 * 1000)
     return () => { cancelled = true; clearInterval(id) }
-  }, [ch.id])
+  }, [ch.id, visible])
 
   return (
-    <button onClick={()=>onSelect(ch)}
+    <button 
+      ref={cardRef}
+      onClick={()=>onSelect(ch)}
       className="group flex flex-col overflow-hidden rounded-lg border border-border bg-background-card
                  transition-all hover:border-border-accent hover:shadow-glow-blue hover:scale-[1.02]">
       <div className="relative aspect-square w-full overflow-hidden bg-background-secondary">
-        {ok
+        {ok && visible
           ? <img src={thumbSrc} alt={ch.nombre}
+              loading="lazy"
               className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
               onError={()=>setOk(false)}/>
           : <div className="flex h-full flex-col items-center justify-center gap-1">

@@ -138,9 +138,6 @@ export function AuroraClient() {
         <p>
           El modelo OVATION utiliza como entrada principal la componente Bz del campo magnético interplanetario (IMF) y la velocidad del viento solar para calcular el acoplamiento magnetosférico. Cuando Bz es negativo (orientación sur), la reconexión magnética en el lado diurno permite mayor entrada de energía, expandiendo e intensificando el óvalo auroral.
         </p>
-        <p>
-          <strong>Fuente:</strong> NOAA/SWPC — <em>OVATION Aurora Forecast Model</em>
-        </p>
       </SectionDetails>
     </div>
   )

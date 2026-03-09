@@ -264,9 +264,6 @@ export function KpIndexClient() {
         <p>
           El índice se calcula cada 3 horas (8 valores al día) y el SWPC provee un índice Kp estimado en tiempo real basado en datos de magnetómetros. También se publica el índice ap, que es la equivalencia lineal del Kp y permite promediar para calcular el índice Ap diario.
         </p>
-        <p>
-          <strong>Fuente:</strong> NOAA/SWPC — <em>Planetary K-Index</em>
-        </p>
       </SectionDetails>
     </div>
   )

@@ -11,11 +11,15 @@ const VIEW_PATHS: Record<string, string> = {
 
 // Parse timestamp from the second date in filenames like:
 // WRS_WAM05_GLOBAL_DEN400-ON2-DEN400_20260308T0900_20260308T1010.png
-// We use the second timestamp (frame time)
+// or WFS_GLOBAL_TEC-MUF-TECAnom-MUFAnom_20260308T1200_20260308T1310.png
+// We use the second timestamp (valid time)
 function parseTimestamp(filename: string): string | null {
-  const match = filename.match(/_(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})\.png$/i)
-  if (!match) return null
-  return `${match[1]}-${match[2]}-${match[3]}T${match[4]}:${match[5]}:00Z`
+  const matches = filename.match(/(\d{8}T\d{4})/g)
+  if (!matches || matches.length < 2) return null
+  const ts = matches[matches.length - 1] // Take the last one
+  const Y = ts.slice(0, 4), M = ts.slice(4, 6), D = ts.slice(6, 8)
+  const h = ts.slice(9, 11), m = ts.slice(11, 13)
+  return `${Y}-${M}-${D}T${h}:${m}:00Z`
 }
 
 export async function GET(req: NextRequest) {

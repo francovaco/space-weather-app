@@ -96,9 +96,6 @@ export function SolarSynopticClient() {
         <p>
           Los pronosticadores utilizan datos de múltiples fuentes para crear el mapa: imágenes del SDO (AIA/HMI), imágenes H-alpha de la red GONG, magnetogramas, e imágenes coronales de SUVI. La posición de cada estructura se registra en coordenadas heliográficas, permitiendo el seguimiento de la rotación solar día a día.
         </p>
-        <p>
-          <strong>Fuente:</strong> NOAA/SWPC — <em>Solar Synoptic Map</em>
-        </p>
       </SectionDetails>
     </div>
   )

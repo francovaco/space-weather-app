@@ -95,9 +95,6 @@ export function DRAPClient() {
         <p>
           Las principales fuentes de ionización que causan absorción en la región D son las fulguraciones solares de rayos X (que producen Eventos de Apagón de Radio de Onda Corta — SWF) y los eventos de protones solares energéticos (que causan Absorción en el Casquete Polar — PCA). El modelo D-RAP combina mediciones de rayos X del sensor XRS y datos de protones del sensor SEISS de GOES.
         </p>
-        <p>
-          <strong>Fuente:</strong> NOAA/SWPC — <em>D-Region Absorption Predictions</em>
-        </p>
       </SectionDetails>
     </div>
   )

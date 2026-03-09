@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils'
 import { Menu, Satellite } from 'lucide-react'
 import { formatInTimeZone } from 'date-fns-tz'
 import { SpaceWeatherPills } from '@/components/layout/SpaceWeatherBar'
+import Link from 'next/link'
 
 export function TopBar() {
   const clocks = useClocks()
@@ -27,13 +28,13 @@ export function TopBar() {
         <button onClick={toggleSidebar} className="ctrl-btn" aria-label="Alternar barra lateral">
           <Menu size={16} />
         </button>
-        <div className="flex items-center gap-2">
+        <Link href="/" prefetch={false} className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer">
           <Satellite size={14} className="text-accent-cyan" />
           <span className="font-display text-xs font-semibold tracking-widest text-text-primary uppercase">
             GOES-19
           </span>
           <span className="text-2xs text-text-muted">Clima Espacial</span>
-        </div>
+        </Link>
       </div>
 
       {/* Center: space weather conditions pills */}

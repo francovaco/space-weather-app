@@ -112,9 +112,6 @@ export function CoronagraphClient() {
         <p>
           Las CME son expulsiones masivas de plasma y campo magnético desde la corona solar. Cuando están dirigidas hacia la Tierra, pueden causar tormentas geomagnéticas severas al interactuar con la magnetosfera terrestre. El tiempo de tránsito tipico de una CME desde el Sol hasta la Tierra es de 1 a 3 días.
         </p>
-        <p>
-          <strong>Fuente:</strong> NOAA/SWPC — <em>LASCO Coronagraph &amp; GOES CCOR</em>
-        </p>
       </SectionDetails>
     </div>
   )

@@ -102,9 +102,6 @@ export function SolarWindClient() {
         <p>
           Cuando se detecta una CME en imágenes de coronógrafos, los forecasters del SWPC la incorporan al modelo para predecir su tiempo de tránsito hasta la Tierra (típicamente 1-3 días). El modelo es operacional y se ejecuta en el NCEP de la NOAA, proporcionando pronósticos vitales para la predicción de tormentas geomagnéticas.
         </p>
-        <p>
-          <strong>Fuente:</strong> NOAA/SWPC — <em>WSA-ENLIL Solar Wind Prediction</em>
-        </p>
       </SectionDetails>
     </div>
   )

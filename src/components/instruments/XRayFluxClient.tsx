@@ -210,9 +210,6 @@ export function XRayFluxClient() {
         <p>
           El flujo de rayos X de la banda larga (1–8 Å) es el principal indicador utilizado por el SWPC para emitir alertas de fulguraciones. Un evento de clase M5 o superior generalmente dispara una alerta de apagón de radio R1–R2, mientras que un evento X10+ puede producir un apagón R4–R5.
         </p>
-        <p>
-          <strong>Fuente:</strong> NOAA/SWPC — <em>GOES X-Ray Flux</em>
-        </p>
       </SectionDetails>
     </div>
   )

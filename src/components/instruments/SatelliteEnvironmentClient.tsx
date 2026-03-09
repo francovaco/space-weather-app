@@ -99,19 +99,19 @@ export function SatelliteEnvironmentClient() {
 
   // Fetch all three datasets in parallel
   const protons = useAutoRefresh<FluxSample[]>({
-    queryKey: ['sat-env-protons', range],
+    queryKey: ['proton-flux', range],
     fetcher: () => getProtonFluxData(param) as Promise<FluxSample[]>,
     intervalMs: REFRESH_INTERVALS.FIVE_MIN,
   })
 
   const electrons = useAutoRefresh<FluxSample[]>({
-    queryKey: ['sat-env-electrons', range],
+    queryKey: ['electron-flux', range],
     fetcher: () => getElectronFluxData(param) as Promise<FluxSample[]>,
     intervalMs: REFRESH_INTERVALS.FIVE_MIN,
   })
 
   const xrays = useAutoRefresh<XRaySample[]>({
-    queryKey: ['sat-env-xray', range],
+    queryKey: ['xray-flux', range],
     fetcher: () => getXRayFluxData(param) as Promise<XRaySample[]>,
     intervalMs: REFRESH_INTERVALS.ONE_MIN,
   })
@@ -166,11 +166,11 @@ export function SatelliteEnvironmentClient() {
   }
 
   // ── Electron chart ──
-  const ge2 = electrons.data?.filter((d) => d.energy === '>=2 MeV') ?? []
+  const ge2 = electrons.data?.filter((d: any) => d.energy === '>=2 MeV') ?? []
   const electronTraces: Plotly.Data[] = ge2.length > 0
     ? [{
-        x: ge2.map((d) => d.time_tag),
-        y: ge2.map((d) => d.flux),
+        x: ge2.map((d: any) => d.time_tag),
+        y: ge2.map((d: any) => d.flux ?? d.electron_flux),
         type: 'scattergl' as const,
         mode: 'lines' as const,
         name: '≥2 MeV',
@@ -320,9 +320,6 @@ export function SatelliteEnvironmentClient() {
         </p>
         <p>
           El flujo de rayos X en las bandas 0.05–0.4 nm y 0.1–0.8 nm permite la clasificación de fulguraciones solares (A, B, C, M, X). Juntos, estos indicadores proporcionan una evaluación integral del entorno de radiación espacial que afecta tanto a los satélites como a las comunicaciones terrestres.
-        </p>
-        <p>
-          <strong>Fuente:</strong> NOAA/SWPC — <em>Satellite Environment Overview</em>
         </p>
       </SectionDetails>
     </div>

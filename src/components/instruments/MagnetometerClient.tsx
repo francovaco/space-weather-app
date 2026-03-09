@@ -231,9 +231,6 @@ export function MagnetometerClient() {
         <p>
           Los datos se actualizan cada minuto con resolución temporal de 1 segundo promediada. Las mediciones de campo magnético total (Bt) se calculan como la magnitud del vector resultante de las tres componentes.
         </p>
-        <p>
-          <strong>Fuente:</strong> NOAA/SWPC — <em>GOES Magnetometer</em>
-        </p>
       </SectionDetails>
     </div>
   )

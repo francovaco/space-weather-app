@@ -200,9 +200,6 @@ export function ProtonFluxClient() {
         <p>
           Las tormentas de radiación solar se clasifican de S1 a S5 según la escala NOAA. Un evento S1 (menor) comienza en 10 pfu, mientras que un evento S5 (extremo) supera las 100.000 pfu. Los eventos fuertes pueden causar absorción en casquetes polares (PCA), degradar las comunicaciones HF transpolare y aumentar la dosis de radiación para tripulaciones aéreas en rutas de alta latitud.
         </p>
-        <p>
-          <strong>Fuente:</strong> NOAA/SWPC — <em>GOES Proton Flux</em>
-        </p>
       </SectionDetails>
     </div>
   )

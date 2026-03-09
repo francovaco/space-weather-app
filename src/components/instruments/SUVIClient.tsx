@@ -119,9 +119,6 @@ export function SUVIClient() {
         <p>
           SUVI reemplaza al instrumento SXI de satélites GOES anteriores con mayor resolución espacial y temporal. Las imágenes se utilizan para monitorear la actividad solar incluyendo fulguraciones, agujeros coronales, filamentos y prominencias. La cadencia típica es de una imagen cada 4 minutos por canal.
         </p>
-        <p>
-          <strong>Fuente:</strong> NOAA/SWPC — <em>GOES SUVI Solar Ultraviolet Imager</em>
-        </p>
       </SectionDetails>
     </div>
   )

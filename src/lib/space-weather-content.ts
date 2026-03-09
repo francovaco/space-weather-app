@@ -8,6 +8,8 @@ export interface SpaceWeatherArticle {
   slug: string
   title: string
   summary: string
+  imageUrl?: string
+  imageCaption?: string
   sections: { heading?: string; body: string }[]
 }
 
@@ -21,6 +23,8 @@ export const IMPACTS: SpaceWeatherArticle[] = [
     title: 'Transmisión de Energía Eléctrica',
     summary:
       'Cómo las tormentas geomagnéticas inducen corrientes en las redes de alta tensión y pueden provocar apagones masivos.',
+    imageUrl: 'https://blogs.masterhacks.net/wp-content/uploads/2023/03/linea-de-transmision.jpg',
+    imageCaption: 'Imagen referencial: Infraestructura eléctrica de alta tensión vulnerable a tormentas geomagnéticas.',
     sections: [
       {
         body: 'Las tormentas geomagnéticas severas pueden representar una amenaza significativa para las redes eléctricas. Durante estos eventos, las variaciones del campo magnético terrestre inducen corrientes geoeléctricas en la superficie de la Tierra. Estas corrientes pueden fluir a través de los conductores de la red eléctrica y los transformadores de las subestaciones, generando lo que se conoce como Corrientes Inducidas Geomagnéticamente (GIC, por sus siglas en inglés).',
@@ -48,6 +52,8 @@ export const IMPACTS: SpaceWeatherArticle[] = [
     title: 'Sistemas GPS',
     summary:
       'De qué manera las perturbaciones ionosféricas degradan la precisión de los sistemas de navegación global.',
+    imageUrl: 'https://www.mozaweb.com/es/mozaik3D/FOL/tarsadalom/muholdas_navigacio/960.jpg',
+    imageCaption: 'Imagen referencial: La constelación de satélites GNSS orbitando la Tierra.',
     sections: [
       {
         body: 'El Sistema de Posicionamiento Global (GPS) y otros sistemas de navegación por satélite (GNSS) dependen de señales de radio que viajan desde los satélites hasta los receptores en tierra. Estas señales deben atravesar la ionósfera, una capa de la atmósfera terrestre que contiene partículas cargadas (plasma). Las condiciones del clima espacial pueden alterar significativamente las propiedades de la ionósfera, degradando la precisión y fiabilidad de los sistemas GPS.',
@@ -75,6 +81,8 @@ export const IMPACTS: SpaceWeatherArticle[] = [
     title: 'Comunicaciones de Radio HF',
     summary:
       'Cómo las fulguraciones solares y las tormentas de radiación solar pueden interrumpir las comunicaciones por radio de alta frecuencia.',
+    imageUrl: 'https://culturacientifica.com/app/uploads/2016/08/ionosfera.jpg',
+    imageCaption: 'Imagen referencial: Representación de la propagación de ondas de radio y su interacción con las capas de la ionósfera.',
     sections: [
       {
         body: 'Las comunicaciones por radio de Alta Frecuencia (HF, entre 3 y 30 MHz) dependen de la refracción de las ondas de radio en la ionósfera para lograr comunicaciones de largo alcance más allá de la línea de visión. Este recurso natural es aprovechado por la aviación transoceánica, las operaciones marítimas, las fuerzas armadas y los servicios de emergencia. Sin embargo, las perturbaciones del clima espacial pueden degradar o interrumpir completamente estas comunicaciones.',
@@ -102,6 +110,8 @@ export const IMPACTS: SpaceWeatherArticle[] = [
     title: 'Comunicaciones Satelitales',
     summary:
       'Efectos del clima espacial en las señales de comunicación que transitan la ionósfera.',
+    imageUrl: 'https://a21.com.mx/wp-content/uploads/2025/05/imagercvbnmo.jpg',
+    imageCaption: 'Imagen referencial: Satélite de comunicaciones operando en el entorno espacial.',
     sections: [
       {
         body: 'Los sistemas de comunicación por satélite emplean señales de radio que deben atravesar la ionósfera terrestre. Aunque las frecuencias utilizadas por las comunicaciones satelitales (UHF, SHF y superiores) son menos susceptibles que las frecuencias HF, las condiciones extremas de clima espacial pueden causar degradación significativa del servicio, especialmente en los sistemas que operan en bandas de frecuencia más bajas.',
@@ -129,6 +139,8 @@ export const IMPACTS: SpaceWeatherArticle[] = [
     title: 'Arrastre Satelital',
     summary:
       'Cómo la actividad solar modifica la densidad de la termósfera y altera las órbitas de los satélites.',
+    imageUrl: 'https://eos.com/wp-content/uploads/2022/10/three-earth-orbits.jpg.webp',
+    imageCaption: 'Imagen referencial: Los satélites en órbita LEO enfrentan el arrastre de la atmósfera superior.',
     sections: [
       {
         body: 'Los satélites en órbita terrestre baja (LEO, por debajo de ~1000 km de altitud) experimentan una fuerza de arrastre atmosférico residual que gradualmente reduce su altitud orbital. La densidad de la termósfera —la capa de la atmósfera donde orbitan estos satélites— está fuertemente controlada por la actividad solar y las condiciones del clima espacial. Los cambios en esta densidad pueden alterar drásticamente las tasas de decaimiento orbital.',
@@ -163,6 +175,8 @@ export const PHENOMENA: SpaceWeatherArticle[] = [
     title: 'Aurora',
     summary:
       'Las luces polares: cómo las partículas del viento solar crean espectaculares exhibiciones de luz.',
+    imageUrl: 'https://cdn.mos.cms.futurecdn.net/v2/t:0,l:0,cw:2120,ch:1193,q:80,w:2120/57jQMDN5MZLYfV8ps8HuZQ.jpg',
+    imageCaption: 'Imagen referencial: Espectacular exhibición de aurora boreal en el cielo nocturno.',
     sections: [
       {
         body: 'La aurora (boreal en el hemisferio norte, austral en el sur) es una de las manifestaciones más visibles del clima espacial. Se produce cuando partículas cargadas del viento solar —principalmente electrones— son aceleradas a lo largo de las líneas del campo magnético terrestre hacia las regiones polares, donde colisionan con átomos y moléculas de la atmósfera superior.',
@@ -186,6 +200,8 @@ export const PHENOMENA: SpaceWeatherArticle[] = [
     title: 'Agujeros Coronales',
     summary:
       'Regiones oscuras en la corona solar que emiten corrientes de viento solar rápido.',
+    imageUrl: 'https://estaticos-cdn.prensaiberica.es/clip/45e9377e-d094-4e3c-b51a-adec3259635a_alta-libre-aspect-ratio_default_0.jpg',
+    imageCaption: 'Imagen referencial: El Sol observado en ultravioleta extremo, mostrando un extenso agujero coronal (zona oscura).',
     sections: [
       {
         body: 'Los agujeros coronales son regiones extensas de la corona solar donde las líneas del campo magnético se abren hacia el espacio interplanetario en lugar de cerrarse de vuelta a la superficie solar. Estas regiones aparecen como áreas oscuras en las imágenes de rayos X y ultravioleta extremo, ya que tienen menor densidad y temperatura que la corona circundante.',
@@ -200,7 +216,7 @@ export const PHENOMENA: SpaceWeatherArticle[] = [
       },
       {
         heading: 'Observación y Predicción',
-        body: 'Los agujeros coronales son bien visibles en imágenes del instrumento SUVI a bordo de los satélites GOES y en el Observatorio de Dinámica Solar (SDO). Como son estructuras relativamente estables que pueden persistir durante varias rotaciones solares, una vez identificado un agujero coronal geoefectivo, se puede anticipar su retorno cada ~27 días. Esto proporciona una de las predicciones más confiables en meteorología espacial.',
+        body: 'Los agujeros coronales son bien visibles en imágenes del instrumento SUVI a bordo de los satélites GOES y el instrumento EVE del SDO. Como son estructuras relativamente estables que pueden persistir durante varias rotaciones solares, una vez identificado un agujero coronal geoefectivo, se puede anticipar su retorno cada ~27 días. Esto proporciona una de las predicciones más confiables en meteorología espacial.',
       },
     ],
   },
@@ -209,6 +225,8 @@ export const PHENOMENA: SpaceWeatherArticle[] = [
     title: 'Eyecciones de Masa Coronal (CME)',
     summary:
       'Enormes expulsiones de plasma y campo magnético desde la corona solar hacia el espacio interplanetario.',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/e/e3/Magnificent_CME_Erupts_on_the_Sun_-_August_31.jpg',
+    imageCaption: 'Imagen referencial: Una de las eyecciones de masa coronal más espectaculares capturadas por el SDO. Fuente: NASA.',
     sections: [
       {
         body: 'Las Eyecciones de Masa Coronal (CME, por sus siglas en inglés) son liberaciones masivas de plasma y campo magnético desde la corona solar. Una CME típica expulsa entre 10¹¹ y 10¹³ kg de material solar a velocidades de 250 a más de 3000 km/s. Son los eventos más energéticos del clima espacial y la principal causa de las tormentas geomagnéticas severas.',
@@ -223,7 +241,7 @@ export const PHENOMENA: SpaceWeatherArticle[] = [
       },
       {
         heading: 'Geoefectividad',
-        body: 'No todas las CME que alcanzan la Tierra producen tormentas geomagnéticas significativas. La geoefectividad depende principalmente de la orientación del campo magnético dentro de la CME. Si el componente Bz es fuertemente negativo (sur), la reconexión con el campo geomagnético es eficiente y se transfiere mucha energía a la magnetósfera. La velocidad y densidad del plasma también influyen en la intensidad de la perturbación.',
+        body: 'No todas las CME que alcanzan la Tierra producen tormentas geomagnéticas significativas. La geoefectividad depende principalmente de la orientación del campo magnético dentro de la CME. Si el componente Bz es fuertemente negativo (sur), la reconexión con el campo geomagnético es eficiente y se trasfiere mucha energía a la magnetósfera. La velocidad y densidad del plasma también influyen en la intensidad de la perturbación.',
       },
       {
         heading: 'Detección',
@@ -236,6 +254,8 @@ export const PHENOMENA: SpaceWeatherArticle[] = [
     title: 'Magnetósfera Terrestre',
     summary:
       'El escudo magnético de la Tierra que nos protege del viento solar y las partículas cósmicas.',
+    imageUrl: 'https://media.ambito.com/p/ebb17dc1f0f8658bc33cf02067d9c2d8/adjuntos/239/imagenes/042/438/0042438414/tormenta-solarjpg.jpg',
+    imageCaption: 'Imagen referencial: Representación artística de la magnetósfera terrestre desviando el viento solar.',
     sections: [
       {
         body: 'La magnetósfera es la región del espacio dominada por el campo magnético de la Tierra. Actúa como un escudo que desvía la mayor parte del viento solar y las partículas energéticas, protegiendo la atmósfera y la superficie terrestre. Sin la magnetósfera, el viento solar erosionaría gradualmente nuestra atmósfera, como probablemente ocurrió en Marte.',
@@ -259,6 +279,8 @@ export const PHENOMENA: SpaceWeatherArticle[] = [
     title: 'Emisiones de Radio F10.7 cm',
     summary:
       'Un indicador clave de la actividad solar medido desde la superficie terrestre.',
+    imageUrl: 'https://s3.amazonaws.com/arc-wordpress-client-uploads/infobae-wp/wp-content/uploads/2017/04/22173904/ESA_Malarguee_tracking_station_M2.jpg',
+    imageCaption: 'Imagen referencial: Estación de seguimiento y monitoreo de radio solar.',
     sections: [
       {
         body: 'El flujo de radio solar a 10.7 cm de longitud de onda (2800 MHz), conocido como el índice F10.7, es uno de los indicadores más importantes y longevos de la actividad solar. Se ha medido diariamente desde 1947 en Canadá y constituye la serie temporal continua más larga de observaciones de actividad solar.',
@@ -282,6 +304,8 @@ export const PHENOMENA: SpaceWeatherArticle[] = [
     title: 'Rayos Cósmicos Galácticos',
     summary:
       'Partículas de altísima energía originadas fuera del sistema solar y su modulación por la actividad solar.',
+    imageUrl: 'https://phantom-elmundo.unidadeditorial.es/661e9029c80225cfa942e686e79c0163/crop/21x2/912x596/f/jpg/assets/multimedia/imagenes/2021/02/05/16125482841109.png',
+    imageCaption: 'Imagen referencial: Representación de rayos cósmicos de alta energía interactuando con la atmósfera terrestre.',
     sections: [
       {
         body: 'Los Rayos Cósmicos Galácticos (GCR, por sus siglas en inglés) son partículas cargadas de alta energía que se originan fuera del sistema solar, principalmente de remanentes de supernovas en nuestra galaxia. Están compuestos principalmente por protones (~87%), partículas alfa (~12%) y una pequeña fracción de núcleos pesados e electrones. Sus energías van desde cientos de MeV hasta más de 10²⁰ eV.',
@@ -305,13 +329,15 @@ export const PHENOMENA: SpaceWeatherArticle[] = [
     title: 'Tormentas Geomagnéticas',
     summary:
       'Perturbaciones globales del campo magnético terrestre causadas por el viento solar y las CME.',
+    imageUrl: 'https://muyinteresante.okdiario.com/wp-content/uploads/sites/5/2022/10/13/6347ae0d7bc33.jpeg',
+    imageCaption: 'Imagen referencial: Representación de una tormenta solar impactando el entorno magnético de la Tierra.',
     sections: [
       {
         body: 'Una tormenta geomagnética es una perturbación temporal importante del campo magnético de la Tierra, causada por la interacción con estructuras del viento solar, principalmente Eyecciones de Masa Coronal (CME) y corrientes de viento solar rápido de agujeros coronales. Las tormentas geomagnéticas son el tipo de evento de clima espacial con mayor impacto potencial en los sistemas tecnológicos terrestres.',
       },
       {
         heading: 'Fases de la Tormenta',
-        body: 'Una tormenta geomagnética típica tiene tres fases. La fase inicial comienza con una Compresión Súbita (SSC) cuando una CME o frente de presión del viento solar comprime la magnetósfera. La fase principal se caracteriza por una caída pronunciada del índice Dst (o su equivalente moderno SYM-H) debido a la intensificación de la corriente anular —un flujo de iones energéticos que circula alrededor de la Tierra a distancias de 3-8 Re. La fase de recuperación, que puede durar días, refleja la gradual disipación de la corriente anular.',
+        body: 'Una tormenta geomagnética típica tiene tres fases. La fase inicial comienza con una Compresión Súbita (SSC) cuando una CME o frente de presión del viento solar comprime la magnetósfera. La fase principal se caracteriza por una caída pronunciada del índice Dst (o su equivalente moderno SYM-H) debido a la intensificación de la corriente anular —un flujo de ions energéticos que circula alrededor de la Tierra a distancias de 3-8 Re. La fase de recuperación, que puede durar días, refleja la gradual disipación de la corriente anular.',
       },
       {
         heading: 'Escala de Tormentas Geomagnéticas',
@@ -328,6 +354,8 @@ export const PHENOMENA: SpaceWeatherArticle[] = [
     title: 'Ionósfera',
     summary:
       'La capa ionizada de la atmósfera terrestre que afecta las comunicaciones y la navegación.',
+    imageUrl: 'https://cienciauanl.uanl.mx/wp-content/uploads/2023/02/1-2.png',
+    imageCaption: 'Imagen referencial: Diagrama de las capas de la ionósfera terrestre.',
     sections: [
       {
         body: 'La ionósfera es la porción ionizada de la atmósfera superior terrestre, extendiéndose desde aproximadamente 60 km hasta más de 1000 km de altitud. Se forma por la ionización de los gases atmosféricos por la radiación solar ultravioleta y rayos X. La ionósfera es fundamental para las comunicaciones por radio, la navegación por satélite y los sistemas de radar, y es una de las regiones más directamente afectadas por el clima espacial.',
@@ -351,6 +379,8 @@ export const PHENOMENA: SpaceWeatherArticle[] = [
     title: 'Centelleo Ionosférico',
     summary:
       'Fluctuaciones rápidas de las señales satelitales causadas por irregularidades en la ionósfera.',
+    imageUrl: 'https://mettatec.com/wp-content/uploads/2024/11/Clasificacion-y-distribucion-geografica-del-centelleo-1024x572.webp',
+    imageCaption: 'Imagen referencial: Clasificación y distribución geográfica del centelleo ionosférico.',
     sections: [
       {
         body: 'El centelleo ionosférico es la fluctuación rápida de la amplitud y fase de las señales de radio que pasan a través de la ionósfera, causada por irregularidades a pequeña escala en la densidad electrónica. Es el equivalente ionosférico del centelleo de las estrellas causado por la turbulencia atmosférica. El centelleo afecta a todas las frecuencias trans-ionosféricas, aunque con mayor intensidad a frecuencias más bajas.',
@@ -365,7 +395,7 @@ export const PHENOMENA: SpaceWeatherArticle[] = [
       },
       {
         heading: 'Distribución Geográfica y Temporal',
-        body: 'El centelleo es más severo en dos regiones: la zona ecuatorial/tropical (±20° del ecuador magnético), especialmente entre el atardecer y la medianoche local, y las regiones aurorales durante actividad geomagnética. En las latitudes ecuatoriales, la mayor actividad post-atardecer se debe a las "burbujas de plasma" que se forman cuando la ionización decae rápidamente. En las regiones polares, el centelleo está asociado con parches de ionización y arcos aurorales. Las latitudes medias generalmente experimentan centelleo débil, excepto durante tormentas geomagnéticas severas.',
+        body: 'El centelleo es más severo en dos regiones: la zona ecuatorial/tropical (±20° del ecuador magnético), especialmente entre el atardecer y la medianoche local, y las regiones aurorales durante actividad geomagnética. En las latitudes ecuatiales, la mayor actividad post-atardecer se debe a las "burbujas de plasma" que se forman cuando la ionización decae rápidamente. En las regiones polares, el centelleo está asociado con parches de ionización y arcos aurorales. Las latitudes medias generalmente experimentan centelleo débil, excepto durante tormentas geomagnéticas severas.',
       },
     ],
   },
@@ -374,6 +404,8 @@ export const PHENOMENA: SpaceWeatherArticle[] = [
     title: 'Cinturones de Radiación',
     summary:
       'Las regiones toroidales de partículas atrapadas por el campo magnético terrestre.',
+    imageUrl: 'https://saberesyciencias.com.mx/wp-content/uploads/2024/08/p09.jpg',
+    imageCaption: 'Imagen referencial: Visualización de los cinturones de radiación de Van Allen que rodean la Tierra.',
     sections: [
       {
         body: 'Los cinturones de radiación de Van Allen son dos regiones con forma de dona (toroide) de partículas energéticas atrapadas por el campo magnético de la Tierra. Fueron descubiertos en 1958 por James Van Allen utilizando datos del satélite Explorer 1. Representan uno de los entornos de radiación más intensos del sistema solar interior y suponen un desafío considerable para los satélites y las misiones tripuladas.',
@@ -397,6 +429,8 @@ export const PHENOMENA: SpaceWeatherArticle[] = [
     title: 'Irradiancia Solar EUV',
     summary:
       'La radiación ultravioleta extrema del Sol y su papel fundamental en la ionósfera terrestre.',
+    imageUrl: 'https://encolombia.com/wp-content/uploads/2022/03/Radiacion-Solar.jpg',
+    imageCaption: 'Imagen referencial: La radiación EUV solar es absorbida por la atmósfera superior terrestre.',
     sections: [
       {
         body: 'La irradiancia solar en el ultravioleta extremo (EUV, longitudes de onda entre 10 y 121 nm) es la principal fuente de ionización de la atmósfera superior terrestre y el principal controlador de la ionósfera y la termósfera. Aunque representa una fracción diminuta de la energía total del Sol, la radiación EUV tiene un impacto enorme en el entorno espacial cercano a la Tierra.',
@@ -411,7 +445,7 @@ export const PHENOMENA: SpaceWeatherArticle[] = [
       },
       {
         heading: 'Medición y Proxies',
-        body: 'La radiación EUV es completamente absorbida por la atmósfera terrestre, por lo que solo puede medirse desde el espacio. Los instrumentos EUVS a bordo de los satélites GOES y el instrumento EVE del SDO proporcionan mediciones continuas. Dado que las mediciones espaciales directas son relativamente recientes y a veces presentan interrupciones, se utilizan proxies basados en tierra como el índice F10.7 cm y el índice Mg II para estimar la emisión EUV a largo plazo.',
+        body: 'La radiación EUV es completamente absorbida por la atmósfera terrestre, por lo que solo puede medirse desde el espacio. Los instrumentos EUVS a bordo de los satélites GOES y el instrumento EVE del SDO proporcionar mediciones continuas. Dado que las mediciones espaciales directas son relativamente recientes y a veces presentan interrupciones, se utilizan proxies basados en tierra como el índice F10.7 cm y el índice Mg II para estimar la emisión EUV a largo plazo.',
       },
     ],
   },
@@ -420,6 +454,8 @@ export const PHENOMENA: SpaceWeatherArticle[] = [
     title: 'Fulguraciones Solares',
     summary:
       'Explosiones repentinas de energía electromagnética en la superficie del Sol.',
+    imageUrl: 'https://es.knowablemagazine.org/docserver/fulltext/10.1146/knowable-082122-1/solar-superflares-1600x600.jpg',
+    imageCaption: 'Imagen referencial: Fulguraciones solares masivas liberando energía al espacio interplanetario.',
     sections: [
       {
         body: 'Las fulguraciones solares son liberaciones súbitas e intensas de energía electromagnética en la atmósfera solar, producidas por la reconexión magnética en regiones de campo magnético complejo. En cuestión de minutos, una fulguración puede liberar una energía equivalente a miles de millones de bombas de hidrógeno, emitiendo radiación a lo largo de todo el espectro electromagnético, desde ondas de radio hasta rayos gamma.',
@@ -443,6 +479,8 @@ export const PHENOMENA: SpaceWeatherArticle[] = [
     title: 'Tormenta de Radiación Solar',
     summary:
       'Lluvia de protones y partículas energéticas solares que pueden afectar a astronautas y satélites.',
+    imageUrl: 'https://img.asmedia.epimg.net/resizer/v2/INFAJQYQY5G6JOHVB7GNYNJE7U.webp?auth=6dea4b25680a2b8638000804c3bc5aeb6a07b3f1091738bc38cca197e4fd1d20&width=1472&height=1104&smart=true',
+    imageCaption: 'Imagen referencial: El Sol activo emitiendo partículas energéticas hacia el sistema solar.',
     sections: [
       {
         body: 'Una tormenta de radiación solar ocurre cuando el Sol emite grandes cantidades de partículas energéticas, principalmente protones, que alcanzan la Tierra en tiempos que van desde minutos hasta horas dependiendo de su energía. Estos eventos, también llamados Eventos de Partículas Energéticas Solares (SEP), son generados por las ondas de choque de las CME rápidas y/o por los procesos de reconexión magnética en las fulguraciones solares.',
@@ -466,6 +504,8 @@ export const PHENOMENA: SpaceWeatherArticle[] = [
     title: 'Viento Solar',
     summary:
       'El flujo continuo de plasma que emana del Sol y llena el espacio interplanetario.',
+    imageUrl: 'https://img.freepik.com/vector-premium/proteccion-contra-viento-solar-tormenta-solar-escudo-tierra-campo-magnetico-rayos-solares-onda-fenomenos-naturales-concepto-vector-ilustracion_229548-3469.jpg',
+    imageCaption: 'Imagen referencial: Ilustración del escudo magnético de la Tierra protegiéndonos del viento solar.',
     sections: [
       {
         body: 'El viento solar es un flujo continuo de plasma (gas ionizado) que emana de la corona solar y se extiende por todo el sistema solar. Fue predicho teóricamente por Eugene Parker en 1958 y confirmado observacionalmente poco después por las primeras sondas espaciales. El viento solar arrastra consigo el campo magnético solar, llamado Campo Magnético Interplanetario (CMI), y es el medio a través del cual el Sol influye en los entornos magnéticos y atmosféricos de los planetas.',
@@ -489,6 +529,8 @@ export const PHENOMENA: SpaceWeatherArticle[] = [
     title: 'Manchas Solares y Ciclo Solar',
     summary:
       'Las regiones oscuras del Sol y el ciclo de ~11 años que controla la actividad solar.',
+    imageUrl: 'https://cdn.agenciasinc.es/var/ezwebin_site/storage/images/_aliases/img_1col/multimedia/fotografias/las-manchas-solares-informan-de-la-historia-de-la-actividad-solar/3503595-1-esl-MX/Las-manchas-solares-informan-de-la-historia-de-la-actividad-solar.jpg',
+    imageCaption: 'Imagen referencial: Grupo de manchas solares observadas en la superficie del Sol.',
     sections: [
       {
         body: 'Las manchas solares son regiones temporales de la fotósfera solar (la superficie visible del Sol) que aparecen oscuras porque son más frías que su entorno (~3500-4500 K comparado con ~5800 K del Sol en calma). Esta menor temperatura se debe a la intensa concentración de campo magnético (1000-4000 gauss) que inhibe la convección, principal mecanismo de transporte de energía en las capas externas del Sol.',
@@ -512,6 +554,8 @@ export const PHENOMENA: SpaceWeatherArticle[] = [
     title: 'Contenido Total de Electrones (TEC)',
     summary:
       'La medida clave de la ionización atmosférica que afecta las señales de navegación.',
+    imageUrl: 'https://services.swpc.noaa.gov/images/animations/ctipe/tec/latest.png',
+    imageCaption: 'Imagen referencial: Mapa del Contenido Total de Electrones (TEC) global en tiempo real. Fuente: NOAA/SWPC.',
     sections: [
       {
         body: 'El Contenido Total de Electrones (TEC, por sus siglas en inglés) es la cantidad total de electrones libres integrados a lo largo de un camino vertical (o inclinado) a través de la ionósfera, desde la superficie terrestre hasta la altitud del satélite GPS (~20.200 km). Se expresa en unidades TEC (TECU), donde 1 TECU = 10¹⁶ electrones/m². Valores típicos varían de 5 a 150+ TECU dependiendo de la ubicación, hora del día, estación y fase del ciclo solar.',

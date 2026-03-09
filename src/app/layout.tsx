@@ -48,6 +48,11 @@ export const metadata: Metadata = {
     'flujo de protones',
     'flujo de electrones',
   ],
+  icons: {
+    icon: '/favicon.ico?v=1',
+    shortcut: '/icon.png?v=1',
+    apple: '/apple-icon.png?v=1',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

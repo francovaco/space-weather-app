@@ -10,6 +10,7 @@ import {
   Satellite, BookOpen, Activity, Image, Zap, Radio,
   Sun, Wind, Eye, Globe, ChevronDown, ChevronRight,
   Gauge, Layers, SunDim, BarChart3, CloudSun, BrainCircuit,
+  Info,
 } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 
@@ -92,7 +93,7 @@ const NAV_ITEMS: NavItem[] = [
   },
   {
     label: 'Clima Espacial',
-    icon: <CloudSun size={15} />,
+    icon: <Info size={15} />,
     children: [
       { label: 'Introducción', href: '/space-weather', icon: <CloudSun size={13} /> },
       {
@@ -152,13 +153,13 @@ export function Sidebar() {
       )}
     >
       {/* Logo area */}
-      <Link href="/" className="flex h-14 items-center border-b border-border px-3 hover:bg-border/40 transition-colors">
+      <Link href="/" className="flex h-14 items-center border-b border-border hover:bg-border/40 transition-colors">
         {sidebarOpen ? (
-          <span className="font-display text-xs font-bold uppercase tracking-widest text-primary">
+          <span className="font-display text-xs font-bold uppercase tracking-widest text-primary px-3">
             Monitor Espacial
           </span>
         ) : (
-          <Activity size={18} className="mx-auto text-primary" />
+          <img src="/assets/logo.png" alt="Logo" className="mx-auto h-12 w-auto object-contain p-1" />
         )}
       </Link>
 
@@ -225,12 +226,26 @@ function NavItemComponent({ item, pathname, collapsed, expanded, onToggle, depth
   const handlePopoverToggle = () => {
     if (!popoverOpen && btnRef.current) {
       const rect = btnRef.current.getBoundingClientRect()
-      // Clamp so popover doesn't overflow viewport bottom
-      const maxTop = window.innerHeight - 320
-      setPopoverPos({ top: Math.min(rect.top, Math.max(8, maxTop)), left: rect.right + 4 })
+      // Center vertically relative to the button (button height is ~36px, popover height is capped at 480px)
+      // We aim for the middle of the popover to align with the middle of the button
+      const popoverHeight = 400 // Estimate
+      let top = rect.top + rect.height / 2 - popoverHeight / 2
+      
+      // Clamp to screen boundaries
+      top = Math.max(8, Math.min(top, window.innerHeight - popoverHeight - 8))
+      
+      setPopoverPos({ top, left: rect.right + 4 })
     }
     setPopoverOpen(v => !v)
   }
+
+  // Auto-scroll active item into view when popover opens
+  const activeItemRef = useRef<HTMLAnchorElement>(null)
+  useEffect(() => {
+    if (popoverOpen && activeItemRef.current) {
+      activeItemRef.current.scrollIntoView({ block: 'center', behavior: 'instant' as any })
+    }
+  }, [popoverOpen])
 
   const baseClass = cn(
     'flex items-center rounded text-xs transition-colors',
@@ -260,7 +275,7 @@ function NavItemComponent({ item, pathname, collapsed, expanded, onToggle, depth
           {popoverOpen && (
             <div
               ref={popoverRef}
-              className="fixed z-[200] min-w-48 max-h-[min(70vh,480px)] overflow-y-auto rounded-md border border-border bg-background-secondary py-1 shadow-xl"
+              className="fixed z-[200] min-w-48 max-h-[min(80vh,480px)] overflow-y-auto rounded-md border border-border bg-background-secondary py-1 shadow-xl scroll-py-10"
               style={{ top: popoverPos.top, left: popoverPos.left }}
             >
               <p className="px-3 py-1.5 text-2xs font-bold uppercase tracking-wider text-text-muted">
@@ -279,7 +294,9 @@ function NavItemComponent({ item, pathname, collapsed, expanded, onToggle, depth
                           <Link
                             key={sub.label}
                             href={sub.href!}
+                            ref={subActive ? activeItemRef : null}
                             onClick={() => setPopoverOpen(false)}
+                            prefetch={false}
                             className={cn(
                               'flex items-center gap-2 px-3 py-1.5 text-xs transition-colors',
                               'hover:bg-border/60 hover:text-text-primary',
@@ -299,6 +316,7 @@ function NavItemComponent({ item, pathname, collapsed, expanded, onToggle, depth
                   <Link
                     key={child.label}
                     href={child.href!}
+                    ref={childActive ? activeItemRef : null}
                     onClick={() => setPopoverOpen(false)}
                     className={cn(
                       'flex items-center gap-2 px-3 py-1.5 text-xs transition-colors',
@@ -346,7 +364,7 @@ function NavItemComponent({ item, pathname, collapsed, expanded, onToggle, depth
 
   return (
     <li>
-      <Link href={item.href!} className={baseClass} title={collapsed ? item.label : undefined}>
+      <Link href={item.href!} prefetch={false} className={baseClass} title={collapsed ? item.label : undefined}>
         <span className="shrink-0">{item.icon}</span>
         {!collapsed && (
           <>

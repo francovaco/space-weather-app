@@ -235,12 +235,9 @@ export function GLOTECClient() {
           <strong>Mapas de Anomalía:</strong> Muestran la desviación del TEC actual respecto a la media móvil de los últimos 10 días. Permite identificar rápidamente tormentas ionosféricas de fase positiva (aumento de densidad) o negativa (depleción), que afectan de manera distinta a las radiocomunicaciones.
         </p>
         <p>
-          <strong>Ray Tracing / MUF:</strong> Estos mapas indican las condiciones de propagación para ondas de radio de alta frecuencia (HF). La Frecuencia Máxima Utilizable (MUF) es crítica para operadores de radio que necesitan seleccionar la banda óptima según el estado de la ionósfera.
+          <strong>Trazado de Rayos / MUF:</strong> Estos mapas indican las condiciones de propagación para ondas de radio de alta frecuencia (HF). La Frecuencia Máxima Utilizable (MUF) es crítica para operadores de radio que necesitan seleccionar la banda óptima según el estado de la ionósfera.
         </p>
-        <p>
-          <strong>Fuente:</strong> NOAA/SWPC — <em>Global Total Electron Content (GloTEC)</em>
-        </p>
-      </SectionDetails>
+        </SectionDetails>
     </div>
   )
 }
