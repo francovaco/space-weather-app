@@ -61,6 +61,10 @@ export const getDRAPFrames = (view: 'global' | 'north-pole' | 'south-pole') =>
 export const getWAMIPEFrames = (view: 'neutral-nowcast' | 'ionosphere-nowcast' | 'neutral-forecast' | 'ionosphere-forecast') =>
   apiFetch(`${BASE}/wam-ipe?view=${view}`)
 
+// --- GloTEC (Global Total Electron Content) ---
+export const getGLOTECFrames = (view: 'atlantic' | 'pacific', type: 'tec' | 'anomaly' | 'ray' = 'tec') =>
+  apiFetch(`${BASE}/glotec?view=${view}&type=${type}`)
+
 /** 
  * Map UI time range to SWPC API range string
  * SWPC endpoints use: 1-hour, 6-hour, 1-day, 3-day, 7-day

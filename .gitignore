@@ -89,3 +89,4 @@ logs/
 *.key
 *.cert
 /tmp/
+GEMINI.md

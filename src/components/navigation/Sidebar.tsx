@@ -76,6 +76,11 @@ const NAV_ITEMS: NavItem[] = [
     icon: <BrainCircuit size={15} />,
   },
   {
+    label: 'GloTEC Contenido Electrones',
+    href: '/glotec',
+    icon: <Layers size={15} />,
+  },
+  {
     label: 'Viento Solar',
     href: '/solar-wind',
     icon: <Wind size={15} />,
