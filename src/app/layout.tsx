@@ -49,9 +49,12 @@ export const metadata: Metadata = {
     'flujo de electrones',
   ],
   icons: {
-    icon: '/favicon.ico?v=1',
-    shortcut: '/icon.png?v=1',
-    apple: '/apple-icon.png?v=1',
+    icon: [
+      { url: '/app-logo.png', type: 'image/png' },
+      { url: '/app-logo.png', type: 'image/png', sizes: '32x32' },
+    ],
+    shortcut: '/app-logo.png',
+    apple: '/app-logo.png',
   },
 }
 
@@ -62,6 +65,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${spaceMono.variable} ${orbitron.variable} ${jetbrainsMono.variable}`}
       suppressHydrationWarning
     >
+      <head>
+        <link rel="icon" href="/app-logo-sq.png?v=3" />
+        <link rel="apple-touch-icon" href="/app-logo-sq.png?v=3" />
+      </head>
       <body>
         <Providers>
           <AppShell>{children}</AppShell>
