@@ -268,11 +268,13 @@ function DRAPPlayer({ frames, view }: { frames: DRAPFrame[]; view: DRAPView }) {
                   resolve()
                 }
                 img.onerror = () => {
+                  // Mark as null so it gets filtered out
+                  ok[i + bi] = null
                   doneCount++
                   if (!cancelled) setLoadProgress(Math.round((doneCount / frames.length) * 100))
                   resolve()
                 }
-                img.src = f.url
+                img.src = proxyUrl(f.url)
               })
           )
         )
@@ -285,6 +287,7 @@ function DRAPPlayer({ frames, view }: { frames: DRAPFrame[]; view: DRAPView }) {
           setLoaded(true)
           setPlaying(true)
         } else {
+          // If all failed, show something at least to avoid infinite loading
           setActiveFrames(frames)
           setLoaded(true)
         }

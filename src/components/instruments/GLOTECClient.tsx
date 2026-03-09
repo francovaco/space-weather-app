@@ -325,6 +325,8 @@ function GLOTECPlayer({ frames, type }: { frames: GLOTECFrame[]; type: GLOTECTyp
                   resolve()
                 }
                 img.onerror = () => {
+                  // Mark as null so it gets filtered out
+                  ok[i + bi] = null
                   doneCount++
                   if (!cancelled) setLoadProgress(Math.round((doneCount / frames.length) * 100))
                   resolve()
@@ -343,6 +345,7 @@ function GLOTECPlayer({ frames, type }: { frames: GLOTECFrame[]; type: GLOTECTyp
           setLoaded(true)
           setPlaying(true)
         } else {
+          // If all failed, show something at least to avoid infinite loading
           setActiveFrames(frames)
           setLoaded(true)
         }

@@ -61,6 +61,10 @@ export const getDRAPFrames = (view: 'global' | 'north-pole' | 'south-pole') =>
 export const getWAMIPEFrames = (view: 'neutral-nowcast' | 'ionosphere-nowcast' | 'neutral-forecast' | 'ionosphere-forecast') =>
   apiFetch(`${BASE}/wam-ipe?view=${view}`)
 
+// --- Geospace Magnetosphere Movies ---
+export const getMagnetosphereFrames = (type: 'density' | 'pressure' | 'velocity') =>
+  apiFetch(`${BASE}/magnetosphere?type=${type}`)
+
 // --- GloTEC (Global Total Electron Content) ---
 export const getGLOTECFrames = (view: 'atlantic' | 'pacific', type: 'tec' | 'anomaly' | 'ray' = 'tec') =>
   apiFetch(`${BASE}/glotec?view=${view}&type=${type}`)

@@ -10,7 +10,7 @@ import {
   Satellite, BookOpen, Activity, Image, Zap, Radio,
   Sun, Wind, Eye, Globe, ChevronDown, ChevronRight,
   Gauge, Layers, SunDim, BarChart3, CloudSun, BrainCircuit,
-  Info,
+  Info, Shield,
 } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 
@@ -75,6 +75,11 @@ const NAV_ITEMS: NavItem[] = [
     label: 'WAM-IPE Atmósfera/Ionósfera',
     href: '/wam-ipe',
     icon: <BrainCircuit size={15} />,
+  },
+  {
+    label: 'Magnetósfera Geospace',
+    href: '/instruments/magnetosphere',
+    icon: <Shield size={15} />,
   },
   {
     label: 'GloTEC Contenido Electrones',
