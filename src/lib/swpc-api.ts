@@ -69,6 +69,10 @@ export const getMagnetosphereFrames = (type: 'density' | 'pressure' | 'velocity'
 export const getGLOTECFrames = (view: 'atlantic' | 'pacific', type: 'tec' | 'anomaly' | 'ray' = 'tec') =>
   apiFetch(`${BASE}/glotec?view=${view}&type=${type}`)
 
+// --- CTIPe (Coupled Thermosphere Ionosphere Plasmasphere Electrodynamics Model) ---
+export const getCTIPEFrames = () =>
+  apiFetch(`${BASE}/ctipe`)
+
 /** 
  * Map UI time range to SWPC API range string
  * SWPC endpoints use: 1-hour, 6-hour, 1-day, 3-day, 7-day

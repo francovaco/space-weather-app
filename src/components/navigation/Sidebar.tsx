@@ -10,7 +10,7 @@ import {
   Satellite, BookOpen, Activity, Image, Zap, Radio,
   Sun, Wind, Eye, Globe, ChevronDown, ChevronRight,
   Gauge, Layers, SunDim, BarChart3, CloudSun, BrainCircuit,
-  Info, Shield,
+  Info, Shield, Orbit,
 } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 
@@ -85,6 +85,11 @@ const NAV_ITEMS: NavItem[] = [
     label: 'GloTEC Contenido Electrones',
     href: '/glotec',
     icon: <Layers size={15} />,
+  },
+  {
+    label: 'CTIPe Pronóstico TEC',
+    href: '/ctipe',
+    icon: <Orbit size={15} />,
   },
   {
     label: 'Viento Solar',

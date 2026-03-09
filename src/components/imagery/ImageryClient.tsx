@@ -356,6 +356,26 @@ export function ImageryClient() {
 
 // ── Channel grid ───────────────────────────────────────────────
 function ChannelGrid({ onSelect }:{ onSelect:(c:Channel)=>void }) {
+  const [latestTs, setLatestTs] = useState<string | null>(null)
+
+  // Fetch the timestamp of the latest image ONCE for the whole grid
+  // Using GEOCOLOR as the reference channel (updated every 10 min)
+  useEffect(() => {
+    let cancelled = false
+    async function fetchLatest() {
+      try {
+        const res = await fetch(`/api/goes/imagery-list?band=GEOCOLOR&count=1`)
+        const data = await res.json()
+        if (cancelled) return
+        const fn: string = data.frames?.[0]
+        if (fn) setLatestTs(formatLabel(fn))
+      } catch { /* silent */ }
+    }
+    fetchLatest()
+    const id = setInterval(fetchLatest, 10 * 60 * 1000)
+    return () => { cancelled = true; clearInterval(id) }
+  }, [])
+
   return (
     <div className="space-y-6 pb-8">
       <div>
@@ -369,13 +389,17 @@ function ChannelGrid({ onSelect }:{ onSelect:(c:Channel)=>void }) {
       <section>
         <p className="section-label mb-3">Productos RGB y Compuestos</p>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
-          {CHANNELS.filter(c=>c.tipo==='rgb').map(ch=><ChannelCard key={ch.id} channel={ch} onSelect={onSelect}/>)}
+          {CHANNELS.filter(c=>c.tipo==='rgb').map(ch=>(
+            <ChannelCard key={ch.id} channel={ch} onSelect={onSelect} latestTs={latestTs} />
+          ))}
         </div>
       </section>
       <section>
         <p className="section-label mb-3">Bandas ABI Individuales — Canales 1 al 16</p>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-8">
-          {CHANNELS.filter(c=>c.tipo!=='rgb').map(ch=><ChannelCard key={ch.id} channel={ch} onSelect={onSelect}/>)}
+          {CHANNELS.filter(c=>c.tipo!=='rgb').map(ch=>(
+            <ChannelCard key={ch.id} channel={ch} onSelect={onSelect} latestTs={latestTs} />
+          ))}
         </div>
       </section>
       <div className="flex flex-wrap gap-3 pt-2 border-t border-border">
@@ -387,11 +411,8 @@ function ChannelGrid({ onSelect }:{ onSelect:(c:Channel)=>void }) {
   )
 }
 
-function ChannelCard({ channel:ch, onSelect }:{ channel:Channel; onSelect:(c:Channel)=>void }) {
-  const [ok,setOk]           = useState(true)
-  const [lastTs,setLastTs]   = useState<string|null>(null)
-  const [visible, setVisible] = useState(false)
-  const cardRef = useRef<HTMLButtonElement>(null)
+function ChannelCard({ channel:ch, onSelect, latestTs }:{ channel:Channel; onSelect:(c:Channel)=>void; latestTs: string | null }) {
+  const [ok,setOk] = useState(true)
   const isGlm = ch.id === 'EXTENT3'
 
   // Thumbnail: use latest symlink from CDN via proxy
@@ -400,48 +421,13 @@ function ChannelCard({ channel:ch, onSelect }:{ channel:Channel; onSelect:(c:Cha
     : `${CDN_ABI}/${ch.id}/latest.jpg`
   const thumbSrc = proxy(thumbRaw)
 
-  // Use IntersectionObserver to only fetch data when visible
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setVisible(true)
-          observer.disconnect()
-        }
-      },
-      { threshold: 0.1 }
-    )
-    if (cardRef.current) observer.observe(cardRef.current)
-    return () => observer.disconnect()
-  }, [])
-
-  // Fetch the timestamp of the latest image only when visible
-  useEffect(() => {
-    if (!visible) return
-    let cancelled = false
-    async function fetchLatest() {
-      try {
-        const res  = await fetch(`/api/goes/imagery-list?band=${ch.id}&count=1`)
-        const data = await res.json()
-        if (cancelled) return
-        const fn: string = data.frames?.[0]
-        if (fn) setLastTs(formatLabel(fn))
-      } catch { /* silent */ }
-    }
-    fetchLatest()
-    // Refresh every 10 min
-    const id = setInterval(fetchLatest, 10 * 60 * 1000)
-    return () => { cancelled = true; clearInterval(id) }
-  }, [ch.id, visible])
-
   return (
     <button 
-      ref={cardRef}
       onClick={()=>onSelect(ch)}
       className="group flex flex-col overflow-hidden rounded-lg border border-border bg-background-card
                  transition-all hover:border-border-accent hover:shadow-glow-blue hover:scale-[1.02]">
       <div className="relative aspect-square w-full overflow-hidden bg-background-secondary">
-        {ok && visible
+        {ok
           ? <img src={thumbSrc} alt={ch.nombre}
               loading="lazy"
               className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
@@ -453,10 +439,10 @@ function ChannelCard({ channel:ch, onSelect }:{ channel:Channel; onSelect:(c:Cha
           {TIPO_LABELS[ch.tipo]}
         </span>
         {/* Last image timestamp overlay */}
-        {lastTs && (
+        {latestTs && (
           <div className="absolute bottom-0 left-0 right-0 bg-black/70 px-1.5 py-0.5">
             <span className="font-data text-2xs text-accent-cyan tabular-nums leading-none">
-              {lastTs}
+              {latestTs}
             </span>
           </div>
         )}
