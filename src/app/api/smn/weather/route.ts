@@ -13,8 +13,25 @@ export async function GET(req: NextRequest) {
       lat = parseFloat(headerLat)
       lon = parseFloat(headerLon)
     } else {
-      lat = -32.8895 
-      lon = -68.8458
+      try {
+        // IP-to-Geo fallback for local development or missing headers
+        const ipRes = await fetch('https://ipapi.co/json/', { next: { revalidate: 3600 } })
+        if (ipRes.ok) {
+          const ipData = await ipRes.json()
+          if (ipData.latitude && ipData.longitude) {
+            lat = ipData.latitude
+            lon = ipData.longitude
+          } else {
+            throw new Error('IP geo failed')
+          }
+        } else {
+          throw new Error('IP service down')
+        }
+      } catch (e) {
+        // Final fallback if everything fails
+        lat = -32.8895 
+        lon = -68.8458
+      }
     }
   }
 
