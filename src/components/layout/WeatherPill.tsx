@@ -71,12 +71,12 @@ export function WeatherPill() {
 
   return (
     <div className="flex items-center gap-3 rounded-full border border-border bg-background-card px-3 py-1 shadow-sm transition-all hover:border-border-accent group">
-      {/* Alert Icon */}
+      {/* Alert Icon - Centered and resized for better fit */}
       <div className={cn(
-        "flex h-5 w-5 shrink-0 items-center justify-center rounded bg-black/40 border transition-colors",
-        weather.hasAlerts ? "border-red-500/50 text-red-500 shadow-[0_0_8px_rgba(239,68,68,0.4)]" : "border-green-500/50 text-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]"
+        "flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-black/40 border transition-all",
+        weather.hasAlerts ? "border-red-500/50 text-red-500 shadow-[0_0_10px_rgba(239,68,68,0.4)]" : "border-green-500/50 text-green-500 shadow-[0_0_10px_rgba(34,197,94,0.4)]"
       )}>
-        <AlertTriangle size={12} className={cn(weather.hasAlerts && "animate-pulse")} />
+        <AlertTriangle size={14} className={cn("shrink-0", weather.hasAlerts && "animate-pulse")} />
       </div>
 
       <div className="h-3 w-px bg-border" />
