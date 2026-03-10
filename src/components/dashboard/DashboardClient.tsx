@@ -327,15 +327,15 @@ export function DashboardClient() {
             </div>
 
             {/* 7-Day Forecast */}
-            <div className="card overflow-hidden border-white/5 h-[170px] flex flex-col p-3">
-              <div className="flex items-center justify-between mb-2">
-                <span className="section-label text-[10px] font-bold uppercase tracking-widest">Pronóstico 7 Días</span>
-                <div className="h-px flex-1 mx-4 bg-gradient-to-r from-border/50 to-transparent" />
+            <div className="card overflow-hidden border-white/5 h-[230px] flex flex-col p-5">
+              <div className="flex items-center justify-between mb-4">
+                <span className="section-label text-[12px] font-black uppercase tracking-[0.25em] text-accent-cyan/90">Pronóstico de 7 Días</span>
+                <div className="h-px flex-1 mx-8 bg-gradient-to-r from-accent-cyan/30 to-transparent" />
               </div>
               {weatherLoading ? (
                 <div className="flex h-24 flex-1 items-center justify-center"><span className="h-4 w-4 animate-spin rounded-full border-2 border-accent-cyan border-t-transparent" /></div>
               ) : (
-                <div className="grid grid-cols-7 gap-1 flex-1 items-center">
+                <div className="grid grid-cols-7 gap-3 flex-1 items-center">
                   {weather!.forecast.map((f, i) => {
                     const dateObj = new Date(f.date + 'T12:00:00')
                     const dayStr = DAY_NAMES_SHORT[dateObj.getDay()]
@@ -344,17 +344,17 @@ export function DashboardClient() {
                         key={f.date} 
                         onClick={() => setSelectedDay(f)}
                         className={cn(
-                          "flex flex-col items-center justify-center gap-1 rounded-xl py-2 px-0.5 transition-all group",
+                          "flex flex-col items-center justify-center gap-3 rounded-2xl py-4 px-1 transition-all group",
                           i === 0 ? "bg-accent-cyan/10 ring-1 ring-accent-cyan/30" : "hover:bg-white/[0.05] hover:ring-1 hover:ring-white/20"
                         )}
                       >
                         <span className={cn("text-[13px] font-black uppercase tracking-tighter", i === 0 ? "text-accent-cyan" : "text-text-dim group-hover:text-text-primary")}>
                           {i === 0 ? 'Hoy' : dayStr}
                         </span>
-                        {getWeatherIcon(f.weather_id, 32, "drop-shadow-glow-blue transition-transform group-hover:scale-110")}
+                        {getWeatherIcon(f.weather_id, 40, "drop-shadow-glow-blue transition-transform group-hover:scale-110")}
                         <div className="flex flex-col items-center">
-                          <span className="font-display text-lg font-black text-text-primary leading-none tracking-tighter">{Math.round(f.max)}°</span>
-                          <span className="text-[12px] font-bold text-text-dim mt-1 tracking-tighter">{Math.round(f.min)}°</span>
+                          <span className="font-display text-2xl font-black text-white leading-none tracking-tighter">{Math.round(f.max)}°</span>
+                          <span className="text-[13px] font-bold text-text-muted mt-1 tracking-tighter">{Math.round(f.min)}°</span>
                         </div>
                       </button>
                     )
@@ -367,7 +367,7 @@ export function DashboardClient() {
 
         {/* SAT Alerts */}
         <div className={cn(
-          "card border-accent-orange/30 bg-accent-orange/5 flex flex-col h-[352px]",
+          "card border-accent-orange/30 bg-accent-orange/5 flex flex-col h-[412px]",
           (!weatherLoading && !weather?.current) ? "lg:col-span-1" : "lg:col-span-1"
         )}>
           <div className="flex items-center justify-between mb-3 shrink-0">
@@ -561,8 +561,8 @@ function QuickLink({ title, description, href, icon, color }: { title: string, d
           {icon}
         </div>
         <div className="flex flex-col">
-          <span className="text-xs font-black uppercase tracking-widest text-text-primary group-hover:text-accent-cyan transition-colors">{title}</span>
-          <span className="text-[10px] font-bold text-text-muted uppercase mt-0.5 tracking-tighter">{description}</span>
+          <span className="text-[14px] font-black uppercase tracking-widest text-text-primary group-hover:text-accent-cyan transition-colors">{title}</span>
+          <span className="text-[12px] font-bold text-text-muted uppercase mt-0.5 tracking-tighter">{description}</span>
         </div>
       </div>
       <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-text-dim opacity-0 transition-all group-hover:opacity-100 group-hover:translate-x-1" />
@@ -574,7 +574,7 @@ function StatusCard({ label, value, sub, color, icon, href, loading }: { label: 
   return (
     <Link href={href} className="card group border-white/5 bg-background-card/30 p-3 transition-all hover:border-white/10 hover:bg-white/5">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-[9px] font-black uppercase tracking-widest text-text-muted">{label}</span>
+        <span className="text-[11px] font-black uppercase tracking-widest text-text-muted">{label}</span>
         <div className={cn("transition-transform group-hover:scale-110", color)}>
           {icon}
         </div>
@@ -583,8 +583,8 @@ function StatusCard({ label, value, sub, color, icon, href, loading }: { label: 
         <div className="h-6 w-16 animate-pulse rounded bg-white/5" />
       ) : (
         <>
-          <p className={cn("text-lg font-display font-black leading-none tracking-tight", color)}>{value}</p>
-          <p className="mt-1 text-[9px] font-bold uppercase tracking-tighter text-text-dim line-clamp-1">{sub}</p>
+          <p className={cn("text-xl font-display font-black leading-none tracking-tight", color)}>{value}</p>
+          <p className="mt-1.5 text-[11px] font-bold uppercase tracking-tighter text-text-dim line-clamp-1">{sub}</p>
         </>
       )}
     </Link>
