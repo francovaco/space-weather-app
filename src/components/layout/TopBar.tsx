@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils'
 import { Menu, Satellite } from 'lucide-react'
 import { formatInTimeZone } from 'date-fns-tz'
 import { SpaceWeatherPills } from '@/components/layout/SpaceWeatherBar'
+import { WeatherPill } from '@/components/layout/WeatherPill'
 import Link from 'next/link'
 
 export function TopBar() {
@@ -24,17 +25,21 @@ export function TopBar() {
   return (
     <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-background-secondary px-4">
       {/* Left */}
-      <div className="flex items-center gap-3">
-        <button onClick={toggleSidebar} className="ctrl-btn" aria-label="Alternar barra lateral">
-          <Menu size={16} />
-        </button>
-        <Link href="/" prefetch={false} className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer">
-          <Satellite size={14} className="text-accent-cyan" />
-          <span className="font-display text-xs font-semibold tracking-widest text-text-primary uppercase">
-            GOES-19
-          </span>
-          <span className="text-2xs text-text-muted">Clima Espacial</span>
-        </Link>
+      <div className="flex items-center gap-6">
+        <div className="flex items-center gap-3">
+          <button onClick={toggleSidebar} className="ctrl-btn" aria-label="Alternar barra lateral">
+            <Menu size={16} />
+          </button>
+          <Link href="/" prefetch={false} className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer">
+            <Satellite size={14} className="text-accent-cyan" />
+            <span className="font-display text-xs font-semibold tracking-widest text-text-primary uppercase">
+              GOES-19
+            </span>
+          </Link>
+        </div>
+
+        {/* Local weather from SMN */}
+        <WeatherPill />
       </div>
 
       {/* Center: space weather conditions pills */}
