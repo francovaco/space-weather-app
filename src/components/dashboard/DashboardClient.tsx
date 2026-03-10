@@ -221,7 +221,7 @@ export function DashboardClient() {
                 Plataforma avanzada de visualización de datos en tiempo real para el clima espacial y terrestre.
               </p>
               <p className="text-xs font-medium text-text-muted leading-relaxed uppercase tracking-tighter opacity-80">
-                Este sistema integra información crítica del satélite <span className="text-white">GOES-19</span>, datos actualizados del <span className="text-white">clima terrestre y local</span> y modelos físicos de alta precisión. Su propósito es proporcionar una alerta temprana sobre fenómenos solares, variaciones ionosféricas, condiciones climáticas locales y alertas meteorológicas extremas que afectan las comunicaciones, los sistemas <span className="text-white">GPS</span> y la infraestructura tecnológica en la región.
+                Este sistema integra información crítica del satélite <span className="text-white">GOES-19</span>, datos actualizados del <span className="text-white">clima terrestre y local</span> y modelos físicos de alta precisión. Su propósito es proporcionar una alerta temprana sobre fenómenos solares, variaciones ionosféricas, condiciones climáticas locales y alertas meteorológicas extremas que afectan las comunicaciones, los sistemas <span className="text-white">GPS</span> y la infraestructura tecnológica en la región. <Link href="/space-weather" className="text-accent-cyan hover:text-white transition-colors border-b border-accent-cyan/30">Visita la sección de Clima Espacial para comprender los impactos y fenómenos detallados.</Link>
               </p>
             </div>
           </div>
