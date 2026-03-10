@@ -69,18 +69,19 @@ function getWindDir(deg: number) {
 
 function formatTime(iso: string) {
   if (!iso) return '--:--'
-  return new Date(iso).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
+  // Extraemos la hora directamente del string para evitar desfases por zona horaria local
+  const timePart = iso.split('T')[1]
+  return timePart ? timePart.substring(0, 5) : '--:--'
 }
 
 function getWeatherIcon(code: number, size = 24, className = "") {
+  // Mapeo estricto a la iconografía permitida
   if (code === 0) return <Sun size={size} className={cn("text-amber-400", className)} />
-  if (code <= 3) return <Cloud size={size} className={cn("text-slate-300", className)} />
-  if (code >= 45 && code <= 48) return <Cloud size={size} className={cn("text-slate-500", className)} />
-  if (code >= 51 && code <= 67) return <CloudRain size={size} className={cn("text-blue-400", className)} />
-  if (code >= 71 && code <= 77) return <Snowflake size={size} className={cn("text-cyan-100", className)} />
-  if (code >= 80 && code <= 82) return <CloudRain size={size} className={cn("text-blue-500", className)} />
-  if (code >= 95) return <CloudLightning size={size} className={cn("text-accent-orange", className)} />
-  return <Cloud size={size} className={cn("text-text-muted", className)} />
+  if (code <= 48) return <Cloud size={size} className={cn("text-sky-300", className)} />
+  if (code <= 67) return <CloudRain size={size} className={cn("text-blue-400", className)} />
+  if (code <= 77) return <Snowflake size={size} className={cn("text-white", className)} />
+  if (code <= 82) return <CloudRain size={size} className={cn("text-indigo-400", className)} />
+  return <CloudLightning size={size} className={cn("text-orange-500", className)} />
 }
 
 async function fetchEarthquakes(): Promise<Earthquake[]> {
@@ -330,9 +331,9 @@ export function DashboardClient() {
                   </div>
 
                   {/* Center: Larger Details, Same Level */}
-                  <div className="grid grid-cols-4 gap-x-8 gap-y-2 flex-1 justify-center">
+                  <div className="grid grid-cols-4 gap-x-4 gap-y-2 flex-1 justify-center">
                     <WeatherDetail icon={<Wind size={14} className="text-accent-cyan" />} label="Viento" value={`${Math.round(weather!.current!.wind_speed)}k/h`} />
-                    <WeatherDetail icon={<Navigation size={14} className="text-accent-cyan rotate-[var(--tw-rotate)]" style={{'--tw-rotate': `${weather!.current!.wind_direction}deg`} as any} />} label="Dir." value={getWindDir(weather!.current!.wind_direction)} />
+                    <WeatherDetail icon={<Navigation size={14} className="text-accent-cyan" style={{ transform: `rotate(${weather!.current!.wind_direction}deg)` }} />} label="Dir." value={getWindDir(weather!.current!.wind_direction)} />
                     <WeatherDetail icon={<Droplets size={14} className="text-accent-amber" />} label="Humedad" value={`${weather!.current!.humidity}%`} />
                     <WeatherDetail icon={<Gauge size={14} className="text-accent-teal" />} label="Presión" value={`${Math.round(weather!.current!.pressure)}`} />
                     
@@ -527,7 +528,6 @@ export function DashboardClient() {
             <div className="grid grid-cols-2 gap-4">
               <IconRef code={0} label="Despejado" />
               <IconRef code={3} label="Parcialmente Nublado" />
-              <IconRef code={45} label="Niebla / Bruma" />
               <IconRef code={61} label="Lluvia / Llovizna" />
               <IconRef code={71} label="Nieve / Aguanieve" />
               <IconRef code={80} label="Chaparrones" />
@@ -572,12 +572,12 @@ export function DashboardClient() {
 
 function WeatherDetail({ icon, label, value }: { icon: React.ReactNode, label: string, value: string }) {
   return (
-    <div className="flex flex-col gap-0.5">
-      <div className="flex items-center gap-1.5 text-text-dim">
-        {icon}
-        <span className="text-[9px] font-display font-black uppercase tracking-tighter">{label}</span>
+    <div className="flex flex-col gap-0">
+      <div className="flex items-center gap-1 text-text-dim">
+        <div className="w-4 flex justify-center">{icon}</div>
+        <span className="text-[8px] font-display font-black uppercase tracking-tighter leading-none">{label}</span>
       </div>
-      <span className="text-[11px] font-display font-bold text-text-primary tabular-nums ml-4.5">{value}</span>
+      <span className="text-[11px] font-display font-bold text-text-primary tabular-nums ml-[20px] leading-none mt-0.5">{value}</span>
     </div>
   )
 }
