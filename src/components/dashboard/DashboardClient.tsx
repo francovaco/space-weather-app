@@ -248,14 +248,14 @@ export function DashboardClient() {
     <div className="flex flex-col gap-6 animate-fadeIn">
       {/* Intro section */}
       <div className="rounded-xl border border-accent-cyan/20 bg-accent-cyan/5 p-4 shadow-glow-blue/5">
-        <div className="flex items-start gap-4">
-          <div className="hidden sm:flex h-5 w-5 shrink-0 items-center justify-center rounded bg-accent-cyan/10 ring-1 ring-accent-cyan/30 overflow-hidden mt-0.5">
-            <img src="/assets/logo.png" alt="Logo" className="w-full h-full object-contain" />
+        <div className="flex items-start gap-5">
+          <div className="hidden sm:flex h-36 w-36 shrink-0 items-center justify-center rounded-xl bg-accent-cyan/10 ring-1 ring-accent-cyan/30 overflow-hidden">
+            <img src="/assets/logo.png" alt="Logo" className="w-full h-full object-contain p-1" />
           </div>
           <div className="flex-1">
             <div className="flex flex-col gap-3">
               <p className="text-[13px] font-black text-white leading-tight uppercase tracking-widest flex items-center gap-2">
-                <img src="/assets/logo.png" alt="Logo" className="sm:hidden w-4 h-4 object-contain" />
+                <img src="/assets/logo.png" alt="Logo" className="sm:hidden w-14 h-14 object-contain" />
                 Plataforma avanzada de visualización de datos en tiempo real para el clima espacial y terrestre.
               </p>
               <p className="text-xs font-medium text-text-muted leading-relaxed uppercase tracking-tighter opacity-80">
