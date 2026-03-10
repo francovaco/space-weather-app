@@ -130,44 +130,51 @@ export function DashboardClient() {
   const [selectedDay, setSelectedDay] = useState<DailyForecast | null>(null)
 
   useEffect(() => {
-    const BUENOS_AIRES = { lat: -34.6037, lon: -58.3816 }
-    let lastCoords = BUENOS_AIRES
+    let intervalId: any
 
-    const fetchWeather = async (lat: number, lon: number, isFallback = false) => {
+    const fetchWeather = async (lat?: number, lon?: number) => {
       try {
-        const res = await fetch(`/api/smn/weather?lat=${lat}&lon=${lon}`)
+        const url = (lat !== undefined && lon !== undefined) 
+          ? `/api/smn/weather?lat=${lat}&lon=${lon}` 
+          : `/api/smn/weather`
+        
+        const res = await fetch(url)
         if (res.ok) {
           const data = await res.json()
           setWeather(data)
-          setUsingFallback(isFallback)
+          setUsingFallback(false)
+        } else {
+          setWeather(null)
         }
-      } catch (err) { console.error(err) }
-      finally { setWeatherLoading(false) }
+      } catch (err) { 
+        console.error('Fetch error:', err)
+        setWeather(null)
+      } finally { 
+        setWeatherLoading(false) 
+      }
     }
 
-    const startPolling = () => {
-      fetchWeather(lastCoords.lat, lastCoords.lon, lastCoords === BUENOS_AIRES)
-      const id = setInterval(() => {
-        fetchWeather(lastCoords.lat, lastCoords.lon, lastCoords === BUENOS_AIRES)
-      }, 60000)
+    const startPolling = (lat?: number, lon?: number) => {
+      fetchWeather(lat, lon)
+      const id = setInterval(() => fetchWeather(lat, lon), 60000)
       return id
     }
 
-    let intervalId: any
-
-    if (!navigator.geolocation) {
-      intervalId = startPolling()
-    } else {
+    if (navigator.geolocation) {
+      // 1. Try to get browser location with a longer timeout
       navigator.geolocation.getCurrentPosition(
         (p) => {
-          lastCoords = { lat: p.coords.latitude, lon: p.coords.longitude }
-          intervalId = startPolling()
+          intervalId = startPolling(p.coords.latitude, p.coords.longitude)
         },
         () => {
+          // 2. If it fails (denied/timeout), let the server detect by IP
           intervalId = startPolling()
         },
-        { timeout: 6000 }
+        { timeout: 8000, enableHighAccuracy: false }
       )
+    } else {
+      // 3. No geolocation API available, use IP
+      intervalId = startPolling()
     }
 
     return () => intervalId && clearInterval(intervalId)

@@ -30,11 +30,13 @@ export function WeatherPill() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const BUENOS_AIRES = { lat: -34.6037, lon: -58.3816 }
-
-    const fetchWeather = async (lat: number, lon: number) => {
+    const fetchWeather = async (lat?: number, lon?: number) => {
       try {
-        const res = await fetch(`/api/smn/weather?lat=${lat}&lon=${lon}`)
+        const url = (lat !== undefined && lon !== undefined) 
+          ? `/api/smn/weather?lat=${lat}&lon=${lon}` 
+          : `/api/smn/weather`
+        
+        const res = await fetch(url)
         if (res.ok) {
           const data = await res.json()
           setWeather(data)
@@ -46,16 +48,15 @@ export function WeatherPill() {
       }
     }
 
-    if (!navigator.geolocation) {
-      fetchWeather(BUENOS_AIRES.lat, BUENOS_AIRES.lon)
-      return
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => fetchWeather(pos.coords.latitude, pos.coords.longitude),
+        () => fetchWeather(), // Fallback to Server/IP detection
+        { timeout: 4000, enableHighAccuracy: false }
+      )
+    } else {
+      fetchWeather() // Use Server/IP detection immediately
     }
-
-    navigator.geolocation.getCurrentPosition(
-      (pos) => fetchWeather(pos.coords.latitude, pos.coords.longitude),
-      () => fetchWeather(BUENOS_AIRES.lat, BUENOS_AIRES.lon),
-      { timeout: 5000 }
-    )
   }, [])
 
   if (loading) {
