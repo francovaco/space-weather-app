@@ -29,19 +29,19 @@ export async function GET(req: NextRequest) {
         }
       } catch (e) {
         // No location could be detected
-        return NextResponse.json({ current: null, forecast: [], status: 'no-location' })
+        return NextResponse.json({ current: null, forecast: [], alerts: [], hasAlerts: false, status: 'no-location' })
       }
     }
   }
 
   try {
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 6000)
+    const timeoutId = setTimeout(() => controller.abort(), 10000)
 
     // 2. Parallel Fetch: Weather + City Name
     const [weatherRes, geoRes] = await Promise.all([
       fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,surface_pressure,visibility&daily=weather_code,temperature_2m_max,temperature_2m_min,wind_speed_10m_max,precipitation_probability_max,surface_pressure_max,relative_humidity_2m_mean,visibility_max&timezone=auto`,
+        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,surface_pressure,visibility&daily=weather_code,temperature_2m_max,temperature_2m_min,wind_speed_10m_max,precipitation_probability_max,surface_pressure_max,relative_humidity_2m_mean,visibility_max&timezone=auto&alerts=true`,
         { signal: controller.signal, next: { revalidate: 900 } }
       ),
       fetch(
@@ -51,11 +51,69 @@ export async function GET(req: NextRequest) {
     ])
 
     clearTimeout(timeoutId)
+    
+    if (!weatherRes.ok) {
+      const errText = await weatherRes.text()
+      console.error('Open-Meteo Error:', errText)
+      throw new Error('Weather service failure')
+    }
+
     const data = await weatherRes.json()
     const geoData = geoRes ? await geoRes.json() : null
 
-    // Prioritize Province (principalSubdivision) as requested
-    let cityName = geoData?.principalSubdivision || geoData?.city || geoData?.locality || 'Ubicación Detectada'
+    // Determine City/Province Name early for alert filtering
+    const cityName = geoData?.principalSubdivision || geoData?.city || geoData?.locality || 'Ubicación Detectada'
+
+    // 3. Process Alerts from Open-Meteo (Safely)
+    const alerts = Array.isArray(data.alerts) 
+      ? data.alerts.map((a: any) => ({
+          title: a.headline || a.event || 'Alerta Meteorológica',
+          description: a.description || '',
+          severity: a.severity || 'unknown',
+          expires: a.expires || null,
+          type: 'SAT'
+        }))
+      : []
+
+    // 4. Try to fetch SMN Short-term Warnings (ACP)
+    try {
+      const smnCapRes = await fetch('https://ssl.smn.gob.ar/CAP/AR.php', { signal: controller.signal, next: { revalidate: 300 } })
+      if (smnCapRes.ok) {
+        const capXml = await smnCapRes.text()
+        const items = capXml.match(/<item>[\s\S]*?<\/item>/g) || []
+        
+        items.forEach(item => {
+          const titleMatch = item.match(/<title>(.*?)<\/title>/)
+          const descMatch = item.match(/<description>(.*?)<\/description>/)
+          const linkMatch = item.match(/<link>(.*?)<\/link>/)
+          
+          if (titleMatch && descMatch) {
+            const title = titleMatch[1].replace('<![CDATA[', '').replace(']]>', '')
+            const description = descMatch[1].replace('<![CDATA[', '').replace(']]>', '')
+            const link = linkMatch ? linkMatch[1] : ''
+
+            const isShortTerm = link.toLowerCase().includes('short_term') || description.toLowerCase().includes('corto plazo')
+            
+            // Filter by city or province name
+            const locationInDesc = description.toLowerCase().includes(cityName.toLowerCase()) || 
+                                   (geoData?.city && description.toLowerCase().includes(geoData.city.toLowerCase())) ||
+                                   (geoData?.locality && description.toLowerCase().includes(geoData.locality.toLowerCase()))
+
+            if (isShortTerm && locationInDesc) {
+              alerts.unshift({
+                title: `AVISO CORTO PLAZO: ${title}`,
+                description: description,
+                severity: 'Extreme',
+                expires: null,
+                type: 'ACP'
+              })
+            }
+          }
+        })
+      }
+    } catch (e) {
+      console.error('SMN CAP fetch error:', e)
+    }
 
     const getDesc = (code: number) => {
       if (code === 0) return 'Despejado'
@@ -67,6 +125,10 @@ export async function GET(req: NextRequest) {
       return 'Nublado'
     }
 
+    if (!data.current) {
+       throw new Error('Incomplete weather data')
+    }
+
     return NextResponse.json({
       current: {
         name: cityName,
@@ -76,7 +138,7 @@ export async function GET(req: NextRequest) {
         st: data.current.apparent_temperature,
         wind_speed: data.current.wind_speed_10m,
         pressure: data.current.surface_pressure,
-        visibility: data.current.visibility / 1000,
+        visibility: (data.current.visibility || 0) / 1000,
         weather_id: data.current.weather_code
       },
       forecast: (data.daily?.time || []).map((time: string, i: number) => ({
@@ -91,14 +153,18 @@ export async function GET(req: NextRequest) {
         precipitation_prob: data.daily.precipitation_probability_max?.[i] ?? 0,
         description: getDesc(data.daily.weather_code?.[i] ?? 0)
       })),
+      alerts,
+      hasAlerts: alerts.length > 0,
       status: 'online'
     })
 
   } catch (err) {
-    console.error('Weather API Error')
+    console.error('Weather API Error:', err)
     return NextResponse.json({
       current: null,
       forecast: [],
+      alerts: [],
+      hasAlerts: false,
       status: 'error'
     })
   }
