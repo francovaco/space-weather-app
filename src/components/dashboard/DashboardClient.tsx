@@ -76,7 +76,9 @@ interface Earthquake {
   id: string
   mag: number
   place: string
+  country: string
   time: number
+  depth: number
 }
 
 // ── Helpers ──
@@ -135,12 +137,31 @@ const fetchEarthquakes = async () => {
         const p = f.properties.place.toLowerCase()
         return p.includes('chile') || p.includes('argentina')
       })
-      .map((f: any) => ({
-        id: f.id,
-        mag: f.properties.mag,
-        place: f.properties.place,
-        time: f.properties.time
-      }))
+      .map((f: any) => {
+        const rawPlace = f.properties.place || ''
+        let city = rawPlace
+        let country = ''
+        
+        if (rawPlace.includes(', ')) {
+          const parts = rawPlace.split(', ')
+          country = parts[parts.length - 1]
+          city = parts.slice(0, -1).join(', ')
+        }
+        
+        // Remove English prefixes like "113 km WNW of "
+        if (city.includes(' of ')) {
+          city = city.split(' of ')[1]
+        }
+        
+        return {
+          id: f.id,
+          mag: f.properties.mag,
+          place: city,
+          country: country,
+          time: f.properties.time,
+          depth: f.geometry.coordinates[2]
+        }
+      })
       .sort((a: any, b: any) => b.time - a.time)
       .slice(0, 3)
   } catch (err) {
@@ -212,14 +233,12 @@ export function DashboardClient() {
           const newLat = p.coords.latitude
           const newLon = p.coords.longitude
           
-          // Only re-poll if the location is significantly different or we were using IP
           if (usingFallback || !currentLat || Math.abs(currentLat - newLat) > 0.01) {
             setUsingFallback(false)
             startPolling(newLat, newLon)
           }
         },
         () => {
-          // If GPS fails but we don't even have IP weather yet, force IP weather
           if (weatherLoading && !weather) {
             setUsingFallback(true)
             startPolling()
@@ -417,8 +436,8 @@ export function DashboardClient() {
           (!weatherLoading && !weather?.current) ? "lg:col-span-1" : "lg:col-span-1"
         )}>
           <div className="flex items-center justify-between mb-3">
-            <span className="section-label flex items-center gap-2 text-accent-orange text-[11px] font-bold uppercase">
-              <AlertTriangle size={12} />
+            <span className="section-label flex items-center gap-2 text-accent-orange text-[15px] font-bold uppercase">
+              <AlertTriangle size={16} />
               Alertas (SAT)
             </span>
             <span className="pulse-dot bg-accent-orange shadow-glow-orange h-1.5 w-1.5" />
@@ -430,29 +449,29 @@ export function DashboardClient() {
               <div className="space-y-2">
                 {weather.alerts.map((alert: any, idx: number) => (
                   <div key={idx} className="flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/10 p-2">
-                    <AlertTriangle size={12} className="text-red-500 mt-0.5 shrink-0" />
+                    <AlertTriangle size={16} className="text-red-500 mt-0.5 shrink-0" />
                     <div>
-                      <p className="text-[10px] font-black text-white leading-tight uppercase">{alert.title || 'Alerta Meteorológica'}</p>
-                      <p className="text-[9px] font-bold text-red-400 mt-0.5 leading-tight line-clamp-2 uppercase">{alert.description}</p>
+                      <p className="text-[14px] font-black text-white leading-tight uppercase">{alert.title || 'Alerta Meteorológica'}</p>
+                      <p className="text-[13px] font-bold text-red-400 mt-0.5 leading-tight line-clamp-2 uppercase">{alert.description}</p>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
               <div className="flex items-start gap-3 rounded-lg border border-green-500/20 bg-green-500/5 p-2.5">
-                <div className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-green-500/20 text-green-500">
-                  <CheckCircle2 size={12} />
+                <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-green-500/20 text-green-500">
+                  <CheckCircle2 size={16} />
                 </div>
                 <div>
-                  <p className="text-[10px] font-black text-white leading-tight uppercase tracking-tighter">Sin Alertas Críticas</p>
-                  <p className="mt-0.5 text-[9px] font-bold leading-normal text-green-400/80 uppercase tracking-tight">Condiciones estables.</p>
+                  <p className="text-[14px] font-black text-white leading-tight uppercase tracking-tighter">Sin Alertas Críticas</p>
+                  <p className="mt-0.5 text-[13px] font-bold leading-normal text-green-400/80 uppercase tracking-tight">Condiciones estables.</p>
                 </div>
               </div>
             )}
 
             {/* Sismos */}
             <div className="space-y-1.5 pt-1 border-t border-white/5">
-              <p className="text-[9px] font-black text-accent-cyan uppercase tracking-widest mb-1.5">Sismos Recientes (CL/AR)</p>
+              <p className="text-[13px] font-black text-accent-cyan uppercase tracking-widest mb-1.5">Sismos Recientes (CL/AR)</p>
               {earthquakeData && earthquakeData.length > 0 ? (
                 earthquakeData.map(eq => (
                   <Link 
@@ -462,13 +481,15 @@ export function DashboardClient() {
                     className="flex items-center justify-between border-b border-white/5 pb-1 last:border-0 last:pb-0 hover:bg-white/5 transition-colors group px-1 rounded"
                   >
                     <div className="flex flex-col overflow-hidden">
-                      <span className="text-[9px] font-bold text-white truncate leading-tight group-hover:text-accent-cyan transition-colors">{eq.place}</span>
-                      <span className="text-[7px] text-text-dim uppercase tracking-tighter">
-                        USGS · {new Date(eq.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      <span className="text-[13px] font-bold text-white truncate leading-tight group-hover:text-accent-cyan transition-colors">
+                        {eq.place}, {eq.country} | Prof: {Math.round(eq.depth)}km
+                      </span>
+                      <span className="text-[11px] text-text-dim uppercase tracking-tighter">
+                        {new Date(eq.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
                     <span className={cn(
-                      "text-xs font-black ml-2 tabular-nums",
+                      "text-base font-black ml-2 tabular-nums shrink-0",
                       eq.mag >= 5 ? "text-red-500" : eq.mag >= 4 ? "text-accent-orange" : "text-yellow-400"
                     )}>
                       {eq.mag.toFixed(1)}
@@ -476,18 +497,18 @@ export function DashboardClient() {
                   </Link>
                 ))
               ) : (
-                <p className="text-[8px] text-text-dim uppercase font-bold italic">Buscando actividad sísmica...</p>
+                <p className="text-[12px] text-text-dim uppercase font-bold italic">Buscando actividad sísmica...</p>
               )}
             </div>
 
             <div className="mt-auto space-y-1 pt-2">
-              <Link href="https://www.inpres.gob.ar/desktop/" target="_blank" className="flex items-center justify-between rounded-lg border border-border bg-background-secondary/50 px-2 py-1.5 text-[8px] font-black text-text-muted hover:text-white hover:border-accent-cyan transition-all group">
-                <span className="uppercase tracking-widest">Sismos INPRES (AR)</span>
-                <ChevronRight size={10} className="group-hover:translate-x-1 transition-transform text-accent-cyan" />
+              <Link href="https://www.inpres.gob.ar/desktop/" target="_blank" className="flex items-center justify-between rounded-lg border border-border bg-background-secondary/50 px-2 py-1.5 text-[12px] font-black text-text-muted hover:text-white hover:border-accent-cyan transition-all group">
+                <span className="uppercase tracking-widest">Sismos INPRES</span>
+                <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform text-accent-cyan" />
               </Link>
-              <Link href="https://www.smn.gob.ar/alertas" target="_blank" className="flex items-center justify-between rounded-lg border border-border bg-background-secondary/50 px-2 py-1.5 text-[8px] font-black text-text-muted hover:text-white hover:border-accent-cyan transition-all group">
-                <span className="uppercase tracking-widest">Mapa oficial sistema de alerta temprana</span>
-                <ChevronRight size={10} className="group-hover:translate-x-1 transition-transform text-accent-cyan" />
+              <Link href="https://www.smn.gob.ar/alertas" target="_blank" className="flex items-center justify-between rounded-lg border border-border bg-background-secondary/50 px-2 py-1.5 text-[12px] font-black text-text-muted hover:text-white hover:border-accent-cyan transition-all group">
+                <span className="uppercase tracking-widest">Mapa sistema de alerta temprana</span>
+                <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform text-accent-cyan" />
               </Link>
             </div>
           </div>
