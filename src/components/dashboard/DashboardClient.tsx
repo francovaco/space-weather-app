@@ -331,20 +331,17 @@ export function DashboardClient() {
                   </div>
 
                   {/* Center: Larger Details, Same Level */}
-                  <div className="grid grid-cols-4 gap-x-4 gap-y-2 flex-1 justify-center">
+                  <div className="grid grid-cols-5 gap-x-4 gap-y-2 flex-1 justify-center">
                     <WeatherDetail icon={<Wind size={14} className="text-accent-cyan" />} label="Viento" value={`${Math.round(weather!.current!.wind_speed)}k/h`} />
                     <WeatherDetail icon={<Navigation size={14} className="text-accent-cyan" style={{ transform: `rotate(${weather!.current!.wind_direction}deg)` }} />} label="Dir." value={getWindDir(weather!.current!.wind_direction)} />
                     <WeatherDetail icon={<Droplets size={14} className="text-accent-amber" />} label="Humedad" value={`${weather!.current!.humidity}%`} />
                     <WeatherDetail icon={<Gauge size={14} className="text-accent-teal" />} label="Presión" value={`${Math.round(weather!.current!.pressure)}`} />
+                    <WeatherDetail icon={<Eye size={14} className="text-accent-cyan" />} label="Visib." value={`${weather!.current!.visibility.toFixed(0)}km`} />
                     
                     <WeatherDetail icon={<Sunrise size={14} className="text-orange-400" />} label="Amanecer" value={formatTime(weather!.current!.sunrise)} />
                     <WeatherDetail icon={<Sunset size={14} className="text-orange-600" />} label="Atardecer" value={formatTime(weather!.current!.sunset)} />
-                    <WeatherDetail icon={<MoonStar size={14} className="text-blue-200" />} label="Luna" value={formatTime(weather!.current!.moonrise)} />
-                    <WeatherDetail icon={<MoonStar size={14} className="text-indigo-300" />} label="Lum." value={`${Math.round((1 - Math.abs(weather!.current!.moon_phase - 0.5) * 2) * 100)}%`} />
-
                     <WeatherDetail icon={<Zap size={14} className="text-accent-amber" />} label="Índice UV" value={`${weather!.current!.uv_index.toFixed(1)}`} />
                     <WeatherDetail icon={<CloudRain size={14} className="text-blue-400" />} label="Lluvia" value={`${weather!.current!.precipitation.toFixed(1)}mm`} />
-                    <WeatherDetail icon={<Eye size={14} className="text-accent-cyan" />} label="Visib." value={`${weather!.current!.visibility.toFixed(0)}km`} />
                     <WeatherDetail icon={<Thermometer size={14} className="text-accent-red" />} label="ST" value={`${Math.round(weather!.current!.st || 0)}°C`} />
                   </div>
 
