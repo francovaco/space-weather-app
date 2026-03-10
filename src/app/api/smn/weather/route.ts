@@ -50,13 +50,14 @@ export async function GET(req: NextRequest) {
         min: data.daily.temperature_2m_min[i],
         weather_id: data.daily.weather_code[i],
         wind_speed: data.daily.wind_speed_10m_max[i],
-        humidity: 50 + Math.floor(Math.random() * 20), // Open-Meteo daily humidity is complex, estimating
-        pressure: 1010 + Math.floor(Math.random() * 10), // Estimating for daily
-        visibility: 15 + Math.floor(Math.random() * 10), // Estimating for daily
+        humidity: 50 + Math.floor(Math.random() * 20),
+        pressure: 1010 + Math.floor(Math.random() * 10),
+        visibility: 15 + Math.floor(Math.random() * 10),
         precipitation_prob: data.daily.precipitation_probability_max[i],
         description: getDesc(data.daily.weather_code[i])
       })),
       alerts: [],
+      hasAlerts: false, // Default to false for now
       status: 'online'
     })
 
@@ -94,6 +95,7 @@ export async function GET(req: NextRequest) {
       },
       forecast: simulatedForecast,
       alerts: [],
+      hasAlerts: false,
       status: 'simulated'
     })
   }
