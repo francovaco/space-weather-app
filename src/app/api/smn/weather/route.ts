@@ -8,15 +8,28 @@ export async function GET(req: NextRequest) {
   const lon = lonStr ? parseFloat(lonStr) : -68.8458
 
   try {
+    // 1. Weather & Forecast from Open-Meteo
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,surface_pressure,visibility&daily=weather_code,temperature_2m_max,temperature_2m_min,wind_speed_10m_max,precipitation_probability_max&timezone=auto`
     
-    const res = await fetch(url, { 
-      next: { revalidate: 1800 },
-    })
-
-    if (!res.ok) throw new Error(`Weather Service status: ${res.status}`)
+    const res = await fetch(url, { next: { revalidate: 900 } })
     const data = await res.json()
 
+    // 2. Try to fetch real-time alerts from SMN
+    // Use the station detection to find province for alert filtering
+    const smnWeatherRes = await fetch('https://ws.smn.gob.ar/map_items/weather', { next: { revalidate: 600 } })
+    const smnWeatherData = await smnWeatherRes.json()
+    
+    let userProvince = ''
+    let minDist = Infinity
+    for (const st of smnWeatherData) {
+      const d = Math.sqrt(Math.pow(lat - parseFloat(st.lat), 2) + Math.pow(lon - parseFloat(st.lon), 2))
+      if (d < minDist) {
+        minDist = d
+        userProvince = st.province
+      }
+    }
+
+    // Map WMO codes to descriptions
     const getDesc = (code: number) => {
       if (code === 0) return 'Despejado'
       if (code <= 3) return 'Parcialmente Nublado'
@@ -27,14 +40,9 @@ export async function GET(req: NextRequest) {
       return 'Nublado'
     }
 
-    let locationName = 'Ubicación Detectada'
-    if (lat > -33.1 && lat < -32.5) locationName = 'Mendoza'
-    else if (lat > -34.8 && lat < -34.4) locationName = 'Buenos Aires'
-    else if (lat > -31.6 && lat < -31.2) locationName = 'Córdoba'
-
     return NextResponse.json({
       current: {
-        name: locationName,
+        name: userProvince === 'Mendoza' ? 'Mendoza' : (userProvince || 'Ubicación Detectada'),
         temp: data.current.temperature_2m,
         description: getDesc(data.current.weather_code),
         humidity: data.current.relative_humidity_2m,
@@ -50,50 +58,21 @@ export async function GET(req: NextRequest) {
         min: data.daily.temperature_2m_min[i],
         weather_id: data.daily.weather_code[i],
         wind_speed: data.daily.wind_speed_10m_max[i],
-        humidity: 50 + Math.floor(Math.random() * 20),
-        pressure: 1010 + Math.floor(Math.random() * 10),
-        visibility: 15 + Math.floor(Math.random() * 10),
+        humidity: 50 + (i % 5), // Estimated
+        pressure: 1013, // Estimated
+        visibility: 15, // Estimated
         precipitation_prob: data.daily.precipitation_probability_max[i],
         description: getDesc(data.daily.weather_code[i])
       })),
-      alerts: [],
-      hasAlerts: false, // Default to false for now
+      alerts: [], // Still empty as the 404 persists on known endpoints
+      hasAlerts: false,
       status: 'online'
     })
 
   } catch (err) {
-    console.error('[API/Weather] Error:', err)
-    const today = new Date()
-    const simulatedForecast = Array.from({ length: 7 }).map((_, i) => {
-      const d = new Date()
-      d.setDate(today.getDate() + i)
-      return {
-        date: d.toISOString().split('T')[0],
-        max: 22 + Math.floor(Math.random() * 5),
-        min: 12 + Math.floor(Math.random() * 5),
-        weather_id: i % 3,
-        wind_speed: 10 + i,
-        humidity: 50,
-        pressure: 1013,
-        visibility: 15,
-        precipitation_prob: 0,
-        description: 'Despejado'
-      }
-    })
-
     return NextResponse.json({
-      current: {
-        name: 'Mendoza',
-        temp: 21,
-        description: 'Parcialmente Nublado',
-        humidity: 55,
-        st: 20,
-        wind_speed: 12,
-        pressure: 1012,
-        visibility: 15,
-        weather_id: 2
-      },
-      forecast: simulatedForecast,
+      current: { name: 'Mendoza', temp: 21, description: 'Despejado', humidity: 55, st: 20, wind_speed: 12, pressure: 1012, visibility: 15, weather_id: 0 },
+      forecast: [],
       alerts: [],
       hasAlerts: false,
       status: 'simulated'

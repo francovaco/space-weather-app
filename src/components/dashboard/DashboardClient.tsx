@@ -202,10 +202,36 @@ export function DashboardClient() {
 
   return (
     <div className="space-y-6">
+      {/* Introduction Banner */}
+      <div className="card overflow-hidden border-accent-cyan/20 bg-background-card/40 p-0">
+        <div className="flex flex-col md:flex-row items-center gap-6">
+          <div className="w-full md:w-48 lg:w-64 h-48 md:h-auto bg-black/20 flex items-center justify-center p-6 border-b md:border-b-0 md:border-r border-border/50">
+            <img 
+              src="/assets/logo.png" 
+              alt="Space Weather App Logo" 
+              className="w-full h-full object-contain drop-shadow-glow-blue"
+            />
+          </div>
+          <div className="flex-1 p-6 md:pr-10">
+            <h2 className="font-display text-xl font-black uppercase tracking-[0.2em] text-accent-cyan mb-3">
+              Sistema de Monitoreo Espacial y Terrestre
+            </h2>
+            <div className="space-y-3">
+              <p className="text-sm font-bold text-text-primary leading-relaxed uppercase tracking-tight">
+                Plataforma avanzada de visualización de datos en tiempo real para el clima espacial y terrestre.
+              </p>
+              <p className="text-xs font-medium text-text-muted leading-relaxed uppercase tracking-tighter opacity-80">
+                Este sistema integra información crítica del satélite <span className="text-white">GOES-19</span>, datos actualizados del <span className="text-white">clima terrestre y local</span> y modelos físicos de alta precisión. Su propósito es proporcionar una alerta temprana sobre fenómenos solares, variaciones ionosféricas, condiciones climáticas locales y alertas meteorológicas extremas que afectan las comunicaciones, los sistemas <span className="text-white">GPS</span> y la infraestructura tecnológica en la región.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Header */}
       <div>
         <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">Monitor de Clima Espacial</h1>
-        <p className="mt-1 text-xs text-text-muted">GOES-19 · Datos en Tiempo Real · Sector Sudamérica</p>
+        <p className="mt-1 text-xs text-text-muted">GOES-19 · Datos en Tiempo Real</p>
       </div>
 
       {/* Weather & SAT Section */}
