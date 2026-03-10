@@ -30,6 +30,9 @@ export function WeatherPill() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    let currentLat: number | undefined
+    let currentLon: number | undefined
+
     const fetchWeather = async (lat?: number, lon?: number) => {
       try {
         const url = (lat !== undefined && lon !== undefined) 
@@ -40,6 +43,10 @@ export function WeatherPill() {
         if (res.ok) {
           const data = await res.json()
           setWeather(data)
+          if (lat !== undefined && lon !== undefined) {
+            localStorage.setItem('last_lat', lat.toString())
+            localStorage.setItem('last_lon', lon.toString())
+          }
         }
       } catch (err) {
         console.error('WeatherPill fetch error:', err)
@@ -48,14 +55,33 @@ export function WeatherPill() {
       }
     }
 
+    // 1. Proactive Load from localStorage
+    const savedLat = localStorage.getItem('last_lat')
+    const savedLon = localStorage.getItem('last_lon')
+
+    if (savedLat && savedLon) {
+      currentLat = parseFloat(savedLat)
+      currentLon = parseFloat(savedLon)
+      fetchWeather(currentLat, currentLon)
+    } else {
+      fetchWeather() // IP Fallback
+    }
+
+    // 2. Background Update from GPS
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        (pos) => fetchWeather(pos.coords.latitude, pos.coords.longitude),
-        () => fetchWeather(), // Fallback to Server/IP detection
-        { timeout: 4000, enableHighAccuracy: false }
+        (pos) => {
+          const newLat = pos.coords.latitude
+          const newLon = pos.coords.longitude
+          if (!currentLat || Math.abs(currentLat - newLat) > 0.01) {
+            fetchWeather(newLat, newLon)
+          }
+        },
+        () => {
+          if (!weather) fetchWeather()
+        },
+        { timeout: 5000, enableHighAccuracy: false }
       )
-    } else {
-      fetchWeather() // Use Server/IP detection immediately
     }
   }, [])
 

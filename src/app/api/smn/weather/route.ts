@@ -28,9 +28,8 @@ export async function GET(req: NextRequest) {
           throw new Error('IP service down')
         }
       } catch (e) {
-        // Final fallback if everything fails
-        lat = -32.8895 
-        lon = -68.8458
+        // No location could be detected
+        return NextResponse.json({ current: null, forecast: [], status: 'no-location' })
       }
     }
   }
@@ -96,39 +95,11 @@ export async function GET(req: NextRequest) {
     })
 
   } catch (err) {
-    console.error('Weather API Timeout/Error - Using Offline Data')
-    const forecast = []
-    for (let i = 0; i < 7; i++) {
-      const d = new Date()
-      d.setDate(d.getDate() + i)
-      forecast.push({
-        date: d.toISOString().split('T')[0],
-        max: 22 + (i % 3),
-        min: 14 + (i % 2),
-        weather_id: 0,
-        wind_speed: 10 + (i % 5),
-        humidity: 45 + (i % 10),
-        pressure: 1012 + (i % 4),
-        visibility: 15,
-        precipitation_prob: 0,
-        description: 'Despejado'
-      })
-    }
-
+    console.error('Weather API Error')
     return NextResponse.json({
-      current: {
-        name: isFromGPS ? 'Ubicación Detectada' : 'Mi Ubicación',
-        temp: 22,
-        description: 'Despejado',
-        humidity: 45,
-        st: 21,
-        wind_speed: 12,
-        pressure: 1012,
-        visibility: 15,
-        weather_id: 0
-      },
-      forecast,
-      status: 'offline'
+      current: null,
+      forecast: [],
+      status: 'error'
     })
   }
 }

@@ -296,113 +296,125 @@ export function DashboardClient() {
 
       {/* Weather & SAT Section */}
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-4">
-        {/* Current Weather */}
-        {(weatherLoading || weather?.current) && (
-          <div className="card flex flex-col justify-between overflow-hidden border-accent-cyan/20 bg-background-card/50 min-h-[200px]">
-            <div className="flex items-center justify-between">
-              <span className="section-label flex items-center gap-1.5">
-                <MapPin size={10} className={cn("text-accent-cyan", usingFallback && "text-text-dim")} />
-                <span className="text-xs font-bold uppercase tracking-tighter">{usingFallback ? 'Ubicación Detectada' : 'Clima Local'}</span>
-              </span>
-              <button onClick={() => setShowIconRef(true)} className="rounded p-1 text-text-dim hover:text-white transition-colors"><Info size={12} /></button>
+        {/* Current Weather & Forecast */}
+        {(!weatherLoading && !weather?.current) ? (
+          <div className="card lg:col-span-3 flex items-center justify-center min-h-[240px] border-dashed border-white/10 bg-white/5">
+            <div className="flex flex-col items-center gap-3 opacity-50">
+              <Cloud size={32} className="text-text-dim" />
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-text-dim">Pronóstico no disponible</p>
             </div>
-
-            {weatherLoading ? (
-              <div className="flex h-24 items-center justify-center flex-1"><span className="h-4 w-4 animate-spin rounded-full border-2 border-accent-cyan border-t-transparent" /></div>
-            ) : (
-              <div className="mt-2 flex items-center justify-between">
-                <div>
-                  <span className="font-display text-4xl font-black text-text-primary tabular-nums tracking-tighter leading-none">
-                    {Math.round(weather!.current!.temp)}°C
+          </div>
+        ) : (
+          <>
+            {/* Current Weather */}
+            {(weatherLoading || weather?.current) && (
+              <div className="card flex flex-col justify-between overflow-hidden border-accent-cyan/20 bg-background-card/50 min-h-[200px]">
+                <div className="flex items-center justify-between">
+                  <span className="section-label flex items-center gap-1.5">
+                    <MapPin size={10} className={cn("text-accent-cyan", usingFallback && "text-text-dim")} />
+                    <span className="text-xs font-bold uppercase tracking-tighter">{usingFallback ? 'Ubicación Detectada' : 'Clima Local'}</span>
                   </span>
-                  <p className="mt-1.5 text-xs font-bold text-accent-cyan truncate max-w-[120px] uppercase tracking-wide">{weather!.current!.name}</p>
-                  <p className="text-[10px] text-text-muted font-bold mt-0.5 tracking-tight">{weather!.current!.description}</p>
+                  <button onClick={() => setShowIconRef(true)} className="rounded p-1 text-text-dim hover:text-white transition-colors"><Info size={12} /></button>
                 </div>
-                <div className="flex flex-col items-end">
-                  {getWeatherIcon(weather!.current!.weather_id, 44, "drop-shadow-glow-blue")}
-                  {weather!.current!.st !== null && <span className="text-[9px] font-data text-text-dim mt-1 font-bold">ST: {Math.round(weather!.current!.st)}°</span>}
-                </div>
-              </div>
-            )}
 
-            {!weatherLoading && weather?.current && (
-              <div className="mt-4 grid grid-cols-2 gap-y-2 gap-x-4 border-t border-border/50 pt-3">
-                <div className="flex items-center gap-1.5">
-                  <Wind size={12} className="text-accent-cyan" />
-                  <div className="flex flex-col">
-                    <span className="font-data text-xs font-black text-text-primary leading-none">{Math.round(weather?.current?.wind_speed ?? 0)}</span>
-                    <span className="text-[9px] uppercase text-text-dim font-black tracking-tighter">km/h</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <Thermometer size={12} className="text-accent-amber" />
-                  <div className="flex flex-col">
-                    <span className="font-data text-xs font-black text-text-primary leading-none">{weather?.current?.humidity ?? '--'}%</span>
-                    <span className="text-[9px] uppercase text-text-dim font-black tracking-tighter">hum.</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <Gauge size={12} className="text-accent-teal" />
-                  <div className="flex flex-col">
-                    <span className="font-data text-xs font-black text-text-primary leading-none">{Math.round(weather?.current?.pressure ?? 0)}</span>
-                    <span className="text-[9px] uppercase text-text-dim font-black tracking-tighter">hPa</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <Eye size={12} className="text-accent-cyan" />
-                  <div className="flex flex-col">
-                    <span className="font-data text-xs font-black text-text-primary leading-none">{Math.round(weather?.current?.visibility ?? 0)}</span>
-                    <span className="text-[9px] uppercase text-text-dim font-black tracking-tighter">km vis.</span>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* 7-Day Forecast */}
-        {(weatherLoading || (weather?.forecast && weather.forecast.length > 0)) && (
-          <div className="card lg:col-span-2 overflow-hidden border-white/5 min-h-[240px] flex flex-col">
-            <div className="flex items-center justify-between mb-2">
-              <span className="section-label text-xs font-bold uppercase tracking-widest">Pronóstico 7 Días</span>
-              <div className="h-px flex-1 mx-4 bg-gradient-to-r from-border/50 to-transparent" />
-            </div>
-            {weatherLoading ? (
-              <div className="flex h-24 flex-1 items-center justify-center"><span className="h-4 w-4 animate-spin rounded-full border-2 border-accent-cyan border-t-transparent" /></div>
-            ) : (
-              <div className="grid grid-cols-7 gap-2 flex-1 items-center">
-                {weather!.forecast.map((f, i) => {
-                  const dateObj = new Date(f.date + 'T12:00:00')
-                  const dayStr = DAY_NAMES_SHORT[dateObj.getDay()]
-                  return (
-                    <button 
-                      key={f.date} 
-                      onClick={() => setSelectedDay(f)}
-                      className={cn(
-                        "flex flex-col items-center justify-center gap-5 rounded-xl py-6 px-1 transition-all group",
-                        i === 0 ? "bg-accent-cyan/10 ring-1 ring-accent-cyan/30" : "hover:bg-white/[0.05] hover:ring-1 hover:ring-white/20"
-                      )}
-                    >
-                      <span className={cn("text-[14px] font-black uppercase tracking-tighter", i === 0 ? "text-accent-cyan" : "text-text-dim group-hover:text-text-primary")}>
-                        {i === 0 ? 'Hoy' : dayStr}
+                {weatherLoading ? (
+                  <div className="flex h-24 items-center justify-center flex-1"><span className="h-4 w-4 animate-spin rounded-full border-2 border-accent-cyan border-t-transparent" /></div>
+                ) : (
+                  <div className="mt-2 flex items-center justify-between">
+                    <div>
+                      <span className="font-display text-4xl font-black text-text-primary tabular-nums tracking-tighter leading-none">
+                        {Math.round(weather!.current!.temp)}°C
                       </span>
-                      {getWeatherIcon(f.weather_id, 40, "drop-shadow-glow-blue transition-transform group-hover:scale-110")}
-                      <div className="flex flex-col items-center">
-                        <span className="font-display text-xl font-black text-text-primary leading-none tracking-tighter">{Math.round(f.max)}°</span>
-                        <span className="text-[13px] font-bold text-text-dim mt-2 tracking-tighter">{Math.round(f.min)}°</span>
+                      <p className="mt-1.5 text-xs font-bold text-accent-cyan truncate max-w-[120px] uppercase tracking-wide">{weather!.current!.name}</p>
+                      <p className="text-[10px] text-text-muted font-bold mt-0.5 tracking-tight">{weather!.current!.description}</p>
+                    </div>
+                    <div className="flex flex-col items-end">
+                      {getWeatherIcon(weather!.current!.weather_id, 44, "drop-shadow-glow-blue")}
+                      {weather!.current!.st !== null && <span className="text-[9px] font-data text-text-dim mt-1 font-bold">ST: {Math.round(weather!.current!.st)}°</span>}
+                    </div>
+                  </div>
+                )}
+
+                {!weatherLoading && weather?.current && (
+                  <div className="mt-4 grid grid-cols-2 gap-y-2 gap-x-4 border-t border-border/50 pt-3">
+                    <div className="flex items-center gap-1.5">
+                      <Wind size={12} className="text-accent-cyan" />
+                      <div className="flex flex-col">
+                        <span className="font-data text-xs font-black text-text-primary leading-none">{Math.round(weather?.current?.wind_speed ?? 0)}</span>
+                        <span className="text-[9px] uppercase text-text-dim font-black tracking-tighter">km/h</span>
                       </div>
-                    </button>
-                  )
-                })}
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <Thermometer size={12} className="text-accent-amber" />
+                      <div className="flex flex-col">
+                        <span className="font-data text-xs font-black text-text-primary leading-none">{weather?.current?.humidity ?? '--'}%</span>
+                        <span className="text-[9px] uppercase text-text-dim font-black tracking-tighter">hum.</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <Gauge size={12} className="text-accent-teal" />
+                      <div className="flex flex-col">
+                        <span className="font-data text-xs font-black text-text-primary leading-none">{Math.round(weather?.current?.pressure ?? 0)}</span>
+                        <span className="text-[9px] uppercase text-text-dim font-black tracking-tighter">hPa</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <Eye size={12} className="text-accent-cyan" />
+                      <div className="flex flex-col">
+                        <span className="font-data text-xs font-black text-text-primary leading-none">{Math.round(weather?.current?.visibility ?? 0)}</span>
+                        <span className="text-[9px] uppercase text-text-dim font-black tracking-tighter">km vis.</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
-          </div>
+
+            {/* 7-Day Forecast */}
+            {(weatherLoading || (weather?.forecast && weather.forecast.length > 0)) && (
+              <div className="card lg:col-span-2 overflow-hidden border-white/5 min-h-[240px] flex flex-col">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="section-label text-xs font-bold uppercase tracking-widest">Pronóstico 7 Días</span>
+                  <div className="h-px flex-1 mx-4 bg-gradient-to-r from-border/50 to-transparent" />
+                </div>
+                {weatherLoading ? (
+                  <div className="flex h-24 flex-1 items-center justify-center"><span className="h-4 w-4 animate-spin rounded-full border-2 border-accent-cyan border-t-transparent" /></div>
+                ) : (
+                  <div className="grid grid-cols-7 gap-2 flex-1 items-center">
+                    {weather!.forecast.map((f, i) => {
+                      const dateObj = new Date(f.date + 'T12:00:00')
+                      const dayStr = DAY_NAMES_SHORT[dateObj.getDay()]
+                      return (
+                        <button 
+                          key={f.date} 
+                          onClick={() => setSelectedDay(f)}
+                          className={cn(
+                            "flex flex-col items-center justify-center gap-5 rounded-xl py-6 px-1 transition-all group",
+                            i === 0 ? "bg-accent-cyan/10 ring-1 ring-accent-cyan/30" : "hover:bg-white/[0.05] hover:ring-1 hover:ring-white/20"
+                          )}
+                        >
+                          <span className={cn("text-[14px] font-black uppercase tracking-tighter", i === 0 ? "text-accent-cyan" : "text-text-dim group-hover:text-text-primary")}>
+                            {i === 0 ? 'Hoy' : dayStr}
+                          </span>
+                          {getWeatherIcon(f.weather_id, 40, "drop-shadow-glow-blue transition-transform group-hover:scale-110")}
+                          <div className="flex flex-col items-center">
+                            <span className="font-display text-xl font-black text-text-primary leading-none tracking-tighter">{Math.round(f.max)}°</span>
+                            <span className="text-[13px] font-bold text-text-dim mt-2 tracking-tighter">{Math.round(f.min)}°</span>
+                          </div>
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+          </>
         )}
 
         {/* SAT Alerts */}
         <div className={cn(
           "card border-accent-orange/30 bg-accent-orange/5 min-h-[200px] flex flex-col",
-          (!weatherLoading && !weather?.current) ? "lg:col-span-4" : "lg:col-span-1"
+          (!weatherLoading && !weather?.current) ? "lg:col-span-1" : "lg:col-span-1"
         )}>
           <div className="flex items-center justify-between mb-3">
             <span className="section-label flex items-center gap-2 text-accent-orange text-[11px] font-bold uppercase">
