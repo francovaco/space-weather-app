@@ -362,7 +362,7 @@ export function DashboardClient() {
 
         {/* 7-Day Forecast */}
         {(weatherLoading || (weather?.forecast && weather.forecast.length > 0)) && (
-          <div className="card lg:col-span-2 overflow-hidden border-white/5 min-h-[200px] flex flex-col">
+          <div className="card lg:col-span-2 overflow-hidden border-white/5 min-h-[240px] flex flex-col">
             <div className="flex items-center justify-between mb-2">
               <span className="section-label text-xs font-bold uppercase tracking-widest">Pronóstico 7 Días</span>
               <div className="h-px flex-1 mx-4 bg-gradient-to-r from-border/50 to-transparent" />
@@ -370,7 +370,7 @@ export function DashboardClient() {
             {weatherLoading ? (
               <div className="flex h-24 flex-1 items-center justify-center"><span className="h-4 w-4 animate-spin rounded-full border-2 border-accent-cyan border-t-transparent" /></div>
             ) : (
-              <div className="grid grid-cols-7 gap-1 flex-1 items-center">
+              <div className="grid grid-cols-7 gap-2 flex-1 items-center">
                 {weather!.forecast.map((f, i) => {
                   const dateObj = new Date(f.date + 'T12:00:00')
                   const dayStr = DAY_NAMES_SHORT[dateObj.getDay()]
@@ -379,17 +379,17 @@ export function DashboardClient() {
                       key={f.date} 
                       onClick={() => setSelectedDay(f)}
                       className={cn(
-                        "flex flex-col items-center justify-center gap-3 rounded-xl py-4 px-1 transition-all group",
+                        "flex flex-col items-center justify-center gap-5 rounded-xl py-6 px-1 transition-all group",
                         i === 0 ? "bg-accent-cyan/10 ring-1 ring-accent-cyan/30" : "hover:bg-white/[0.05] hover:ring-1 hover:ring-white/20"
                       )}
                     >
-                      <span className={cn("text-[10px] font-black uppercase tracking-tighter", i === 0 ? "text-accent-cyan" : "text-text-dim group-hover:text-text-primary")}>
+                      <span className={cn("text-[14px] font-black uppercase tracking-tighter", i === 0 ? "text-accent-cyan" : "text-text-dim group-hover:text-text-primary")}>
                         {i === 0 ? 'Hoy' : dayStr}
                       </span>
-                      {getWeatherIcon(f.weather_id, 24, "drop-shadow-glow-blue transition-transform group-hover:scale-110")}
+                      {getWeatherIcon(f.weather_id, 40, "drop-shadow-glow-blue transition-transform group-hover:scale-110")}
                       <div className="flex flex-col items-center">
-                        <span className="font-display text-sm font-black text-text-primary leading-none tracking-tighter">{Math.round(f.max)}°</span>
-                        <span className="text-[9px] font-bold text-text-dim mt-1.5 tracking-tighter">{Math.round(f.min)}°</span>
+                        <span className="font-display text-xl font-black text-text-primary leading-none tracking-tighter">{Math.round(f.max)}°</span>
+                        <span className="text-[13px] font-bold text-text-dim mt-2 tracking-tighter">{Math.round(f.min)}°</span>
                       </div>
                     </button>
                   )

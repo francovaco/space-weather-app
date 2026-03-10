@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
     // 2. Parallel Fetch: Weather + City Name
     const [weatherRes, geoRes] = await Promise.all([
       fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,surface_pressure,visibility&daily=weather_code,temperature_2m_max,temperature_2m_min,wind_speed_10m_max,precipitation_probability_max&timezone=auto`,
+        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,surface_pressure,visibility&daily=weather_code,temperature_2m_max,temperature_2m_min,wind_speed_10m_max,precipitation_probability_max,surface_pressure_max,relative_humidity_2m_mean,visibility_max&timezone=auto`,
         { signal: controller.signal, next: { revalidate: 900 } }
       ),
       fetch(
@@ -80,17 +80,17 @@ export async function GET(req: NextRequest) {
         visibility: data.current.visibility / 1000,
         weather_id: data.current.weather_code
       },
-      forecast: data.daily.time.map((time: string, i: number) => ({
+      forecast: (data.daily?.time || []).map((time: string, i: number) => ({
         date: time,
-        max: data.daily.temperature_2m_max[i],
-        min: data.daily.temperature_2m_min[i],
-        weather_id: data.daily.weather_code[i],
-        wind_speed: data.daily.wind_speed_10m_max[i],
-        humidity: 50,
-        pressure: data.current.surface_pressure,
-        visibility: 15,
-        precipitation_prob: data.daily.precipitation_probability_max[i],
-        description: getDesc(data.daily.weather_code[i])
+        max: data.daily.temperature_2m_max?.[i] ?? 0,
+        min: data.daily.temperature_2m_min?.[i] ?? 0,
+        weather_id: data.daily.weather_code?.[i] ?? 0,
+        wind_speed: data.daily.wind_speed_10m_max?.[i] ?? 0,
+        humidity: data.daily.relative_humidity_2m_mean?.[i] ? Math.round(data.daily.relative_humidity_2m_mean[i]) : 50,
+        pressure: data.daily.surface_pressure_max?.[i] ?? data.current.surface_pressure,
+        visibility: data.daily.visibility_max?.[i] ? (data.daily.visibility_max[i] / 1000) : 15,
+        precipitation_prob: data.daily.precipitation_probability_max?.[i] ?? 0,
+        description: getDesc(data.daily.weather_code?.[i] ?? 0)
       })),
       status: 'online'
     })
@@ -106,9 +106,9 @@ export async function GET(req: NextRequest) {
         max: 22 + (i % 3),
         min: 14 + (i % 2),
         weather_id: 0,
-        wind_speed: 10,
-        humidity: 45,
-        pressure: 1013,
+        wind_speed: 10 + (i % 5),
+        humidity: 45 + (i % 10),
+        pressure: 1012 + (i % 4),
         visibility: 15,
         precipitation_prob: 0,
         description: 'Despejado'
