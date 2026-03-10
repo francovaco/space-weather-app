@@ -191,6 +191,21 @@ export interface KpReading {
   station_count: number
 }
 
+// --- GOES Status ---
+
+export interface SatelliteStatusRow {
+  name: string
+  role: string
+  color: 'GREEN' | 'YELLOW' | 'ORANGE' | 'RED' | 'BLUE' | 'UNKNOWN'
+}
+
+export interface GOESStatusData {
+  fetchedAt: string
+  satellites: SatelliteStatusRow[]
+  anomalies: any[]
+  sourceUrl: string
+}
+
 // --- Common ---
 
 export type TimeRange = '6h' | '1d' | '3d' | '7d'

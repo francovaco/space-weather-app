@@ -14,7 +14,6 @@ export async function GET(req: NextRequest) {
       lon = parseFloat(headerLon)
     } else {
       try {
-        // IP-to-Geo fallback for local development or missing headers
         const ipRes = await fetch('https://ipapi.co/json/', { next: { revalidate: 3600 } })
         if (ipRes.ok) {
           const ipData = await ipRes.json()
@@ -28,7 +27,6 @@ export async function GET(req: NextRequest) {
           throw new Error('IP service down')
         }
       } catch (e) {
-        // No location could be detected
         return NextResponse.json({ current: null, forecast: [], alerts: [], hasAlerts: false, status: 'no-location' })
       }
     }
@@ -36,83 +34,116 @@ export async function GET(req: NextRequest) {
 
   try {
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 10000)
+    const timeoutId = setTimeout(() => controller.abort(), 12000)
 
-    // 2. Parallel Fetch: Weather + City Name
-    const [weatherRes, geoRes] = await Promise.all([
+    // 2. Parallel Fetch: Weather, Geo, Space Alerts, SMN CAP
+    const [weatherRes, geoRes, spaceAlertsRes, smnCapRes] = await Promise.all([
       fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,surface_pressure,visibility&daily=weather_code,temperature_2m_max,temperature_2m_min,wind_speed_10m_max,precipitation_probability_max,surface_pressure_max,relative_humidity_2m_mean,visibility_max&timezone=auto&alerts=true`,
+        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,surface_pressure,visibility,uv_index,precipitation&daily=weather_code,temperature_2m_max,temperature_2m_min,wind_speed_10m_max,precipitation_probability_max,surface_pressure_max,relative_humidity_2m_mean,visibility_max&timezone=auto&alerts=true`,
         { signal: controller.signal, next: { revalidate: 900 } }
       ),
       fetch(
         `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=es`,
         { signal: controller.signal, next: { revalidate: 86400 } }
-      ).catch(() => null)
+      ).catch(() => null),
+      fetch('https://services.swpc.noaa.gov/products/alerts.json', { signal: controller.signal, next: { revalidate: 300 } }).catch(() => null),
+      fetch('https://ssl.smn.gob.ar/CAP/AR.php', { signal: controller.signal, next: { revalidate: 300 } }).catch(() => null)
     ])
 
     clearTimeout(timeoutId)
     
-    if (!weatherRes.ok) {
-      const errText = await weatherRes.text()
-      console.error('Open-Meteo Error:', errText)
-      throw new Error('Weather service failure')
-    }
-
     const data = await weatherRes.json()
     const geoData = geoRes ? await geoRes.json() : null
-
-    // Determine City/Province Name early for alert filtering
+    const spaceAlertsRaw = spaceAlertsRes ? await spaceAlertsRes.json() : []
     const cityName = geoData?.principalSubdivision || geoData?.city || geoData?.locality || 'Ubicación Detectada'
 
-    // 3. Process Alerts from Open-Meteo (Safely)
-    const alerts = Array.isArray(data.alerts) 
-      ? data.alerts.map((a: any) => ({
+    const alerts: any[] = []
+
+    // ─── TERRESTRIAL ALERTS (Open-Meteo & SMN CAP) ───
+
+    // Open-Meteo SAT Alerts
+    if (Array.isArray(data.alerts)) {
+      data.alerts.forEach((a: any) => {
+        alerts.push({
           title: a.headline || a.event || 'Alerta Meteorológica',
           description: a.description || '',
-          severity: a.severity || 'unknown',
-          expires: a.expires || null,
+          severity: a.severity || 'Minor',
           type: 'SAT'
-        }))
-      : []
-
-    // 4. Try to fetch SMN Short-term Warnings (ACP)
-    try {
-      const smnCapRes = await fetch('https://ssl.smn.gob.ar/CAP/AR.php', { signal: controller.signal, next: { revalidate: 300 } })
-      if (smnCapRes.ok) {
-        const capXml = await smnCapRes.text()
-        const items = capXml.match(/<item>[\s\S]*?<\/item>/g) || []
-        
-        items.forEach(item => {
-          const titleMatch = item.match(/<title>(.*?)<\/title>/)
-          const descMatch = item.match(/<description>(.*?)<\/description>/)
-          const linkMatch = item.match(/<link>(.*?)<\/link>/)
-          
-          if (titleMatch && descMatch) {
-            const title = titleMatch[1].replace('<![CDATA[', '').replace(']]>', '')
-            const description = descMatch[1].replace('<![CDATA[', '').replace(']]>', '')
-            const link = linkMatch ? linkMatch[1] : ''
-
-            const isShortTerm = link.toLowerCase().includes('short_term') || description.toLowerCase().includes('corto plazo')
-            
-            // Filter by city or province name
-            const locationInDesc = description.toLowerCase().includes(cityName.toLowerCase()) || 
-                                   (geoData?.city && description.toLowerCase().includes(geoData.city.toLowerCase())) ||
-                                   (geoData?.locality && description.toLowerCase().includes(geoData.locality.toLowerCase()))
-
-            if (isShortTerm && locationInDesc) {
-              alerts.unshift({
-                title: `AVISO CORTO PLAZO: ${title}`,
-                description: description,
-                severity: 'Extreme',
-                expires: null,
-                type: 'ACP'
-              })
-            }
-          }
         })
-      }
-    } catch (e) {
-      console.error('SMN CAP fetch error:', e)
+      })
+    }
+
+    // SMN CAP (ACP, Incendios, Cenizas, Rayos)
+    if (smnCapRes?.ok) {
+      const capXml = await smnCapRes.text()
+      const items = capXml.match(/<item>[\s\S]*?<\/item>/g) || []
+      
+      items.forEach(item => {
+        const titleMatch = item.match(/<title>(.*?)<\/title>/)
+        const descMatch = item.match(/<description>(.*?)<\/description>/)
+        
+        if (titleMatch && descMatch) {
+          const title = titleMatch[1].replace('<![CDATA[', '').replace(']]>', '')
+          const description = descMatch[1].replace('<![CDATA[', '').replace(']]>', '')
+          const descLower = description.toLowerCase()
+          
+          const isRelevant = descLower.includes(cityName.toLowerCase()) || 
+                            (geoData?.city && descLower.includes(geoData.city.toLowerCase()))
+          
+          if (isRelevant) {
+            let type = 'SAT'
+            let severity = 'Moderate'
+            
+            if (descLower.includes('corto plazo') || descLower.includes('acp')) {
+              type = 'ACP'
+              severity = 'Extreme'
+            } else if (descLower.includes('ceniza') || descLower.includes('volcán')) {
+              type = 'VOLCANIC'
+              severity = 'Strong'
+            } else if (descLower.includes('incendio') || descLower.includes('fuego')) {
+              type = 'FIRE'
+              severity = 'Strong'
+            } else if (descLower.includes('eléctrica') || descLower.includes('rayos')) {
+              type = 'LIGHTNING'
+              severity = 'Strong'
+            }
+
+            alerts.unshift({
+              title: `${type === 'ACP' ? 'AVISO CORTO PLAZO' : type}: ${title}`,
+              description: description,
+              severity: severity,
+              type: type
+            })
+          }
+        }
+      })
+    }
+
+    // ─── SPACE WEATHER ALERTS (NOAA) ───
+    if (Array.isArray(spaceAlertsRaw)) {
+      const now = new Date()
+      spaceAlertsRaw.slice(0, 10).forEach((msg: any) => {
+        const issueTime = new Date(msg.issue_datetime)
+        if (now.getTime() - issueTime.getTime() < 12 * 3600 * 1000) {
+          const content = msg.message || ''
+          if (content.includes('Solar Flare') || content.includes('Geomagnetic Storm') || content.includes('Radio Emission')) {
+             let title = 'Evento de Clima Espacial'
+             if (content.includes('Solar Flare')) title = 'Llamarada Solar (Alert)'
+             if (content.includes('Geomagnetic Storm')) title = 'Tormenta Geomagnética'
+             
+             alerts.push({
+               title: title,
+               description: content.split('\n').slice(0, 2).join(' '),
+               severity: 'Moderate',
+               type: 'SPACE'
+             })
+          }
+        }
+      })
+    }
+
+    if (alerts.length > 20) {
+       alerts.splice(20)
     }
 
     const getDesc = (code: number) => {
@@ -125,9 +156,7 @@ export async function GET(req: NextRequest) {
       return 'Nublado'
     }
 
-    if (!data.current) {
-       throw new Error('Incomplete weather data')
-    }
+    if (!data.current) throw new Error('Incomplete weather data')
 
     return NextResponse.json({
       current: {
@@ -139,7 +168,9 @@ export async function GET(req: NextRequest) {
         wind_speed: data.current.wind_speed_10m,
         pressure: data.current.surface_pressure,
         visibility: (data.current.visibility || 0) / 1000,
-        weather_id: data.current.weather_code
+        weather_id: data.current.weather_code,
+        uv_index: data.current.uv_index,
+        precipitation: data.current.precipitation
       },
       forecast: (data.daily?.time || []).map((time: string, i: number) => ({
         date: time,
@@ -161,11 +192,7 @@ export async function GET(req: NextRequest) {
   } catch (err) {
     console.error('Weather API Error:', err)
     return NextResponse.json({
-      current: null,
-      forecast: [],
-      alerts: [],
-      hasAlerts: false,
-      status: 'error'
+      current: null, forecast: [], alerts: [], hasAlerts: false, status: 'error'
     })
   }
 }

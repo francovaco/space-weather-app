@@ -1,18 +1,18 @@
 'use client'
-// ============================================================
-// src/components/dashboard/DashboardClient.tsx
-// Main dashboard with real-time status cards
-// ============================================================
-import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
+import { useState, useEffect } from 'react'
 import { 
-  Activity, Satellite, Zap, Wind, Globe, Cloud, CloudRain, Sun, 
-  MapPin, Thermometer, Info, X, CloudLightning, CloudDrizzle, 
-  AlertTriangle, ChevronRight, Snowflake, CheckCircle2, Eye, Gauge,
-  Calendar
+  AlertTriangle, ChevronRight, Snowflake, CheckCircle2, Eye, Gauge, 
+  Wind, Droplets, MapPin, Sun, Cloud, CloudRain, CloudLightning, 
+  Zap, Activity, Globe, Satellite, Info, Thermometer
 } from 'lucide-react'
-import { useState, useEffect, useMemo } from 'react'
-import { cn } from '@/lib/utils'
 import Link from 'next/link'
+import { cn } from '@/lib/utils'
+import { 
+  XRayFluxData, 
+  ProtonFluxData, 
+  KpIndexData, 
+  GOESStatusData 
+} from '@/types/swpc'
 
 // ── Types ──
 
@@ -22,11 +22,6 @@ interface DailyForecast {
   min: number
   weather_id: number
   description: string
-  humidity: number
-  wind_speed: number
-  pressure: number
-  visibility: number
-  precipitation_prob: number
 }
 
 interface WeatherData {
@@ -34,42 +29,17 @@ interface WeatherData {
     name: string
     temp: number
     description: string
-    st: number | null
     humidity: number
+    st: number | null
     wind_speed: number
     pressure: number
     visibility: number
     weather_id: number
+    uv_index: number
+    precipitation: number
   } | null
   forecast: DailyForecast[]
   alerts: any[]
-}
-
-interface XRayReading {
-  time_tag: string
-  flux: number
-  energy: string
-}
-
-interface ProtonReading {
-  time_tag: string
-  flux: number
-  energy: string
-}
-
-interface KpSample {
-  time_tag: string
-  kp: number
-}
-
-interface SatelliteStatusRow {
-  name: string
-  role: string
-  color: string
-}
-
-interface GOESStatusResponse {
-  satellites: SatelliteStatusRow[]
 }
 
 interface Earthquake {
@@ -83,7 +53,9 @@ interface Earthquake {
 
 // ── Helpers ──
 
-function getWeatherIcon(code: number, size = 14, className = "") {
+const DAY_NAMES_SHORT = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
+
+function getWeatherIcon(code: number, size = 24, className = "") {
   if (code === 0) return <Sun size={size} className={cn("text-amber-400", className)} />
   if (code <= 3) return <Cloud size={size} className={cn("text-slate-300", className)} />
   if (code >= 45 && code <= 48) return <Cloud size={size} className={cn("text-slate-500", className)} />
@@ -94,61 +66,20 @@ function getWeatherIcon(code: number, size = 14, className = "") {
   return <Cloud size={size} className={cn("text-text-muted", className)} />
 }
 
-const DAY_NAMES = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
-const DAY_NAMES_SHORT = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
-
-function classifyXRay(flux: number): { label: string; color: string } {
-  if (!flux || isNaN(flux)) return { label: '—', color: 'text-text-muted' }
-  if (flux >= 1e-4) return { label: `X${(flux/1e-4).toFixed(1)}`, color: 'text-red-500 font-black' }
-  if (flux >= 1e-5) return { label: `M${(flux/1e-5).toFixed(1)}`, color: 'text-accent-orange font-bold' }
-  if (flux >= 1e-6) return { label: `C${(flux/1e-6).toFixed(1)}`, color: 'text-yellow-400' }
-  if (flux >= 1e-7) return { label: `B${(flux/1e-7).toFixed(1)}`, color: 'text-blue-400' }
-  return { label: `A${(flux/1e-8).toFixed(1)}`, color: 'text-green-400 opacity-80' }
-}
-
-function kpDescription(kp: number): { sub: string; color: string } {
-  if (kp >= 5) return { sub: 'Tormenta G1+', color: 'text-accent-orange' }
-  if (kp >= 4) return { sub: 'Activo', color: 'text-yellow-400' }
-  return { sub: 'Tranquilo', color: 'text-green-400' }
-}
-
-function goesStatusLabel(color: string): { label: string; statusColor: string; sub: string } {
-  switch (color?.toUpperCase()) {
-    case 'GREEN':  return { label: 'NORMAL', statusColor: 'text-green-400', sub: 'Instrumentos operativos' }
-    case 'YELLOW': return { label: 'PRECAUCIÓN', statusColor: 'text-yellow-400', sub: 'Anomalía menor' }
-    case 'ORANGE': return { label: 'DEGRADADO', statusColor: 'text-accent-orange', sub: 'Rendimiento bajo' }
-    case 'RED':    return { label: 'CRÍTICO', statusColor: 'text-red-500', sub: 'Interrupción' }
-    default:       return { label: 'NORMAL', statusColor: 'text-green-400', sub: 'Instrumentos operativos' }
-  }
-}
-
-// ── Data fetchers ──
-
-const fetchXRay = () => fetch('/api/swpc/xray-flux?range=1-day').then(r => r.json()).then(d => Array.isArray(d) ? d : [])
-const fetchProtons = () => fetch('/api/swpc/proton-flux?range=1-day').then(r => r.json()).then(d => Array.isArray(d) ? d : [])
-const fetchKp = () => fetch('/api/swpc/kp-index').then(r => r.json()).then(d => Array.isArray(d) ? d : [])
-const fetchGOESStatus = () => fetch('/api/goes/status').then(r => r.json())
-const fetchEarthquakes = async () => {
+async function fetchEarthquakes(): Promise<Earthquake[]> {
   try {
     const res = await fetch('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson')
     const data = await res.json()
     return data.features
       .filter((f: any) => {
-        const p = f.properties.place.toLowerCase()
-        return p.includes('chile') || p.includes('argentina')
+        const place = f.properties.place.toLowerCase()
+        return place.includes('argentina') || place.includes('chile')
       })
       .map((f: any) => {
-        const rawPlace = f.properties.place || ''
-        let city = rawPlace
-        let country = ''
+        let placeParts = f.properties.place.split(', ')
+        let city = placeParts[0]
+        let country = placeParts[1] || 'Región'
         
-        if (rawPlace.includes(', ')) {
-          const parts = rawPlace.split(', ')
-          country = parts[parts.length - 1]
-          city = parts.slice(0, -1).join(', ')
-        }
-        
-        // Remove English prefixes like "113 km WNW of "
         if (city.includes(' of ')) {
           city = city.split(' of ')[1]
         }
@@ -178,6 +109,13 @@ export function DashboardClient() {
   const [usingFallback, setUsingFallback] = useState(false)
   const [showIconRef, setShowIconRef] = useState(false)
   const [selectedDay, setSelectedDay] = useState<DailyForecast | null>(null)
+  const [earthquakeData, setEarthquakeData] = useState<Earthquake[]>([])
+
+  // Space weather data states
+  const [xrayData, setXrayData] = useState<XRayFluxData[] | null>(null)
+  const [protonData, setProtonData] = useState<ProtonFluxData[] | null>(null)
+  const [kpData, setKpData] = useState<KpIndexData[] | null>(null)
+  const [goesData, setGoesData] = useState<GOESStatusData | null>(null)
 
   useEffect(() => {
     let intervalId: any
@@ -212,7 +150,6 @@ export function DashboardClient() {
       intervalId = setInterval(() => fetchWeather(lat, lon), 60000)
     }
 
-    // 1. Proactive Load: Try localStorage first, then IP immediately
     const savedLat = localStorage.getItem('last_lat')
     const savedLon = localStorage.getItem('last_lon')
 
@@ -226,13 +163,11 @@ export function DashboardClient() {
       startPolling()
     }
 
-    // 2. Background Update: Try to get fresh GPS
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (p) => {
           const newLat = p.coords.latitude
           const newLon = p.coords.longitude
-          
           if (usingFallback || !currentLat || Math.abs(currentLat - newLat) > 0.01) {
             setUsingFallback(false)
             startPolling(newLat, newLon)
@@ -248,55 +183,79 @@ export function DashboardClient() {
       )
     }
 
-    return () => intervalId && clearInterval(intervalId)
-  }, [])
+    fetchEarthquakes().then(setEarthquakeData)
+    const eqInterval = setInterval(() => fetchEarthquakes().then(setEarthquakeData), 300000)
 
-  const { data: xrayData } = useAutoRefresh<XRayReading[]>({ queryKey: ['db-xray'], fetcher: fetchXRay, intervalMs: 60000 })
-  const { data: protonData } = useAutoRefresh<ProtonReading[]>({ queryKey: ['db-proton'], fetcher: fetchProtons, intervalMs: 300000 })
-  const { data: kpData } = useAutoRefresh<KpSample[]>({ queryKey: ['db-kp'], fetcher: fetchKp, intervalMs: 300000 })
-  const { data: goesData } = useAutoRefresh<GOESStatusResponse>({ queryKey: ['db-goes'], fetcher: fetchGOESStatus, intervalMs: REFRESH_INTERVALS.STATUS })
-  const { data: earthquakeData } = useAutoRefresh<Earthquake[]>({ queryKey: ['db-earthquakes'], fetcher: fetchEarthquakes, intervalMs: 300000 })
+    const fetchSpace = async () => {
+      try {
+        const [xr, pr, kp, gs] = await Promise.all([
+          fetch('/api/swpc/xray-flux').then(r => r.json()),
+          fetch('/api/swpc/proton-flux').then(r => r.json()),
+          fetch('/api/swpc/kp-index').then(r => r.json()),
+          fetch('/api/goes/status').then(r => r.json())
+        ])
+        setXrayData(xr)
+        setProtonData(pr)
+        setKpData(kp)
+        setGoesData(gs)
+      } catch (e) { console.error('Space data fetch error:', e) }
+    }
+    fetchSpace()
+    const spaceInterval = setInterval(fetchSpace, 60000)
 
-  const xrayInfo = useMemo(() => {
-    if (!Array.isArray(xrayData)) return null
-    const latest = xrayData.filter(d => d.energy === '0.1-0.8nm').at(-1)
-    return latest ? classifyXRay(latest.flux) : null
-  }, [xrayData])
+    return () => {
+      if (intervalId) clearInterval(intervalId)
+      clearInterval(eqInterval)
+      clearInterval(spaceInterval)
+    }
+  }, [usingFallback])
 
-  const proton = useMemo(() => {
-    if (!Array.isArray(protonData)) return null
-    return protonData.filter(d => d.energy === '>=10 MeV').at(-1)
-  }, [protonData])
+  // Space Weather Logic
+  const xrayLong = xrayData?.find(d => d.energy === '0.1-0.8nm')
+  const xrayInfo = xrayLong ? (() => {
+    const val = xrayLong.flux
+    if (val >= 1e-4) return { label: `X ${(val / 1e-4).toFixed(1)}`, color: 'text-red-500' }
+    if (val >= 1e-5) return { label: `M ${(val / 1e-5).toFixed(1)}`, color: 'text-accent-orange' }
+    if (val >= 1e-6) return { label: `C ${(val / 1e-6).toFixed(1)}`, color: 'text-yellow-400' }
+    if (val >= 1e-7) return { label: `B ${(val / 1e-7).toFixed(1)}`, color: 'text-blue-400' }
+    return { label: `A ${(val / 1e-8).toFixed(1)}`, color: 'text-blue-400' }
+  })() : null
 
-  const kpInfo = useMemo(() => {
-    if (!Array.isArray(kpData)) return null
-    const latest = kpData.at(-1)
-    return latest ? kpDescription(latest.kp) : null
-  }, [kpData])
+  const proton = protonData?.at(-1)
+  const kp = kpData?.at(-1)?.kp ?? 0
+  const kpInfo = (() => {
+    if (kp >= 7) return { color: 'text-red-500', sub: 'Tormenta Fuerte' }
+    if (kp >= 5) return { color: 'text-accent-orange', sub: 'Tormenta Menor' }
+    if (kp >= 4) return { color: 'text-yellow-400', sub: 'Activo' }
+    return { color: 'text-blue-400', sub: 'Tranquilo' }
+  })()
 
-  const gStatus = useMemo(() => {
-    const goes19 = goesData?.satellites?.find(s => s.name.includes('19'))
-    return goesStatusLabel(goes19?.color || 'GREEN')
-  }, [goesData])
+  const gStatus = (() => {
+    if (!goesData) return { label: '...', sub: 'Conectando', statusColor: 'text-text-muted' }
+    
+    // Find GOES-19 in the satellites array
+    const goes19 = goesData.satellites.find(s => s.name.includes('19'))
+    const color = goes19?.color || 'UNKNOWN'
+
+    if (color === 'GREEN') return { label: 'OPERACIONAL', sub: 'Sistemas Nominales', statusColor: 'text-green-400' }
+    if (color === 'YELLOW') return { label: 'LIMITADO', sub: 'Anomalía Menor', statusColor: 'text-yellow-400' }
+    if (color === 'ORANGE' || color === 'RED') return { label: 'DEGRADADO', sub: 'Falla/Interrupción', statusColor: 'text-red-500' }
+    
+    return { label: 'DESCONOCIDO', sub: 'Sin Reporte', statusColor: 'text-text-muted' }
+  })()
 
   return (
-    <div className="space-y-6">
-      {/* Introduction Banner */}
-      <div className="card overflow-hidden border-accent-cyan/20 bg-background-card/40 p-0">
-        <div className="flex flex-col md:flex-row items-center gap-6">
-          <div className="w-full md:w-48 lg:w-64 h-48 md:h-auto bg-black/20 flex items-center justify-center p-6 border-b md:border-b-0 md:border-r border-border/50">
-            <img 
-              src="/assets/logo.png" 
-              alt="Space Weather App Logo" 
-              className="w-full h-full object-contain drop-shadow-glow-blue"
-            />
+    <div className="flex flex-col gap-6 animate-fadeIn">
+      {/* Intro section */}
+      <div className="rounded-xl border border-accent-cyan/20 bg-accent-cyan/5 p-4 shadow-glow-blue/5">
+        <div className="flex items-start gap-4">
+          <div className="hidden sm:flex h-5 w-5 shrink-0 items-center justify-center rounded bg-accent-cyan/10 ring-1 ring-accent-cyan/30 overflow-hidden mt-0.5">
+            <img src="/assets/logo.png" alt="Logo" className="w-full h-full object-contain" />
           </div>
-          <div className="flex-1 p-6 md:pr-10">
-            <h2 className="font-display text-xl font-black uppercase tracking-[0.2em] text-accent-cyan mb-3">
-              Sistema de Monitoreo Espacial y Terrestre
-            </h2>
-            <div className="space-y-3">
-              <p className="text-sm font-bold text-text-primary leading-relaxed uppercase tracking-tight">
+          <div className="flex-1">
+            <div className="flex flex-col gap-3">
+              <p className="text-[13px] font-black text-white leading-tight uppercase tracking-widest flex items-center gap-2">
+                <img src="/assets/logo.png" alt="Logo" className="sm:hidden w-4 h-4 object-contain" />
                 Plataforma avanzada de visualización de datos en tiempo real para el clima espacial y terrestre.
               </p>
               <p className="text-xs font-medium text-text-muted leading-relaxed uppercase tracking-tighter opacity-80">
@@ -317,125 +276,101 @@ export function DashboardClient() {
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-4">
         {/* Current Weather & Forecast */}
         {(!weatherLoading && !weather?.current) ? (
-          <div className="card lg:col-span-3 flex items-center justify-center min-h-[240px] border-dashed border-white/10 bg-white/5">
+          <div className="card lg:col-span-3 flex items-center justify-center h-[355px] border-dashed border-white/10 bg-white/5">
             <div className="flex flex-col items-center gap-3 opacity-50">
               <Cloud size={32} className="text-text-dim" />
               <p className="text-xs font-black uppercase tracking-[0.2em] text-text-dim">Pronóstico no disponible</p>
             </div>
           </div>
         ) : (
-          <>
+          <div className="lg:col-span-3 flex flex-col gap-3">
             {/* Current Weather */}
-            {(weatherLoading || weather?.current) && (
-              <div className="card flex flex-col justify-between overflow-hidden border-accent-cyan/20 bg-background-card/50 min-h-[200px]">
-                <div className="flex items-center justify-between">
-                  <span className="section-label flex items-center gap-1.5">
-                    <MapPin size={10} className={cn("text-accent-cyan", usingFallback && "text-text-dim")} />
-                    <span className="text-xs font-bold uppercase tracking-tighter">{usingFallback ? 'Ubicación Detectada' : 'Clima Local'}</span>
-                  </span>
-                  <button onClick={() => setShowIconRef(true)} className="rounded p-1 text-text-dim hover:text-white transition-colors"><Info size={12} /></button>
-                </div>
-
-                {weatherLoading ? (
-                  <div className="flex h-24 items-center justify-center flex-1"><span className="h-4 w-4 animate-spin rounded-full border-2 border-accent-cyan border-t-transparent" /></div>
-                ) : (
-                  <div className="mt-2 flex items-center justify-between">
-                    <div>
-                      <span className="font-display text-4xl font-black text-text-primary tabular-nums tracking-tighter leading-none">
-                        {Math.round(weather!.current!.temp)}°C
-                      </span>
-                      <p className="mt-1.5 text-xs font-bold text-accent-cyan truncate max-w-[120px] uppercase tracking-wide">{weather!.current!.name}</p>
-                      <p className="text-[10px] text-text-muted font-bold mt-0.5 tracking-tight">{weather!.current!.description}</p>
-                    </div>
-                    <div className="flex flex-col items-end">
-                      {getWeatherIcon(weather!.current!.weather_id, 44, "drop-shadow-glow-blue")}
-                      {weather!.current!.st !== null && <span className="text-[9px] font-data text-text-dim mt-1 font-bold">ST: {Math.round(weather!.current!.st)}°</span>}
-                    </div>
-                  </div>
-                )}
-
-                {!weatherLoading && weather?.current && (
-                  <div className="mt-4 grid grid-cols-2 gap-y-2 gap-x-4 border-t border-border/50 pt-3">
-                    <div className="flex items-center gap-1.5">
-                      <Wind size={12} className="text-accent-cyan" />
-                      <div className="flex flex-col">
-                        <span className="font-data text-xs font-black text-text-primary leading-none">{Math.round(weather?.current?.wind_speed ?? 0)}</span>
-                        <span className="text-[9px] uppercase text-text-dim font-black tracking-tighter">km/h</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <Thermometer size={12} className="text-accent-amber" />
-                      <div className="flex flex-col">
-                        <span className="font-data text-xs font-black text-text-primary leading-none">{weather?.current?.humidity ?? '--'}%</span>
-                        <span className="text-[9px] uppercase text-text-dim font-black tracking-tighter">hum.</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <Gauge size={12} className="text-accent-teal" />
-                      <div className="flex flex-col">
-                        <span className="font-data text-xs font-black text-text-primary leading-none">{Math.round(weather?.current?.pressure ?? 0)}</span>
-                        <span className="text-[9px] uppercase text-text-dim font-black tracking-tighter">hPa</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <Eye size={12} className="text-accent-cyan" />
-                      <div className="flex flex-col">
-                        <span className="font-data text-xs font-black text-text-primary leading-none">{Math.round(weather?.current?.visibility ?? 0)}</span>
-                        <span className="text-[9px] uppercase text-text-dim font-black tracking-tighter">km vis.</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
+            <div className="card flex flex-col justify-between overflow-hidden border-accent-cyan/20 bg-background-card/50 h-[170px] p-3 px-6">
+              <div className="flex items-center justify-between mb-1 px-1">
+                <span className="section-label flex items-center gap-1.5">
+                  <MapPin size={10} className={cn("text-accent-cyan", usingFallback && "text-text-dim")} />
+                  <span className="text-[10px] font-bold uppercase tracking-tighter">{usingFallback ? 'Ubicación Detectada' : 'Clima Local'}</span>
+                </span>
+                <button onClick={() => setShowIconRef(true)} className="rounded p-1 text-text-dim hover:text-white transition-colors"><Info size={12} /></button>
               </div>
-            )}
+
+              {weatherLoading ? (
+                <div className="flex h-24 items-center justify-center flex-1"><span className="h-4 w-4 animate-spin rounded-full border-2 border-accent-cyan border-t-transparent" /></div>
+              ) : (
+                <div className="flex items-center gap-10 flex-1 px-4">
+                  {/* Left: Temp & Location */}
+                  <div className="flex flex-col shrink-0">
+                    <span className="font-display text-4xl font-black text-text-primary tabular-nums tracking-tighter leading-none">
+                      {Math.round(weather!.current!.temp)}°C
+                    </span>
+                    <p className="mt-1.5 text-[14px] font-black text-accent-cyan uppercase tracking-wide">{weather!.current!.name}</p>
+                    <p className="text-[11px] text-text-muted font-bold mt-0.5 tracking-tight uppercase">{weather!.current!.description}</p>
+                  </div>
+
+                  {/* Center: Larger Details, Same Level */}
+                  <div className="grid grid-cols-3 gap-x-10 gap-y-2 flex-1 justify-center">
+                    <WeatherDetail icon={<Wind size={14} className="text-accent-cyan" />} label="Viento" value={`${Math.round(weather!.current!.wind_speed)}k/h`} />
+                    <WeatherDetail icon={<Droplets size={14} className="text-accent-amber" />} label="Humedad" value={`${weather!.current!.humidity}%`} />
+                    <WeatherDetail icon={<Gauge size={14} className="text-accent-teal" />} label="Presión" value={`${Math.round(weather!.current!.pressure)}`} />
+                    <WeatherDetail icon={<Zap size={14} className="text-accent-amber" />} label="Índice UV" value={`${weather!.current!.uv_index.toFixed(1)}`} />
+                    <WeatherDetail icon={<CloudRain size={14} className="text-blue-400" />} label="Lluvia" value={`${weather!.current!.precipitation.toFixed(1)}mm`} />
+                    <WeatherDetail icon={<Eye size={14} className="text-accent-cyan" />} label="Visib." value={`${weather!.current!.visibility.toFixed(0)}km`} />
+                  </div>
+
+                  {/* Right: Icon & ST */}
+                  <div className="flex flex-col items-end shrink-0">
+                    {getWeatherIcon(weather!.current!.weather_id, 48, "drop-shadow-glow-blue")}
+                    {weather!.current!.st !== null && <span className="text-[11px] font-data text-text-dim mt-1 font-bold uppercase">ST: {Math.round(weather!.current!.st)}°</span>}
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* 7-Day Forecast */}
-            {(weatherLoading || (weather?.forecast && weather.forecast.length > 0)) && (
-              <div className="card lg:col-span-2 overflow-hidden border-white/5 min-h-[240px] flex flex-col">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="section-label text-xs font-bold uppercase tracking-widest">Pronóstico 7 Días</span>
-                  <div className="h-px flex-1 mx-4 bg-gradient-to-r from-border/50 to-transparent" />
-                </div>
-                {weatherLoading ? (
-                  <div className="flex h-24 flex-1 items-center justify-center"><span className="h-4 w-4 animate-spin rounded-full border-2 border-accent-cyan border-t-transparent" /></div>
-                ) : (
-                  <div className="grid grid-cols-7 gap-2 flex-1 items-center">
-                    {weather!.forecast.map((f, i) => {
-                      const dateObj = new Date(f.date + 'T12:00:00')
-                      const dayStr = DAY_NAMES_SHORT[dateObj.getDay()]
-                      return (
-                        <button 
-                          key={f.date} 
-                          onClick={() => setSelectedDay(f)}
-                          className={cn(
-                            "flex flex-col items-center justify-center gap-5 rounded-xl py-6 px-1 transition-all group",
-                            i === 0 ? "bg-accent-cyan/10 ring-1 ring-accent-cyan/30" : "hover:bg-white/[0.05] hover:ring-1 hover:ring-white/20"
-                          )}
-                        >
-                          <span className={cn("text-[14px] font-black uppercase tracking-tighter", i === 0 ? "text-accent-cyan" : "text-text-dim group-hover:text-text-primary")}>
-                            {i === 0 ? 'Hoy' : dayStr}
-                          </span>
-                          {getWeatherIcon(f.weather_id, 40, "drop-shadow-glow-blue transition-transform group-hover:scale-110")}
-                          <div className="flex flex-col items-center">
-                            <span className="font-display text-xl font-black text-text-primary leading-none tracking-tighter">{Math.round(f.max)}°</span>
-                            <span className="text-[13px] font-bold text-text-dim mt-2 tracking-tighter">{Math.round(f.min)}°</span>
-                          </div>
-                        </button>
-                      )
-                    })}
-                  </div>
-                )}
+            <div className="card overflow-hidden border-white/5 h-[170px] flex flex-col p-3">
+              <div className="flex items-center justify-between mb-2">
+                <span className="section-label text-[10px] font-bold uppercase tracking-widest">Pronóstico 7 Días</span>
+                <div className="h-px flex-1 mx-4 bg-gradient-to-r from-border/50 to-transparent" />
               </div>
-            )}
-          </>
+              {weatherLoading ? (
+                <div className="flex h-24 flex-1 items-center justify-center"><span className="h-4 w-4 animate-spin rounded-full border-2 border-accent-cyan border-t-transparent" /></div>
+              ) : (
+                <div className="grid grid-cols-7 gap-1 flex-1 items-center">
+                  {weather!.forecast.map((f, i) => {
+                    const dateObj = new Date(f.date + 'T12:00:00')
+                    const dayStr = DAY_NAMES_SHORT[dateObj.getDay()]
+                    return (
+                      <button 
+                        key={f.date} 
+                        onClick={() => setSelectedDay(f)}
+                        className={cn(
+                          "flex flex-col items-center justify-center gap-1 rounded-xl py-2 px-0.5 transition-all group",
+                          i === 0 ? "bg-accent-cyan/10 ring-1 ring-accent-cyan/30" : "hover:bg-white/[0.05] hover:ring-1 hover:ring-white/20"
+                        )}
+                      >
+                        <span className={cn("text-[13px] font-black uppercase tracking-tighter", i === 0 ? "text-accent-cyan" : "text-text-dim group-hover:text-text-primary")}>
+                          {i === 0 ? 'Hoy' : dayStr}
+                        </span>
+                        {getWeatherIcon(f.weather_id, 32, "drop-shadow-glow-blue transition-transform group-hover:scale-110")}
+                        <div className="flex flex-col items-center">
+                          <span className="font-display text-lg font-black text-text-primary leading-none tracking-tighter">{Math.round(f.max)}°</span>
+                          <span className="text-[12px] font-bold text-text-dim mt-1 tracking-tighter">{Math.round(f.min)}°</span>
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
         )}
 
         {/* SAT Alerts */}
         <div className={cn(
-          "card border-accent-orange/30 bg-accent-orange/5 min-h-[200px] flex flex-col",
+          "card border-accent-orange/30 bg-accent-orange/5 flex flex-col h-[352px]",
           (!weatherLoading && !weather?.current) ? "lg:col-span-1" : "lg:col-span-1"
         )}>
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-3 shrink-0">
             <span className="section-label flex items-center gap-2 text-accent-orange text-[15px] font-bold uppercase">
               <AlertTriangle size={16} />
               Alertas (SAT)
@@ -443,31 +378,38 @@ export function DashboardClient() {
             <span className="pulse-dot bg-accent-orange shadow-glow-orange h-1.5 w-1.5" />
           </div>
           
-          <div className="flex flex-col flex-1 gap-3">
+          {/* Scrollable Content Area */}
+          <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar space-y-4">
             {/* Estado de Alertas Meteorológicas */}
-            {weather?.alerts && weather.alerts.length > 0 ? (
-              <div className="space-y-2">
-                {weather.alerts.map((alert: any, idx: number) => (
-                  <div key={idx} className="flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/10 p-2">
-                    <AlertTriangle size={16} className="text-red-500 mt-0.5 shrink-0" />
-                    <div>
-                      <p className="text-[14px] font-black text-white leading-tight uppercase">{alert.title || 'Alerta Meteorológica'}</p>
-                      <p className="text-[13px] font-bold text-red-400 mt-0.5 leading-tight line-clamp-2 uppercase">{alert.description}</p>
+            <div className="space-y-2">
+              {weather?.alerts && weather.alerts.length > 0 ? (
+                <>
+                  {weather.alerts.map((alert: any, idx: number) => (
+                    <div key={idx} className="flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/10 p-2 group hover-marquee">
+                      <AlertTriangle size={16} className="text-red-500 mt-0.5 shrink-0" />
+                      <div className="flex-1 overflow-hidden">
+                        <div className="marquee-container">
+                          <p className="marquee-content text-[14px] font-black text-white leading-tight uppercase">{alert.title || 'Alerta Meteorológica'}</p>
+                        </div>
+                        <div className="marquee-container">
+                          <p className="marquee-content text-[12px] font-bold text-red-400/90 mt-1 leading-tight uppercase">{alert.description}</p>
+                        </div>
+                      </div>
                     </div>
+                  ))}
+                </>
+              ) : (
+                <div className="flex items-start gap-3 rounded-lg border border-green-500/20 bg-green-500/5 p-2.5">
+                  <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-green-500/20 text-green-500">
+                    <CheckCircle2 size={16} />
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="flex items-start gap-3 rounded-lg border border-green-500/20 bg-green-500/5 p-2.5">
-                <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-green-500/20 text-green-500">
-                  <CheckCircle2 size={16} />
+                  <div>
+                    <p className="text-[14px] font-black text-white leading-tight uppercase tracking-tighter">Sin Alertas Críticas</p>
+                    <p className="mt-0.5 text-[13px] font-bold leading-normal text-green-400/80 uppercase tracking-tight">Condiciones estables.</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-[14px] font-black text-white leading-tight uppercase tracking-tighter">Sin Alertas Críticas</p>
-                  <p className="mt-0.5 text-[13px] font-bold leading-normal text-green-400/80 uppercase tracking-tight">Condiciones estables.</p>
-                </div>
-              </div>
-            )}
+              )}
+            </div>
 
             {/* Sismos */}
             <div className="space-y-1.5 pt-1 border-t border-white/5">
@@ -478,12 +420,14 @@ export function DashboardClient() {
                     key={eq.id} 
                     href={`https://earthquake.usgs.gov/earthquakes/eventpage/${eq.id}/executive`}
                     target="_blank"
-                    className="flex items-center justify-between border-b border-white/5 pb-1 last:border-0 last:pb-0 hover:bg-white/5 transition-colors group px-1 rounded"
+                    className="flex items-center justify-between border-b border-white/5 pb-1 last:border-0 last:pb-0 hover:bg-white/5 transition-colors group px-1 rounded overflow-hidden"
                   >
-                    <div className="flex flex-col overflow-hidden">
-                      <span className="text-[13px] font-bold text-white truncate leading-tight group-hover:text-accent-cyan transition-colors">
-                        {eq.place}, {eq.country} | Prof: {Math.round(eq.depth)}km
-                      </span>
+                    <div className="flex flex-col flex-1 overflow-hidden">
+                      <div className="marquee-container">
+                        <span className="marquee-content text-[13px] font-bold text-white leading-tight group-hover:text-accent-cyan transition-colors">
+                          {eq.place}, {eq.country} | Prof: {Math.round(eq.depth)}km
+                        </span>
+                      </div>
                       <span className="text-[11px] text-text-dim uppercase tracking-tighter">
                         {new Date(eq.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
@@ -500,19 +444,21 @@ export function DashboardClient() {
                 <p className="text-[12px] text-text-dim uppercase font-bold italic">Buscando actividad sísmica...</p>
               )}
             </div>
+          </div>
 
-            <div className="mt-auto space-y-1 pt-2">
-              <Link href="https://www.inpres.gob.ar/desktop/" target="_blank" className="flex items-center justify-between rounded-lg border border-border bg-background-secondary/50 px-2 py-1.5 text-[12px] font-black text-text-muted hover:text-white hover:border-accent-cyan transition-all group">
-                <span className="uppercase tracking-widest">Sismos INPRES</span>
-                <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform text-accent-cyan" />
-              </Link>
-              <Link href="https://www.smn.gob.ar/alertas" target="_blank" className="flex items-center justify-between rounded-lg border border-border bg-background-secondary/50 px-2 py-1.5 text-[12px] font-black text-text-muted hover:text-white hover:border-accent-cyan transition-all group">
-                <span className="uppercase tracking-widest">Mapa sistema de alerta temprana</span>
-                <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform text-accent-cyan" />
-              </Link>
-            </div>
+          {/* Footer Buttons - Always at bottom, non-scrollable */}
+          <div className="mt-3 space-y-1 pt-2 border-t border-white/5 shrink-0">
+            <Link href="https://www.inpres.gob.ar/desktop/" target="_blank" className="flex items-center justify-between rounded-lg border border-border bg-background-secondary/50 px-2 py-1.5 text-[12px] font-black text-text-muted hover:text-white hover:border-accent-cyan transition-all group">
+              <span className="uppercase tracking-widest">Sismos INPRES</span>
+              <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform text-accent-cyan" />
+            </Link>
+            <Link href="https://www.smn.gob.ar/alertas" target="_blank" className="flex items-center justify-between rounded-lg border border-border bg-background-secondary/50 px-2 py-1.5 text-[12px] font-black text-text-muted hover:text-white hover:border-accent-cyan transition-all group">
+              <span className="uppercase tracking-widest">Mapa sistema de alerta temprana</span>
+              <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform text-accent-cyan" />
+            </Link>
           </div>
         </div>
+
       </div>
 
       {/* Quick status cards */}
@@ -546,71 +492,48 @@ export function DashboardClient() {
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4" onClick={() => setShowIconRef(false)}>
           <div className="card w-full max-w-sm border-accent-cyan/30 shadow-2xl" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-6 border-b border-white/10 pb-4">
-              <span className="font-display text-xl font-black uppercase tracking-widest text-accent-cyan flex items-center gap-3">
-                <Info size={28} /> LEYENDA DEL CLIMA
-              </span>
-              <button onClick={() => setShowIconRef(false)} className="text-text-dim hover:text-white p-1 transition-colors"><X size={28} /></button>
+              <h3 className="text-sm font-black uppercase tracking-widest text-white">Iconografía Meteorológica</h3>
+              <button onClick={() => setShowIconRef(false)} className="text-text-dim hover:text-white transition-colors">✕</button>
             </div>
-            <div className="grid grid-cols-2 gap-y-8 gap-x-6">
-              <IconRef icon={<Sun size={24} className="text-amber-400" />} label="Despejado / Soleado" />
-              <IconRef icon={<Cloud size={24} className="text-slate-300" />} label="Parcialmente Nublado" />
-              <IconRef icon={<Cloud size={24} className="text-slate-500" />} label="Nublado / Cubierto" />
-              <IconRef icon={<CloudLightning size={24} className="text-accent-orange" />} label="Tormentas" />
-              <IconRef icon={<CloudRain size={24} className="text-blue-400" />} label="Lluvias / Chaparrones" />
-              <IconRef icon={<Snowflake size={24} className="text-cyan-100" />} label="Nieve / Helada" />
+            <div className="grid grid-cols-2 gap-4">
+              <IconRef code={0} label="Despejado" />
+              <IconRef code={3} label="Parcialmente Nublado" />
+              <IconRef code={45} label="Niebla / Bruma" />
+              <IconRef code={61} label="Lluvia / Llovizna" />
+              <IconRef code={71} label="Nieve / Aguanieve" />
+              <IconRef code={80} label="Chaparrones" />
+              <IconRef code={95} label="Tormenta Eléctrica" />
             </div>
-            <button onClick={() => setShowIconRef(false)} className="mt-10 w-full rounded-lg bg-accent-cyan/10 border border-accent-cyan/30 py-4 text-sm font-black uppercase tracking-widest text-accent-cyan hover:bg-accent-cyan/20 transition-all">Entendido</button>
           </div>
         </div>
       )}
 
-      {/* Daily Detail Modal */}
+      {/* Day Details Modal */}
       {selectedDay && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4" onClick={() => setSelectedDay(null)}>
-          <div className="card w-full max-w-md border-accent-cyan/30 shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
-            {/* Header */}
-            <div className="flex items-center justify-between bg-accent-cyan/5 px-6 py-5 border-b border-accent-cyan/20">
-              <div className="flex items-center gap-3">
-                <Calendar size={20} className="text-accent-cyan" />
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-accent-cyan opacity-70">Pronóstico Detallado</p>
-                  <h3 className="font-display text-lg font-black uppercase tracking-wider text-text-primary">
-                    {DAY_NAMES[new Date(selectedDay.date + 'T12:00:00').getDay()]} {selectedDay.date.split('-').reverse().join('/')}
-                  </h3>
-                </div>
+          <div className="card w-full max-w-sm border-accent-cyan/30 shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-6 border-b border-white/10 pb-4">
+              <div className="flex flex-col">
+                <h3 className="text-sm font-black uppercase tracking-widest text-white">
+                  {new Date(selectedDay.date + 'T12:00:00').toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
+                </h3>
+                <span className="text-[10px] text-accent-cyan font-bold uppercase mt-0.5">Reporte Detallado</span>
               </div>
-              <button onClick={() => setSelectedDay(null)} className="text-text-dim hover:text-white transition-colors p-1"><X size={24} /></button>
+              <button onClick={() => setSelectedDay(null)} className="text-text-dim hover:text-white transition-colors">✕</button>
+            </div>
+            
+            <div className="flex items-center justify-between bg-white/5 rounded-xl p-4 mb-6">
+              <div className="flex flex-col">
+                <span className="text-3xl font-display font-black text-white">{Math.round(selectedDay.max)}° / {Math.round(selectedDay.min)}°</span>
+                <span className="text-xs font-bold text-accent-cyan uppercase mt-1">{selectedDay.description}</span>
+              </div>
+              {getWeatherIcon(selectedDay.weather_id, 48, "drop-shadow-glow-blue")}
             </div>
 
-            <div className="p-6 space-y-8">
-              {/* Main weather icon & temp */}
-              <div className="flex items-center justify-between bg-white/[0.02] rounded-2xl p-5 border border-white/5 shadow-inner">
-                <div className="flex flex-col">
-                  <div className="flex items-baseline gap-2">
-                    <span className="font-display text-5xl font-black text-white tabular-nums tracking-tighter">{Math.round(selectedDay.max)}°</span>
-                    <span className="font-display text-xl font-bold text-text-muted tabular-nums">/ {Math.round(selectedDay.min)}°C</span>
-                  </div>
-                  <p className="mt-2 text-sm font-black uppercase tracking-widest text-accent-cyan">{selectedDay.description}</p>
-                </div>
-                {getWeatherIcon(selectedDay.weather_id, 64, "drop-shadow-glow-blue")}
-              </div>
-
-              {/* Detail Grid */}
-              <div className="grid grid-cols-2 gap-4">
-                <DetailItem icon={<Thermometer size={18} />} label="Humedad Relativa" value={`${selectedDay.humidity}%`} color="text-accent-amber" />
-                <DetailItem icon={<Wind size={18} />} label="Viento Máximo" value={`${Math.round(selectedDay.wind_speed)} km/h`} color="text-accent-cyan" />
-                <DetailItem icon={<Gauge size={18} />} label="Presión Est." value={`${Math.round(selectedDay.pressure)} hPa`} color="text-accent-teal" />
-                <DetailItem icon={<Eye size={18} />} label="Visibilidad Est." value={`${Math.round(selectedDay.visibility)} km`} color="text-blue-400" />
-                <DetailItem icon={<CloudRain size={18} />} label="Prob. Precipitación" value={`${selectedDay.precipitation_prob}%`} color="text-accent-blue" full />
-              </div>
-
-              <button 
-                onClick={() => setSelectedDay(null)} 
-                className="w-full rounded-xl bg-accent-cyan/10 border border-accent-cyan/30 py-4 text-xs font-black uppercase tracking-[0.3em] text-accent-cyan hover:bg-accent-cyan/20 transition-all shadow-glow-blue"
-              >
-                Cerrar Detalle
-              </button>
-            </div>
+            <p className="text-[11px] text-text-muted leading-relaxed uppercase font-medium">
+              Pronóstico de condiciones para la jornada. Los valores representan las temperaturas extremas estimadas. 
+              Consulte el mapa de radar para información en tiempo real.
+            </p>
           </div>
         </div>
       )}
@@ -618,50 +541,63 @@ export function DashboardClient() {
   )
 }
 
-function DetailItem({ icon, label, value, color, full = false }: { icon: React.ReactNode, label: string, value: string, color: string, full?: boolean }) {
+function WeatherDetail({ icon, label, value }: { icon: React.ReactNode, label: string, value: string }) {
   return (
-    <div className={cn("flex items-center gap-4 rounded-xl bg-white/[0.03] border border-white/5 p-4", full && "col-span-2")}>
-      <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-background-secondary border border-white/10", color)}>{icon}</div>
-      <div className="flex flex-col">
-        <span className="text-[10px] font-black uppercase tracking-tighter text-text-dim">{label}</span>
-        <span className="font-data text-base font-black text-text-primary tabular-nums">{value}</span>
+    <div className="flex flex-col gap-0.5">
+      <div className="flex items-center gap-1.5 text-text-dim">
+        {icon}
+        <span className="text-[9px] font-black uppercase tracking-tighter">{label}</span>
       </div>
+      <span className="text-[11px] font-bold text-text-primary tabular-nums ml-4.5">{value}</span>
     </div>
   )
 }
 
-function IconRef({ icon, label }: { icon: React.ReactNode, label: string }) {
+function QuickLink({ title, description, href, icon, color }: { title: string, description: string, href: string, icon: React.ReactNode, color: string }) {
   return (
-    <div className="flex items-center gap-4">
-      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/5 border border-white/10">{icon}</div>
-      <span className="text-[12px] font-black text-text-secondary leading-tight uppercase tracking-tight">{label}</span>
-    </div>
+    <Link href={href} className="group relative overflow-hidden rounded-xl border border-white/5 bg-background-card/30 p-4 transition-all hover:border-accent-cyan/30 hover:bg-accent-cyan/5">
+      <div className="flex items-center gap-4">
+        <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-background-secondary ring-1 ring-white/10 transition-all group-hover:scale-110 group-hover:ring-accent-cyan/30", color)}>
+          {icon}
+        </div>
+        <div className="flex flex-col">
+          <span className="text-xs font-black uppercase tracking-widest text-text-primary group-hover:text-accent-cyan transition-colors">{title}</span>
+          <span className="text-[10px] font-bold text-text-muted uppercase mt-0.5 tracking-tighter">{description}</span>
+        </div>
+      </div>
+      <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-text-dim opacity-0 transition-all group-hover:opacity-100 group-hover:translate-x-1" />
+    </Link>
   )
 }
 
-function StatusCard({ label, value, sub, color, icon, href, loading }: any) {
+function StatusCard({ label, value, sub, color, icon, href, loading }: { label: string, value: string, sub: string, color: string, icon: React.ReactNode, href: string, loading?: boolean }) {
   return (
-    <Link href={href} className="card flex flex-col gap-2 transition-all hover:border-border-accent hover:shadow-glow-blue group py-4">
-      <div className="flex items-center justify-between">
-        <span className="section-label text-xs group-hover:text-white transition-colors">{label}</span>
-        <span className={cn(color, "transition-transform group-hover:scale-110")}>{icon}</span>
+    <Link href={href} className="card group border-white/5 bg-background-card/30 p-3 transition-all hover:border-white/10 hover:bg-white/5">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-[9px] font-black uppercase tracking-widest text-text-muted">{label}</span>
+        <div className={cn("transition-transform group-hover:scale-110", color)}>
+          {icon}
+        </div>
       </div>
       {loading ? (
-        <div className="flex items-center gap-2"><span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-accent-cyan border-t-transparent" /></div>
-      ) : <span className={cn('font-display text-2xl font-black', color)}>{value}</span>}
-      <span className="text-[10px] font-black text-text-dim uppercase tracking-tighter">{sub}</span>
+        <div className="h-6 w-16 animate-pulse rounded bg-white/5" />
+      ) : (
+        <>
+          <p className={cn("text-lg font-display font-black leading-none tracking-tight", color)}>{value}</p>
+          <p className="mt-1 text-[9px] font-bold uppercase tracking-tighter text-text-dim line-clamp-1">{sub}</p>
+        </>
+      )}
     </Link>
   )
 }
 
-function QuickLink({ title, description, href, icon, color }: any) {
+function IconRef({ code, label }: { code: number, label: string }) {
   return (
-    <Link href={href} className="card items-start gap-4 transition-all hover:border-border-accent hover:shadow-glow-blue group py-4 flex">
-      <div className={cn("mt-1 shrink-0 p-2.5 rounded-xl bg-white/5 border border-white/5 group-hover:border-white/20 transition-all", color)}>{icon}</div>
-      <div>
-        <p className="font-display text-xs font-black text-text-primary uppercase tracking-wider">{title}</p>
-        <p className="mt-1 text-[9px] font-bold text-text-muted leading-relaxed line-clamp-2 uppercase tracking-tighter">{description}</p>
+    <div className="flex items-center gap-3 bg-white/5 rounded-lg p-3 ring-1 ring-white/5">
+      <div className="h-10 w-10 shrink-0 flex items-center justify-center bg-black/20 rounded">
+        {getWeatherIcon(code, 24)}
       </div>
-    </Link>
+      <span className="text-[13px] font-bold uppercase tracking-tighter text-text-secondary leading-tight">{label}</span>
+    </div>
   )
 }

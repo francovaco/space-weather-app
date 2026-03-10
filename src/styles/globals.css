@@ -232,18 +232,30 @@
   100% { transform: translateY(100vh); }
 }
 
-/* Scan line overlay for satellite imagery */
-.scan-overlay::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    rgba(0, 0, 0, 0.03) 2px,
-    rgba(0, 0, 0, 0.03) 4px
-  );
-  pointer-events: none;
-  z-index: 1;
+/* ============================================================
+   Custom Marquee / Horizontal Scroll on Hover (Smart)
+   ============================================================ */
+.marquee-container {
+  overflow: hidden;
+  white-space: nowrap;
+  position: relative;
+  width: 100%;
+  container-type: inline-size; /* Habilita consultas de tamaño para este contenedor */
+}
+
+.marquee-content {
+  display: inline-block;
+  white-space: nowrap;
+  transition: transform 2s ease-in-out;
+  transform: translateX(0);
+  width: max-content;
+  min-width: 100%;
+}
+
+/* 
+   Solo se desplaza si el contenido es más ancho que el contenedor (100cqw).
+   Calcula la diferencia exacta para mostrar el final del texto.
+*/
+.marquee-container:hover .marquee-content {
+  transform: translateX(min(0px, calc(100cqw - 100%)));
 }
