@@ -204,82 +204,82 @@ export function DashboardClient() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="font-display text-2xl font-bold uppercase tracking-widest text-text-primary">Monitor de Clima Espacial</h1>
-        <p className="mt-1.5 text-sm text-text-muted">GOES-19 · Datos en Tiempo Real · Sector Sudamérica</p>
+        <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">Monitor de Clima Espacial</h1>
+        <p className="mt-1 text-xs text-text-muted">GOES-19 · Datos en Tiempo Real · Sector Sudamérica</p>
       </div>
 
       {/* Weather & SAT Section */}
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-4">
         {/* Current Weather */}
-        <div className="card flex flex-col justify-between overflow-hidden border-accent-cyan/20 bg-background-card/50 min-h-[220px]">
+        <div className="card flex flex-col justify-between overflow-hidden border-accent-cyan/20 bg-background-card/50 min-h-[200px]">
           <div className="flex items-center justify-between">
             <span className="section-label flex items-center gap-1.5">
-              <MapPin size={12} className={cn("text-accent-cyan", usingFallback && "text-text-dim")} />
-              <span className="text-sm font-bold uppercase tracking-tighter">{usingFallback ? 'Ubicación Predet.' : 'Clima Local'}</span>
+              <MapPin size={10} className={cn("text-accent-cyan", usingFallback && "text-text-dim")} />
+              <span className="text-xs font-bold uppercase tracking-tighter">{usingFallback ? 'Ubicación Predet.' : 'Clima Local'}</span>
             </span>
-            <button onClick={() => setShowIconRef(true)} className="rounded p-1 text-text-dim hover:text-white transition-colors"><Info size={14} /></button>
+            <button onClick={() => setShowIconRef(true)} className="rounded p-1 text-text-dim hover:text-white transition-colors"><Info size={12} /></button>
           </div>
 
           {weatherLoading ? (
-            <div className="flex h-24 items-center justify-center"><span className="h-5 w-5 animate-spin rounded-full border-2 border-accent-cyan border-t-transparent" /></div>
+            <div className="flex h-24 items-center justify-center"><span className="h-4 w-4 animate-spin rounded-full border-2 border-accent-cyan border-t-transparent" /></div>
           ) : weather?.current ? (
-            <div className="mt-3 flex items-center justify-between">
+            <div className="mt-2 flex items-center justify-between">
               <div>
-                <span className="font-display text-5xl font-black text-text-primary tabular-nums tracking-tighter leading-none">
+                <span className="font-display text-4xl font-black text-text-primary tabular-nums tracking-tighter leading-none">
                   {Math.round(weather.current.temp)}°C
                 </span>
-                <p className="mt-2 text-sm font-bold text-accent-cyan truncate max-w-[140px] uppercase tracking-wide">{weather.current.name}</p>
-                <p className="text-xs text-text-muted font-bold mt-1 tracking-tight">{weather.current.description}</p>
+                <p className="mt-1.5 text-xs font-bold text-accent-cyan truncate max-w-[120px] uppercase tracking-wide">{weather.current.name}</p>
+                <p className="text-[10px] text-text-muted font-bold mt-0.5 tracking-tight">{weather.current.description}</p>
               </div>
               <div className="flex flex-col items-end">
-                {getWeatherIcon(weather.current.weather_id, 52, "drop-shadow-glow-blue")}
-                {weather.current.st !== null && <span className="text-xs font-data text-text-dim mt-2 font-bold">ST: {Math.round(weather.current.st)}°</span>}
+                {getWeatherIcon(weather.current.weather_id, 44, "drop-shadow-glow-blue")}
+                {weather.current.st !== null && <span className="text-[9px] font-data text-text-dim mt-1 font-bold">ST: {Math.round(weather.current.st)}°</span>}
               </div>
             </div>
-          ) : <div className="py-10 text-center text-xs text-text-dim uppercase tracking-widest opacity-50 font-bold">Clima no disponible</div>}
+          ) : <div className="py-8 text-center text-xs text-text-dim uppercase tracking-widest opacity-50 font-bold">Clima no disponible</div>}
 
-          <div className="mt-5 grid grid-cols-2 gap-y-3 gap-x-4 border-t border-border/50 pt-4">
-            <div className="flex items-center gap-2">
-              <Wind size={14} className="text-accent-cyan" />
+          <div className="mt-4 grid grid-cols-2 gap-y-2 gap-x-4 border-t border-border/50 pt-3">
+            <div className="flex items-center gap-1.5">
+              <Wind size={12} className="text-accent-cyan" />
               <div className="flex flex-col">
-                <span className="font-data text-sm font-black text-text-primary leading-none">{Math.round(weather?.current?.wind_speed ?? 0)}</span>
-                <span className="text-[10px] uppercase text-text-dim font-black tracking-tighter">km/h</span>
+                <span className="font-data text-xs font-black text-text-primary leading-none">{Math.round(weather?.current?.wind_speed ?? 0)}</span>
+                <span className="text-[9px] uppercase text-text-dim font-black tracking-tighter">km/h</span>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Thermometer size={14} className="text-accent-amber" />
+            <div className="flex items-center gap-1.5">
+              <Thermometer size={12} className="text-accent-amber" />
               <div className="flex flex-col">
-                <span className="font-data text-sm font-black text-text-primary leading-none">{weather?.current?.humidity ?? '--'}%</span>
-                <span className="text-[10px] uppercase text-text-dim font-black tracking-tighter">hum.</span>
+                <span className="font-data text-xs font-black text-text-primary leading-none">{weather?.current?.humidity ?? '--'}%</span>
+                <span className="text-[9px] uppercase text-text-dim font-black tracking-tighter">hum.</span>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Gauge size={14} className="text-accent-teal" />
+            <div className="flex items-center gap-1.5">
+              <Gauge size={12} className="text-accent-teal" />
               <div className="flex flex-col">
-                <span className="font-data text-sm font-black text-text-primary leading-none">{Math.round(weather?.current?.pressure ?? 0)}</span>
-                <span className="text-[10px] uppercase text-text-dim font-black tracking-tighter">hPa</span>
+                <span className="font-data text-xs font-black text-text-primary leading-none">{Math.round(weather?.current?.pressure ?? 0)}</span>
+                <span className="text-[9px] uppercase text-text-dim font-black tracking-tighter">hPa</span>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Eye size={14} className="text-accent-cyan" />
+            <div className="flex items-center gap-1.5">
+              <Eye size={12} className="text-accent-cyan" />
               <div className="flex flex-col">
-                <span className="font-data text-sm font-black text-text-primary leading-none">{Math.round(weather?.current?.visibility ?? 0)}</span>
-                <span className="text-[10px] uppercase text-text-dim font-black tracking-tighter">km vis.</span>
+                <span className="font-data text-xs font-black text-text-primary leading-none">{Math.round(weather?.current?.visibility ?? 0)}</span>
+                <span className="text-[9px] uppercase text-text-dim font-black tracking-tighter">km vis.</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* 7-Day Forecast */}
-        <div className="card lg:col-span-2 overflow-hidden border-white/5 min-h-[220px] flex flex-col">
-          <div className="flex items-center justify-between mb-3">
-            <span className="section-label text-sm font-bold uppercase tracking-widest">Pronóstico 7 Días</span>
+        <div className="card lg:col-span-2 overflow-hidden border-white/5 min-h-[200px] flex flex-col">
+          <div className="flex items-center justify-between mb-2">
+            <span className="section-label text-xs font-bold uppercase tracking-widest">Pronóstico 7 Días</span>
             <div className="h-px flex-1 mx-4 bg-gradient-to-r from-border/50 to-transparent" />
           </div>
           {weatherLoading ? (
-            <div className="flex h-24 flex-1 items-center justify-center"><span className="h-5 w-5 animate-spin rounded-full border-2 border-accent-cyan border-t-transparent" /></div>
+            <div className="flex h-24 flex-1 items-center justify-center"><span className="h-4 w-4 animate-spin rounded-full border-2 border-accent-cyan border-t-transparent" /></div>
           ) : (weather?.forecast && weather.forecast.length > 0) ? (
-            <div className="grid grid-cols-7 gap-1.5 flex-1 items-center">
+            <div className="grid grid-cols-7 gap-1 flex-1 items-center">
               {weather.forecast.map((f, i) => {
                 const dateObj = new Date(f.date + 'T12:00:00')
                 const dayStr = DAY_NAMES_SHORT[dateObj.getDay()]
@@ -288,49 +288,49 @@ export function DashboardClient() {
                     key={f.date} 
                     onClick={() => setSelectedDay(f)}
                     className={cn(
-                      "flex flex-col items-center justify-center gap-4 rounded-xl py-5 px-1 transition-all group",
+                      "flex flex-col items-center justify-center gap-3 rounded-xl py-4 px-1 transition-all group",
                       i === 0 ? "bg-accent-cyan/10 ring-1 ring-accent-cyan/30" : "hover:bg-white/[0.05] hover:ring-1 hover:ring-white/20"
                     )}
                   >
-                    <span className={cn("text-[11px] font-black uppercase tracking-tighter", i === 0 ? "text-accent-cyan" : "text-text-dim group-hover:text-text-primary")}>
+                    <span className={cn("text-[10px] font-black uppercase tracking-tighter", i === 0 ? "text-accent-cyan" : "text-text-dim group-hover:text-text-primary")}>
                       {i === 0 ? 'Hoy' : dayStr}
                     </span>
-                    {getWeatherIcon(f.weather_id, 28, "drop-shadow-glow-blue transition-transform group-hover:scale-110")}
+                    {getWeatherIcon(f.weather_id, 24, "drop-shadow-glow-blue transition-transform group-hover:scale-110")}
                     <div className="flex flex-col items-center">
-                      <span className="font-display text-lg font-black text-text-primary leading-none tracking-tighter">{Math.round(f.max)}°</span>
-                      <span className="text-[11px] font-bold text-text-dim mt-2 tracking-tighter">{Math.round(f.min)}°</span>
+                      <span className="font-display text-sm font-black text-text-primary leading-none tracking-tighter">{Math.round(f.max)}°</span>
+                      <span className="text-[9px] font-bold text-text-dim mt-1.5 tracking-tighter">{Math.round(f.min)}°</span>
                     </div>
                   </button>
                 )
               })}
             </div>
-          ) : <div className="flex-1 flex items-center justify-center text-sm text-text-dim uppercase tracking-widest opacity-50 font-bold">Pronóstico no disponible</div>}
+          ) : <div className="flex-1 flex items-center justify-center text-xs text-text-dim uppercase tracking-widest opacity-50 font-bold">Pronóstico no disponible</div>}
         </div>
 
         {/* SAT Alerts */}
-        <div className="card lg:col-span-1 border-accent-orange/30 bg-accent-orange/5 min-h-[220px] flex flex-col">
-          <div className="flex items-center justify-between mb-4">
-            <span className="section-label flex items-center gap-2 text-accent-orange text-sm font-bold uppercase">
-              <AlertTriangle size={14} />
+        <div className="card lg:col-span-1 border-accent-orange/30 bg-accent-orange/5 min-h-[200px] flex flex-col">
+          <div className="flex items-center justify-between mb-3">
+            <span className="section-label flex items-center gap-2 text-accent-orange text-[11px] font-bold uppercase">
+              <AlertTriangle size={12} />
               Alertas (SAT)
             </span>
-            <span className="pulse-dot bg-accent-orange shadow-glow-orange h-2 w-2" />
+            <span className="pulse-dot bg-accent-orange shadow-glow-orange h-1.5 w-1.5" />
           </div>
-          <div className="flex flex-col flex-1 justify-between gap-4">
-            <div className="flex items-start gap-4 rounded-lg border border-green-500/20 bg-green-500/5 p-4">
-              <div className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-500/20 text-green-500">
-                <CheckCircle2 size={18} />
+          <div className="flex flex-col flex-1 justify-between gap-3">
+            <div className="flex items-start gap-3 rounded-lg border border-green-500/20 bg-green-500/5 p-3">
+              <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-green-500/20 text-green-500">
+                <CheckCircle2 size={14} />
               </div>
               <div>
-                <p className="text-sm font-black text-white leading-tight uppercase tracking-tighter">Sin Alertas Críticas</p>
-                <p className="mt-1.5 text-[11px] font-bold leading-normal text-green-400/80 uppercase tracking-tight">
-                  Condiciones estables en tu zona de influencia.
+                <p className="text-xs font-black text-white leading-tight uppercase tracking-tighter">Sin Alertas Críticas</p>
+                <p className="mt-1 text-[10px] font-bold leading-normal text-green-400/80 uppercase tracking-tight">
+                  Condiciones estables.
                 </p>
               </div>
             </div>
-            <Link href="https://www.smn.gob.ar/alertas" target="_blank" className="flex items-center justify-between rounded-lg border border-border bg-background-secondary/50 px-4 py-3 text-xs font-black text-text-muted hover:text-white hover:border-accent-cyan transition-all group">
+            <Link href="https://www.smn.gob.ar/alertas" target="_blank" className="flex items-center justify-between rounded-lg border border-border bg-background-secondary/50 px-3 py-2 text-[9px] font-black text-text-muted hover:text-white hover:border-accent-cyan transition-all group">
               <span className="uppercase tracking-widest">Mapa Oficial SMN</span>
-              <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform text-accent-cyan" />
+              <ChevronRight size={12} className="group-hover:translate-x-1 transition-transform text-accent-cyan" />
             </Link>
           </div>
         </div>
@@ -338,15 +338,15 @@ export function DashboardClient() {
 
       {/* Quick status cards */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <StatusCard label="Clase Rayos X" value={xrayInfo?.label ?? '—'} sub="Onda corta 0.1–0.8 nm" color={xrayInfo?.color ?? 'text-text-muted'} icon={<Zap size={16} />} href="/instruments/xray-flux" loading={!xrayData} />
+        <StatusCard label="Clase Rayos X" value={xrayInfo?.label ?? '—'} sub="Onda corta 0.1–0.8 nm" color={xrayInfo?.color ?? 'text-text-muted'} icon={<Zap size={14} />} href="/instruments/xray-flux" loading={!xrayData} />
         <StatusCard label="Flujo de Protones" value={proton ? (proton.flux as number).toFixed(2) : '—'} sub="≥10 MeV pfu" color={proton && (proton.flux as number) >= 10 ? 'text-accent-orange' : 'text-blue-400'} icon={<Activity size={14} />} href="/instruments/proton-flux" loading={!protonData} />
-        <StatusCard label="Índice Kp" value={kpData?.at(-1) ? kpData.at(-1)!.kp.toFixed(1) : '—'} sub={kpInfo?.sub ?? 'Cargando…'} color={kpInfo?.color ?? 'text-text-muted'} icon={<Globe size={16} />} href="/instruments/kp-index" loading={!kpData} />
+        <StatusCard label="Índice Kp" value={kpData?.at(-1) ? kpData.at(-1)!.kp.toFixed(1) : '—'} sub={kpInfo?.sub ?? 'Cargando…'} color={kpInfo?.color ?? 'text-text-muted'} icon={<Globe size={14} />} href="/instruments/kp-index" loading={!kpData} />
         <StatusCard 
           label="GOES-19" 
           value={gStatus.label} 
           sub={gStatus.sub} 
           color={gStatus.statusColor} 
-          icon={<Satellite size={16} />} 
+          icon={<Satellite size={14} />} 
           href="/satellite-status" 
           loading={!goesData} 
         />
@@ -354,18 +354,18 @@ export function DashboardClient() {
 
       {/* Quick links grid */}
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-        <QuickLink title="Imágenes ABI" description="16 canales · Disco Completo SSA" href="/imagery" icon={<Satellite size={20} />} color="text-accent-cyan" />
-        <QuickLink title="Flujo de Rayos X" description="Llamaradas solares tiempo real" href="/instruments/xray-flux" icon={<Zap size={20} />} color="text-accent-amber" />
-        <QuickLink title="Magnetómetro" description="Tormentas geomagnéticas" href="/instruments/magnetometer" icon={<Activity size={20} />} color="text-primary" />
-        <QuickLink title="Pronóstico de Aurora" description="Polos Norte y Sur 30 min" href="/aurora" icon={<Wind size={20} />} color="text-purple-400" />
-        <QuickLink title="Coronógrafo" description="Detección de CMEs (CCOR-1)" href="/instruments/coronagraph" icon={<Globe size={20} />} color="text-accent-teal" />
-        <QuickLink title="Viento Solar" description="Modelo WSA-ENLIL" href="/solar-wind" icon={<Wind size={20} />} color="text-accent-orange" />
+        <QuickLink title="Imágenes ABI" description="16 canales · Disco Completo SSA" href="/imagery" icon={<Satellite size={18} />} color="text-accent-cyan" />
+        <QuickLink title="Flujo de Rayos X" description="Llamaradas solares tiempo real" href="/instruments/xray-flux" icon={<Zap size={18} />} color="text-accent-amber" />
+        <QuickLink title="Magnetómetro" description="Tormentas geomagnéticas" href="/instruments/magnetometer" icon={<Activity size={18} />} color="text-primary" />
+        <QuickLink title="Pronóstico de Aurora" description="Polos Norte y Sur 30 min" href="/aurora" icon={<Wind size={18} />} color="text-purple-400" />
+        <QuickLink title="Coronógrafo" description="Detección de CMEs (CCOR-1)" href="/instruments/coronagraph" icon={<Globe size={18} />} color="text-accent-teal" />
+        <QuickLink title="Viento Solar" description="Modelo WSA-ENLIL" href="/solar-wind" icon={<Wind size={18} />} color="text-accent-orange" />
       </div>
 
       {/* Icon Reference Modal */}
       {showIconRef && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4" onClick={() => setShowIconRef(false)}>
-          <div className="card w-full max-lg border-accent-cyan/30 shadow-2xl" onClick={e => e.stopPropagation()}>
+          <div className="card w-full max-w-sm border-accent-cyan/30 shadow-2xl" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-6 border-b border-white/10 pb-4">
               <span className="font-display text-xl font-black uppercase tracking-widest text-accent-cyan flex items-center gap-3">
                 <Info size={28} /> LEYENDA DEL CLIMA
@@ -462,26 +462,26 @@ function IconRef({ icon, label }: { icon: React.ReactNode, label: string }) {
 
 function StatusCard({ label, value, sub, color, icon, href, loading }: any) {
   return (
-    <Link href={href} className="card flex flex-col gap-3 transition-all hover:border-border-accent hover:shadow-glow-blue group py-5">
+    <Link href={href} className="card flex flex-col gap-2 transition-all hover:border-border-accent hover:shadow-glow-blue group py-4">
       <div className="flex items-center justify-between">
-        <span className="section-label text-sm group-hover:text-white transition-colors">{label}</span>
+        <span className="section-label text-xs group-hover:text-white transition-colors">{label}</span>
         <span className={cn(color, "transition-transform group-hover:scale-110")}>{icon}</span>
       </div>
       {loading ? (
-        <div className="flex items-center gap-2"><span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-accent-cyan border-t-transparent" /></div>
-      ) : <span className={cn('font-display text-3xl font-black', color)}>{value}</span>}
-      <span className="text-xs font-black text-text-dim uppercase tracking-tighter">{sub}</span>
+        <div className="flex items-center gap-2"><span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-accent-cyan border-t-transparent" /></div>
+      ) : <span className={cn('font-display text-2xl font-black', color)}>{value}</span>}
+      <span className="text-[10px] font-black text-text-dim uppercase tracking-tighter">{sub}</span>
     </Link>
   )
 }
 
 function QuickLink({ title, description, href, icon, color }: any) {
   return (
-    <Link href={href} className="card flex items-start gap-5 transition-all hover:border-border-accent hover:shadow-glow-blue group py-5">
-      <div className={cn("mt-1 shrink-0 p-3 rounded-xl bg-white/5 border border-white/5 group-hover:border-white/20 transition-all", color)}>{icon}</div>
+    <Link href={href} className="card flex items-start gap-4 transition-all hover:border-border-accent hover:shadow-glow-blue group py-4">
+      <div className={cn("mt-1 shrink-0 p-2.5 rounded-xl bg-white/5 border border-white/5 group-hover:border-white/20 transition-all", color)}>{icon}</div>
       <div>
-        <p className="font-display text-sm font-black text-text-primary uppercase tracking-wider">{title}</p>
-        <p className="mt-1.5 text-xs font-bold text-text-muted leading-relaxed line-clamp-2 uppercase tracking-tighter">{description}</p>
+        <p className="font-display text-xs font-black text-text-primary uppercase tracking-wider">{title}</p>
+        <p className="mt-1 text-[9px] font-bold text-text-muted leading-relaxed line-clamp-2 uppercase tracking-tighter">{description}</p>
       </div>
     </Link>
   )

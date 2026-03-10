@@ -39,7 +39,9 @@ export function TopBar() {
         </div>
 
         {/* Local weather from SMN */}
-        <WeatherPill />
+        <Link href="/" prefetch={false} className="hover:opacity-80 transition-opacity">
+          <WeatherPill />
+        </Link>
       </div>
 
       {/* Center: space weather conditions pills */}
