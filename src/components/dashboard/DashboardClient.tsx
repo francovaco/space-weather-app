@@ -7,13 +7,27 @@ import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
 import { 
   Activity, Satellite, Zap, Wind, Globe, Cloud, CloudRain, Sun, 
   MapPin, Thermometer, Info, X, CloudLightning, CloudDrizzle, 
-  AlertTriangle, ChevronRight, Snowflake, CheckCircle2, Eye, Gauge
+  AlertTriangle, ChevronRight, Snowflake, CheckCircle2, Eye, Gauge,
+  Calendar
 } from 'lucide-react'
 import { useState, useEffect, useMemo } from 'react'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
 
 // ── Types ──
+
+interface DailyForecast {
+  date: string
+  max: number
+  min: number
+  weather_id: number
+  description: string
+  humidity: number
+  wind_speed: number
+  pressure: number
+  visibility: number
+  precipitation_prob: number
+}
 
 interface WeatherData {
   current: {
@@ -27,12 +41,7 @@ interface WeatherData {
     visibility: number
     weather_id: number
   } | null
-  forecast: {
-    date: string
-    max: number
-    min: number
-    weather_id: number
-  }[]
+  forecast: DailyForecast[]
   alerts: any[]
 }
 
@@ -76,7 +85,8 @@ function getWeatherIcon(code: number, size = 14, className = "") {
   return <Cloud size={size} className={cn("text-text-muted", className)} />
 }
 
-const DAY_NAMES = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
+const DAY_NAMES = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
+const DAY_NAMES_SHORT = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
 
 function classifyXRay(flux: number): { label: string; color: string } {
   if (!flux || isNaN(flux)) return { label: '—', color: 'text-text-muted' }
@@ -117,6 +127,7 @@ export function DashboardClient() {
   const [weatherLoading, setWeatherLoading] = useState(true)
   const [usingFallback, setUsingFallback] = useState(false)
   const [showIconRef, setShowIconRef] = useState(false)
+  const [selectedDay, setSelectedDay] = useState<DailyForecast | null>(null)
 
   useEffect(() => {
     const BUENOS_AIRES = { lat: -34.6037, lon: -58.3816 }
@@ -270,22 +281,26 @@ export function DashboardClient() {
           ) : (weather?.forecast && weather.forecast.length > 0) ? (
             <div className="grid grid-cols-7 gap-1.5 flex-1 items-center">
               {weather.forecast.map((f, i) => {
-                const date = new Date(f.date + 'T12:00:00')
-                const day = DAY_NAMES[date.getDay()]
+                const dateObj = new Date(f.date + 'T12:00:00')
+                const dayStr = DAY_NAMES_SHORT[dateObj.getDay()]
                 return (
-                  <div key={f.date} className={cn(
-                    "flex flex-col items-center justify-center gap-4 rounded-xl py-5 px-1 transition-all",
-                    i === 0 ? "bg-accent-cyan/10 ring-1 ring-accent-cyan/30" : "hover:bg-white/[0.03]"
-                  )}>
-                    <span className={cn("text-[11px] font-black uppercase tracking-tighter", i === 0 ? "text-accent-cyan" : "text-text-dim")}>
-                      {i === 0 ? 'Hoy' : day}
+                  <button 
+                    key={f.date} 
+                    onClick={() => setSelectedDay(f)}
+                    className={cn(
+                      "flex flex-col items-center justify-center gap-4 rounded-xl py-5 px-1 transition-all group",
+                      i === 0 ? "bg-accent-cyan/10 ring-1 ring-accent-cyan/30" : "hover:bg-white/[0.05] hover:ring-1 hover:ring-white/20"
+                    )}
+                  >
+                    <span className={cn("text-[11px] font-black uppercase tracking-tighter", i === 0 ? "text-accent-cyan" : "text-text-dim group-hover:text-text-primary")}>
+                      {i === 0 ? 'Hoy' : dayStr}
                     </span>
-                    {getWeatherIcon(f.weather_id, 28, "drop-shadow-glow-blue")}
+                    {getWeatherIcon(f.weather_id, 28, "drop-shadow-glow-blue transition-transform group-hover:scale-110")}
                     <div className="flex flex-col items-center">
                       <span className="font-display text-lg font-black text-text-primary leading-none tracking-tighter">{Math.round(f.max)}°</span>
                       <span className="text-[11px] font-bold text-text-dim mt-2 tracking-tighter">{Math.round(f.min)}°</span>
                     </div>
-                  </div>
+                  </button>
                 )
               })}
             </div>
@@ -350,22 +365,73 @@ export function DashboardClient() {
       {/* Icon Reference Modal */}
       {showIconRef && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4" onClick={() => setShowIconRef(false)}>
-          <div className="card w-full max-w-lg border-accent-cyan/30 shadow-2xl" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-8 border-b border-white/10 pb-6">
-              <span className="font-display text-2xl font-black uppercase tracking-widest text-accent-cyan flex items-center gap-4">
-                <Info size={32} /> LEYENDA DEL CLIMA
+          <div className="card w-full max-lg border-accent-cyan/30 shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-6 border-b border-white/10 pb-4">
+              <span className="font-display text-xl font-black uppercase tracking-widest text-accent-cyan flex items-center gap-3">
+                <Info size={28} /> LEYENDA DEL CLIMA
               </span>
-              <button onClick={() => setShowIconRef(false)} className="text-text-dim hover:text-white p-1 transition-colors"><X size={32} /></button>
+              <button onClick={() => setShowIconRef(false)} className="text-text-dim hover:text-white p-1 transition-colors"><X size={28} /></button>
             </div>
-            <div className="grid grid-cols-2 gap-y-10 gap-x-8 px-2">
-              <IconRef icon={<Sun size={28} className="text-amber-400" />} label="Despejado / Soleado" />
-              <IconRef icon={<Cloud size={28} className="text-slate-300" />} label="Parcialmente Nublado" />
-              <IconRef icon={<Cloud size={28} className="text-slate-500" />} label="Nublado / Cubierto" />
-              <IconRef icon={<CloudLightning size={28} className="text-accent-orange" />} label="Tormentas" />
-              <IconRef icon={<CloudRain size={28} className="text-blue-400" />} label="Lluvias / Chaparrones" />
-              <IconRef icon={<Snowflake size={28} className="text-cyan-100" />} label="Nieve / Helada" />
+            <div className="grid grid-cols-2 gap-y-8 gap-x-6">
+              <IconRef icon={<Sun size={24} className="text-amber-400" />} label="Despejado / Soleado" />
+              <IconRef icon={<Cloud size={24} className="text-slate-300" />} label="Parcialmente Nublado" />
+              <IconRef icon={<Cloud size={24} className="text-slate-500" />} label="Nublado / Cubierto" />
+              <IconRef icon={<CloudLightning size={24} className="text-accent-orange" />} label="Tormentas" />
+              <IconRef icon={<CloudRain size={24} className="text-blue-400" />} label="Lluvias / Chaparrones" />
+              <IconRef icon={<Snowflake size={24} className="text-cyan-100" />} label="Nieve / Helada" />
             </div>
-            <button onClick={() => setShowIconRef(false)} className="mt-12 w-full rounded-xl bg-accent-cyan/10 border border-accent-cyan/30 py-5 text-base font-black uppercase tracking-widest text-accent-cyan hover:bg-accent-cyan/20 transition-all shadow-glow-blue">Entendido</button>
+            <button onClick={() => setShowIconRef(false)} className="mt-10 w-full rounded-lg bg-accent-cyan/10 border border-accent-cyan/30 py-4 text-sm font-black uppercase tracking-widest text-accent-cyan hover:bg-accent-cyan/20 transition-all">Entendido</button>
+          </div>
+        </div>
+      )}
+
+      {/* Daily Detail Modal */}
+      {selectedDay && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4" onClick={() => setSelectedDay(null)}>
+          <div className="card w-full max-w-md border-accent-cyan/30 shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+            {/* Header */}
+            <div className="flex items-center justify-between bg-accent-cyan/5 px-6 py-5 border-b border-accent-cyan/20">
+              <div className="flex items-center gap-3">
+                <Calendar size={20} className="text-accent-cyan" />
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-accent-cyan opacity-70">Pronóstico Detallado</p>
+                  <h3 className="font-display text-lg font-black uppercase tracking-wider text-text-primary">
+                    {DAY_NAMES[new Date(selectedDay.date + 'T12:00:00').getDay()]} {selectedDay.date.split('-').reverse().join('/')}
+                  </h3>
+                </div>
+              </div>
+              <button onClick={() => setSelectedDay(null)} className="text-text-dim hover:text-white transition-colors p-1"><X size={24} /></button>
+            </div>
+
+            <div className="p-6 space-y-8">
+              {/* Main weather icon & temp */}
+              <div className="flex items-center justify-between bg-white/[0.02] rounded-2xl p-5 border border-white/5 shadow-inner">
+                <div className="flex flex-col">
+                  <div className="flex items-baseline gap-2">
+                    <span className="font-display text-5xl font-black text-white tabular-nums tracking-tighter">{Math.round(selectedDay.max)}°</span>
+                    <span className="font-display text-xl font-bold text-text-muted tabular-nums">/ {Math.round(selectedDay.min)}°C</span>
+                  </div>
+                  <p className="mt-2 text-sm font-black uppercase tracking-widest text-accent-cyan">{selectedDay.description}</p>
+                </div>
+                {getWeatherIcon(selectedDay.weather_id, 64, "drop-shadow-glow-blue")}
+              </div>
+
+              {/* Detail Grid */}
+              <div className="grid grid-cols-2 gap-4">
+                <DetailItem icon={<Thermometer size={18} />} label="Humedad Relativa" value={`${selectedDay.humidity}%`} color="text-accent-amber" />
+                <DetailItem icon={<Wind size={18} />} label="Viento Máximo" value={`${Math.round(selectedDay.wind_speed)} km/h`} color="text-accent-cyan" />
+                <DetailItem icon={<Gauge size={18} />} label="Presión Est." value={`${Math.round(selectedDay.pressure)} hPa`} color="text-accent-teal" />
+                <DetailItem icon={<Eye size={18} />} label="Visibilidad Est." value={`${Math.round(selectedDay.visibility)} km`} color="text-blue-400" />
+                <DetailItem icon={<CloudRain size={18} />} label="Prob. Precipitación" value={`${selectedDay.precipitation_prob}%`} color="text-accent-blue" full />
+              </div>
+
+              <button 
+                onClick={() => setSelectedDay(null)} 
+                className="w-full rounded-xl bg-accent-cyan/10 border border-accent-cyan/30 py-4 text-xs font-black uppercase tracking-[0.3em] text-accent-cyan hover:bg-accent-cyan/20 transition-all shadow-glow-blue"
+              >
+                Cerrar Detalle
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -373,11 +439,23 @@ export function DashboardClient() {
   )
 }
 
+function DetailItem({ icon, label, value, color, full = false }: { icon: React.ReactNode, label: string, value: string, color: string, full?: boolean }) {
+  return (
+    <div className={cn("flex items-center gap-4 rounded-xl bg-white/[0.03] border border-white/5 p-4", full && "col-span-2")}>
+      <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-background-secondary border border-white/10", color)}>{icon}</div>
+      <div className="flex flex-col">
+        <span className="text-[10px] font-black uppercase tracking-tighter text-text-dim">{label}</span>
+        <span className="font-data text-base font-black text-text-primary tabular-nums">{value}</span>
+      </div>
+    </div>
+  )
+}
+
 function IconRef({ icon, label }: { icon: React.ReactNode, label: string }) {
   return (
-    <div className="flex items-center gap-5">
-      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/5 border border-white/10">{icon}</div>
-      <span className="text-[14px] font-black text-text-secondary leading-tight uppercase tracking-tight">{label}</span>
+    <div className="flex items-center gap-4">
+      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/5 border border-white/10">{icon}</div>
+      <span className="text-[12px] font-black text-text-secondary leading-tight uppercase tracking-tight">{label}</span>
     </div>
   )
 }
