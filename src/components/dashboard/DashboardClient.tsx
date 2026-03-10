@@ -3,7 +3,8 @@ import { useState, useEffect } from 'react'
 import { 
   AlertTriangle, ChevronRight, Snowflake, CheckCircle2, Eye, Gauge, 
   Wind, Droplets, MapPin, Sun, Cloud, CloudRain, CloudLightning, 
-  Zap, Activity, Globe, Satellite, Info, Thermometer
+  Zap, Activity, Globe, Satellite, Info, Thermometer,
+  Sunrise, Sunset, MoonStar, Navigation
 } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
@@ -32,11 +33,17 @@ interface WeatherData {
     humidity: number
     st: number | null
     wind_speed: number
+    wind_direction: number
     pressure: number
     visibility: number
     weather_id: number
     uv_index: number
     precipitation: number
+    sunrise: string
+    sunset: string
+    moonrise: string
+    moon_phase: number
+    is_day: boolean
   } | null
   forecast: DailyForecast[]
   alerts: any[]
@@ -54,6 +61,16 @@ interface Earthquake {
 // ── Helpers ──
 
 const DAY_NAMES_SHORT = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
+
+function getWindDir(deg: number) {
+  const directions = ['N', 'NE', 'E', 'SE', 'S', 'SO', 'O', 'NO']
+  return directions[Math.round(deg / 45) % 8]
+}
+
+function formatTime(iso: string) {
+  if (!iso) return '--:--'
+  return new Date(iso).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
+}
 
 function getWeatherIcon(code: number, size = 24, className = "") {
   if (code === 0) return <Sun size={size} className={cn("text-amber-400", className)} />
@@ -289,9 +306,14 @@ export function DashboardClient() {
               <div className="flex items-center justify-between mb-1 px-1">
                 <span className="section-label flex items-center gap-1.5">
                   <MapPin size={10} className={cn("text-accent-cyan", usingFallback && "text-text-dim")} />
-                  <span className="text-[10px] font-bold uppercase tracking-tighter">{usingFallback ? 'Ubicación Detectada' : 'Clima Local'}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-tighter font-display">{usingFallback ? 'Ubicación Detectada' : 'Clima Local'}</span>
                 </span>
-                <button onClick={() => setShowIconRef(true)} className="rounded p-1 text-text-dim hover:text-white transition-colors"><Info size={12} /></button>
+                <button 
+                  onClick={() => setShowIconRef(true)} 
+                  className="flex items-center justify-center w-4 h-4 rounded-full border border-text-dim/50 text-text-dim hover:text-white hover:border-white transition-colors font-display text-[10px] font-black pb-0.5"
+                >
+                  i
+                </button>
               </div>
 
               {weatherLoading ? (
@@ -303,24 +325,31 @@ export function DashboardClient() {
                     <span className="font-display text-4xl font-black text-text-primary tabular-nums tracking-tighter leading-none">
                       {Math.round(weather!.current!.temp)}°C
                     </span>
-                    <p className="mt-1.5 text-[14px] font-black text-accent-cyan uppercase tracking-wide">{weather!.current!.name}</p>
-                    <p className="text-[11px] text-text-muted font-bold mt-0.5 tracking-tight uppercase">{weather!.current!.description}</p>
+                    <p className="mt-1.5 text-[14px] font-black text-accent-cyan uppercase tracking-wide font-display">{weather!.current!.name}</p>
+                    <p className="text-[11px] text-text-muted font-bold mt-0.5 tracking-tight uppercase font-display">{weather!.current!.description}</p>
                   </div>
 
                   {/* Center: Larger Details, Same Level */}
-                  <div className="grid grid-cols-3 gap-x-10 gap-y-2 flex-1 justify-center">
+                  <div className="grid grid-cols-4 gap-x-8 gap-y-2 flex-1 justify-center">
                     <WeatherDetail icon={<Wind size={14} className="text-accent-cyan" />} label="Viento" value={`${Math.round(weather!.current!.wind_speed)}k/h`} />
+                    <WeatherDetail icon={<Navigation size={14} className="text-accent-cyan rotate-[var(--tw-rotate)]" style={{'--tw-rotate': `${weather!.current!.wind_direction}deg`} as any} />} label="Dir." value={getWindDir(weather!.current!.wind_direction)} />
                     <WeatherDetail icon={<Droplets size={14} className="text-accent-amber" />} label="Humedad" value={`${weather!.current!.humidity}%`} />
                     <WeatherDetail icon={<Gauge size={14} className="text-accent-teal" />} label="Presión" value={`${Math.round(weather!.current!.pressure)}`} />
+                    
+                    <WeatherDetail icon={<Sunrise size={14} className="text-orange-400" />} label="Amanecer" value={formatTime(weather!.current!.sunrise)} />
+                    <WeatherDetail icon={<Sunset size={14} className="text-orange-600" />} label="Atardecer" value={formatTime(weather!.current!.sunset)} />
+                    <WeatherDetail icon={<MoonStar size={14} className="text-blue-200" />} label="Luna" value={formatTime(weather!.current!.moonrise)} />
+                    <WeatherDetail icon={<MoonStar size={14} className="text-indigo-300" />} label="Lum." value={`${Math.round((1 - Math.abs(weather!.current!.moon_phase - 0.5) * 2) * 100)}%`} />
+
                     <WeatherDetail icon={<Zap size={14} className="text-accent-amber" />} label="Índice UV" value={`${weather!.current!.uv_index.toFixed(1)}`} />
                     <WeatherDetail icon={<CloudRain size={14} className="text-blue-400" />} label="Lluvia" value={`${weather!.current!.precipitation.toFixed(1)}mm`} />
                     <WeatherDetail icon={<Eye size={14} className="text-accent-cyan" />} label="Visib." value={`${weather!.current!.visibility.toFixed(0)}km`} />
+                    <WeatherDetail icon={<Thermometer size={14} className="text-accent-red" />} label="ST" value={`${Math.round(weather!.current!.st || 0)}°C`} />
                   </div>
 
-                  {/* Right: Icon & ST */}
+                  {/* Right: Icon */}
                   <div className="flex flex-col items-end shrink-0">
                     {getWeatherIcon(weather!.current!.weather_id, 48, "drop-shadow-glow-blue")}
-                    {weather!.current!.st !== null && <span className="text-[11px] font-data text-text-dim mt-1 font-bold uppercase">ST: {Math.round(weather!.current!.st)}°</span>}
                   </div>
                 </div>
               )}
@@ -348,13 +377,13 @@ export function DashboardClient() {
                           i === 0 ? "bg-accent-cyan/10 ring-1 ring-accent-cyan/30" : "hover:bg-white/[0.05] hover:ring-1 hover:ring-white/20"
                         )}
                       >
-                        <span className={cn("text-[13px] font-black uppercase tracking-tighter", i === 0 ? "text-accent-cyan" : "text-text-dim group-hover:text-text-primary")}>
+                        <span className={cn("text-[13px] font-black uppercase tracking-tighter font-display", i === 0 ? "text-accent-cyan" : "text-text-dim group-hover:text-text-primary")}>
                           {i === 0 ? 'Hoy' : dayStr}
                         </span>
                         {getWeatherIcon(f.weather_id, 40, "drop-shadow-glow-blue transition-transform group-hover:scale-110")}
                         <div className="flex flex-col items-center">
                           <span className="font-display text-2xl font-black text-white leading-none tracking-tighter">{Math.round(f.max)}°</span>
-                          <span className="text-[13px] font-bold text-text-muted mt-1 tracking-tighter">{Math.round(f.min)}°</span>
+                          <span className="text-[13px] font-bold text-text-muted mt-1 tracking-tighter font-display">{Math.round(f.min)}°</span>
                         </div>
                       </button>
                     )
@@ -546,9 +575,9 @@ function WeatherDetail({ icon, label, value }: { icon: React.ReactNode, label: s
     <div className="flex flex-col gap-0.5">
       <div className="flex items-center gap-1.5 text-text-dim">
         {icon}
-        <span className="text-[9px] font-black uppercase tracking-tighter">{label}</span>
+        <span className="text-[9px] font-display font-black uppercase tracking-tighter">{label}</span>
       </div>
-      <span className="text-[11px] font-bold text-text-primary tabular-nums ml-4.5">{value}</span>
+      <span className="text-[11px] font-display font-bold text-text-primary tabular-nums ml-4.5">{value}</span>
     </div>
   )
 }
