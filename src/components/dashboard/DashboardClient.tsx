@@ -386,7 +386,7 @@ export function DashboardClient() {
                         <span className={cn("text-[13px] font-black uppercase tracking-tighter font-display", i === 0 ? "text-accent-cyan" : "text-text-dim group-hover:text-text-primary")}>
                           {i === 0 ? 'Hoy' : dayStr}
                         </span>
-                        {getWeatherIcon(f.weather_id, 40, "drop-shadow-glow-blue transition-transform group-hover:scale-110")}
+                        {getWeatherIcon(i === 0 ? weather!.current!.weather_id : f.weather_id, 40, "drop-shadow-glow-blue transition-transform group-hover:scale-110")}
                         <div className="flex flex-col items-center">
                           <span className="font-display text-2xl font-black text-white leading-none tracking-tighter">{Math.round(f.max)}°</span>
                           <span className="text-[13px] font-bold text-text-muted mt-1 tracking-tighter font-display">{Math.round(f.min)}°</span>
