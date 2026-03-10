@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
     // 1. Peticiones en paralelo: Clima, Astronomía (Luna) y Geocodificación
     const [weatherRes, astroRes, geoRes] = await Promise.all([
       fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${fixedLat}&longitude=${fixedLon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,wind_speed_10m,wind_direction_10m,surface_pressure,visibility,uv_index,precipitation&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max&timezone=auto`,
+        `https://api.open-meteo.com/v1/forecast?latitude=${fixedLat}&longitude=${fixedLon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,wind_speed_10m,wind_direction_10m,surface_pressure,visibility,uv_index,precipitation&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max,wind_speed_10m_max,precipitation_sum,precipitation_probability_max&timezone=auto`,
         { signal: controller.signal, next: { revalidate: 900 } }
       ),
       fetch(
@@ -73,10 +73,18 @@ export async function GET(req: NextRequest) {
       },
       forecast: (data.daily?.time || []).map((time: string, i: number) => ({
         date: time,
-        max: data.daily?.temperature_2m_max?.[i] ?? 0,
-        min: data.daily?.temperature_2m_min?.[i] ?? 0,
-        weather_id: data.daily?.weather_code?.[i] ?? 0,
-        description: getDesc(data.daily?.weather_code?.[i] ?? 0)
+        max: data.daily.temperature_2m_max?.[i] ?? 0,
+        min: data.daily.temperature_2m_min?.[i] ?? 0,
+        weather_id: data.daily.weather_code?.[i] ?? 0,
+        description: getDesc(data.daily.weather_code?.[i] ?? 0),
+        sunrise: data.daily.sunrise?.[i] ?? '',
+        sunset: data.daily.sunset?.[i] ?? '',
+        uv_index: data.daily.uv_index_max?.[i] ?? 0,
+        wind_speed: data.daily.wind_speed_10m_max?.[i] ?? 0,
+        precipitation: data.daily.precipitation_sum?.[i] ?? 0,
+        precipitation_prob: data.daily.precipitation_probability_max?.[i] ?? 0,
+        moonrise: astroData?.daily?.moonrise?.[i] ?? '',
+        moon_phase: astroData?.daily?.moon_phase?.[i] ?? 0
       })),
       alerts: [],
       hasAlerts: false,

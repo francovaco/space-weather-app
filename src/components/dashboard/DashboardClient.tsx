@@ -4,7 +4,7 @@ import {
   AlertTriangle, ChevronRight, Snowflake, CheckCircle2, Eye, Gauge, 
   Wind, Droplets, MapPin, Sun, Cloud, CloudRain, CloudLightning, 
   Zap, Activity, Globe, Satellite, Info, Thermometer,
-  Sunrise, Sunset, MoonStar, Navigation
+  Sunrise, Sunset, Navigation
 } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
@@ -23,6 +23,14 @@ interface DailyForecast {
   min: number
   weather_id: number
   description: string
+  sunrise: string
+  sunset: string
+  uv_index: number
+  wind_speed: number
+  precipitation: number
+  precipitation_prob: number
+  moonrise: string
+  moon_phase: number
 }
 
 interface WeatherData {
@@ -548,17 +556,25 @@ export function DashboardClient() {
               <button onClick={() => setSelectedDay(null)} className="text-text-dim hover:text-white transition-colors">✕</button>
             </div>
             
-            <div className="flex items-center justify-between bg-white/5 rounded-xl p-4 mb-6">
+            <div className="flex items-center justify-between bg-white/5 rounded-xl p-4 mb-4">
               <div className="flex flex-col">
                 <span className="text-3xl font-display font-black text-white">{Math.round(selectedDay.max)}° / {Math.round(selectedDay.min)}°</span>
-                <span className="text-xs font-bold text-accent-cyan uppercase mt-1">{selectedDay.description}</span>
+                <span className="text-xs font-bold text-accent-cyan uppercase mt-1 font-display">{selectedDay.description}</span>
               </div>
-              {getWeatherIcon(selectedDay.weather_id, 48, "drop-shadow-glow-blue")}
+              {getWeatherIcon(selectedDay.weather_id, 56, "drop-shadow-glow-blue")}
             </div>
 
-            <p className="text-[11px] text-text-muted leading-relaxed uppercase font-medium">
-              Pronóstico de condiciones para la jornada. Los valores representan las temperaturas extremas estimadas. 
-              Consulte el mapa de radar para información en tiempo real.
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              <WeatherDetail icon={<Sunrise size={14} className="text-orange-400" />} label="Amanecer" value={formatTime(selectedDay.sunrise)} />
+              <WeatherDetail icon={<Sunset size={14} className="text-orange-600" />} label="Atardecer" value={formatTime(selectedDay.sunset)} />
+              <WeatherDetail icon={<Zap size={14} className="text-accent-amber" />} label="Índice UV" value={`${selectedDay.uv_index.toFixed(1)}`} />
+              <WeatherDetail icon={<Wind size={14} className="text-accent-cyan" />} label="Viento Máx." value={`${Math.round(selectedDay.wind_speed)}k/h`} />
+              <WeatherDetail icon={<CloudRain size={14} className="text-blue-400" />} label="Lluvia" value={`${selectedDay.precipitation.toFixed(1)}mm`} />
+              <WeatherDetail icon={<Activity size={14} className="text-accent-teal" />} label="Prob. Lluvia" value={`${selectedDay.precipitation_prob}%`} />
+            </div>
+
+            <p className="text-[10px] text-text-muted leading-relaxed uppercase font-bold font-display border-t border-white/5 pt-4">
+              Pronóstico detallado para la jornada. Los valores representan estimaciones basadas en modelos globales de alta resolución.
             </p>
           </div>
         </div>
