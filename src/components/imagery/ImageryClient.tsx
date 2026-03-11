@@ -412,29 +412,79 @@ function ChannelGrid({ onSelect }:{ onSelect:(c:Channel)=>void }) {
 }
 
 function ChannelCard({ channel:ch, onSelect, latestTs }:{ channel:Channel; onSelect:(c:Channel)=>void; latestTs: string | null }) {
+  const [thumbUrl, setThumbUrl] = useState<string | null>(null)
   const [ok,setOk] = useState(true)
+  const [loading, setLoading] = useState(true)
+  const [inView, setInView] = useState(false)
+  const containerRef = useRef<HTMLButtonElement>(null)
   const isGlm = ch.id === 'EXTENT3'
 
-  // Thumbnail: use latest symlink from CDN via proxy
-  const thumbRaw = isGlm
-    ? `${CDN_GLM}/latest.jpg`
-    : `${CDN_ABI}/${ch.id}/latest.jpg`
-  const thumbSrc = proxy(thumbRaw)
+  useEffect(() => {
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setInView(true)
+        observer.disconnect()
+      }
+    }, { rootMargin: '200px' })
+    if (containerRef.current) observer.observe(containerRef.current)
+    return () => observer.disconnect()
+  }, [])
+
+  useEffect(() => {
+    if (!inView) return
+    const controller = new AbortController()
+    const thumbRaw = isGlm ? `${CDN_GLM}/latest.jpg` : `${CDN_ABI}/${ch.id}/latest.jpg`
+    const thumbSrc = proxy(thumbRaw)
+
+    async function load() {
+      try {
+        // Small random stagger to avoid simultaneous requests
+        await new Promise(r => setTimeout(r, Math.random() * 400))
+        if (controller.signal.aborted) return
+
+        const res = await fetch(thumbSrc, { signal: controller.signal })
+        if (!res.ok) throw new Error()
+        const blob = await res.blob()
+        const url = URL.createObjectURL(blob)
+        setThumbUrl(url)
+        setLoading(false)
+      } catch (err: any) {
+        if (err.name === 'AbortError') return
+        setOk(false)
+        setLoading(false)
+      }
+    }
+
+    load()
+    return () => controller.abort()
+  }, [ch.id, isGlm, inView])
+
+  useEffect(() => {
+    return () => {
+      if (thumbUrl) URL.revokeObjectURL(thumbUrl)
+    }
+  }, [thumbUrl])
 
   return (
     <button 
+      ref={containerRef}
       onClick={()=>onSelect(ch)}
       className="group flex flex-col overflow-hidden rounded-lg border border-border bg-background-card
                  transition-all hover:border-border-accent hover:shadow-glow-blue hover:scale-[1.02]">
       <div className="relative aspect-square w-full overflow-hidden bg-background-secondary">
-        {ok
-          ? <img src={thumbSrc} alt={ch.nombre}
-              loading="lazy"
-              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-              onError={()=>setOk(false)}/>
-          : <div className="flex h-full flex-col items-center justify-center gap-1">
-              <span className="text-sm text-text-dim font-mono">{ch.id}</span>
-            </div>}
+        {loading ? (
+          <div className="flex h-full items-center justify-center">
+            <RefreshCw size={16} className="animate-spin text-text-dim" />
+          </div>
+        ) : ok && thumbUrl ? (
+          <img src={thumbUrl} alt={ch.nombre}
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        ) : (
+          <div className="flex h-full flex-col items-center justify-center gap-1">
+            <span className="text-sm text-text-dim font-mono">{ch.id}</span>
+          </div>
+        )}
         <span className={cn('absolute top-1 right-1 badge border text-2xs backdrop-blur-sm',TIPO_STYLE[ch.tipo], 'bg-black/60')}>
           {TIPO_LABELS[ch.tipo]}
         </span>
@@ -541,12 +591,44 @@ function AnimationView({ channel, onBack }:{ channel:Channel; onBack:()=>void })
     setLoadedSet(prev => { const s = new Set(prev); s.add(i); return s })
   }, [])
 
+  const curKey  = loadKey.current
+
+  // ── Preload frames with concurrency control and cancellation ──────────
+  useEffect(() => {
+    const controller = new AbortController()
+    if (frames.length === 0) return
+
+    async function preload() {
+      const queue = [...frames.entries()]
+      // Concurrency limit of 4 to leave some room for other requests
+      const workers = Array(4).fill(null).map(async () => {
+        while (queue.length > 0) {
+          if (controller.signal.aborted) break
+          const item = queue.shift()
+          if (!item) break
+          const [i, f] = item
+          
+          try {
+            const res = await fetch(f.proxied, { signal: controller.signal })
+            // We just need to trigger the download into browser cache
+            markLoaded(i, curKey)
+          } catch (e: any) {
+            if (e.name !== 'AbortError') markLoaded(i, curKey)
+          }
+        }
+      })
+      await Promise.all(workers)
+    }
+
+    preload()
+    return () => controller.abort()
+  }, [frames, curKey, markLoaded])
+
   const frame   = frames[idx]
   const fps     = Math.round(1000 / speedMs)
   const loadPct = total > 0 ? Math.round((loadedSet.size / total) * 100) : 0
   const allLoaded = total > 0 && loadedSet.size >= total
   const isGlm   = channel.id === 'EXTENT3'
-  const curKey  = loadKey.current
 
   // ── Draw current frame to hidden canvas for pixel sampling ──
   useEffect(() => {
@@ -636,14 +718,6 @@ function AnimationView({ channel, onBack }:{ channel:Channel; onBack:()=>void })
 
             {/* Hidden canvas for pixel sampling */}
             <canvas ref={canvasRef} className="hidden" />
-
-            {/* Preload all frames hidden */}
-            <div className="hidden">
-              {frames.map((f,i)=>(
-                <img key={`${curKey}-${f.proxied}`} src={f.proxied} alt=""
-                  onLoad={()=>markLoaded(i, curKey)} onError={()=>markLoaded(i, curKey)}/>
-              ))}
-            </div>
 
             {apiErr ? (
               <div className="flex h-full flex-col items-center justify-center gap-3 p-6">

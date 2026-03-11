@@ -31,12 +31,11 @@ export async function GET(req: NextRequest) {
       return new NextResponse(`upstream ${upstream.status}`, { status: upstream.status })
     }
 
-    const buf = await upstream.arrayBuffer()
     const ct  = upstream.headers.get('content-type') ?? 'image/jpeg'
     // Timestamped frames are immutable → cache 24h; symlinks update every 10 min → 5 min
     const maxAge = /\/\d{11}_/.test(raw) ? 86400 : 300
 
-    return new NextResponse(buf, {
+    return new NextResponse(upstream.body, {
       headers: {
         'Content-Type':  ct,
         'Cache-Control': `public, max-age=${maxAge}`,
