@@ -1,10 +1,10 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { 
   AlertTriangle, ChevronRight, Snowflake, CheckCircle2, Eye, Gauge, 
   Wind, Droplets, MapPin, Sun, Cloud, CloudRain, CloudLightning, 
   Zap, Activity, Globe, Satellite, Info, Thermometer,
-  Sunrise, Sunset, Navigation, CloudSun
+  Sunrise, Sunset, Navigation, CloudSun, ExternalLink
 } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
@@ -76,7 +76,7 @@ function getWindDir(deg: number) {
 }
 
 function formatTime(iso: string) {
-  if (!iso) return '--:--'
+  if (!iso || iso === '') return '--:--'
   // Extraemos la hora directamente del string para evitar desfases por zona horaria local
   const timePart = iso.split('T')[1]
   return timePart ? timePart.substring(0, 5) : '--:--'
@@ -142,6 +142,7 @@ export function DashboardClient() {
   const [protonData, setProtonData] = useState<ProtonFluxData[] | null>(null)
   const [kpData, setKpData] = useState<KpIndexData[] | null>(null)
   const [goesData, setGoesData] = useState<GOESStatusData | null>(null)
+  const [lightningData, setLightningData] = useState<{ count: number, closest: number | null, status: string } | null>(null)
 
   useEffect(() => {
     let intervalId: any
@@ -161,6 +162,11 @@ export function DashboardClient() {
           if (lat !== undefined && lon !== undefined) {
             localStorage.setItem('last_lat', lat.toString())
             localStorage.setItem('last_lon', lon.toString())
+            // Also fetch lightning
+            fetch(`/api/lightning/nearby?lat=${lat}&lon=${lon}`)
+              .then(r => r.json())
+              .then(setLightningData)
+              .catch(() => null)
           }
         }
       } catch (err) { 
@@ -229,10 +235,25 @@ export function DashboardClient() {
     fetchSpace()
     const spaceInterval = setInterval(fetchSpace, 60000)
 
+    // Lightning polling
+    const fetchLightning = () => {
+      const lat = localStorage.getItem('last_lat')
+      const lon = localStorage.getItem('last_lon')
+      if (lat && lon) {
+        fetch(`/api/lightning/nearby?lat=${lat}&lon=${lon}`)
+          .then(r => r.json())
+          .then(setLightningData)
+          .catch(() => null)
+      }
+    }
+    fetchLightning()
+    const lightningInterval = setInterval(fetchLightning, 60000)
+
     return () => {
       if (intervalId) clearInterval(intervalId)
       clearInterval(eqInterval)
       clearInterval(spaceInterval)
+      clearInterval(lightningInterval)
     }
   }, [usingFallback])
 
@@ -495,10 +516,11 @@ export function DashboardClient() {
       </div>
 
       {/* Quick status cards */}
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
         <StatusCard label="Clase Rayos X" value={xrayInfo?.label ?? '—'} sub="Onda corta 0.1–0.8 nm" color={xrayInfo?.color ?? 'text-text-muted'} icon={<Zap size={14} />} href="/instruments/xray-flux" loading={!xrayData} />
         <StatusCard label="Flujo de Protones" value={proton ? (proton.flux as number).toFixed(2) : '—'} sub="≥10 MeV pfu" color={proton && (proton.flux as number) >= 10 ? 'text-accent-orange' : 'text-blue-400'} icon={<Activity size={14} />} href="/instruments/proton-flux" loading={!protonData} />
         <StatusCard label="Índice Kp" value={kpData?.at(-1) ? kpData.at(-1)!.kp.toFixed(1) : '—'} sub={kpInfo?.sub ?? 'Cargando…'} color={kpInfo?.color ?? 'text-text-muted'} icon={<Globe size={14} />} href="/instruments/kp-index" loading={!kpData} />
+        <StatusCardLightning data={lightningData} />
         <StatusCard 
           label="GOES-19" 
           value={gStatus.label} 
@@ -549,7 +571,7 @@ export function DashboardClient() {
                 <h3 className="text-sm font-black uppercase tracking-widest text-white">
                   {new Date(selectedDay.date + 'T12:00:00').toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
                 </h3>
-                <span className="text-[10px] text-accent-cyan font-bold uppercase mt-0.5">Reporte Detallado</span>
+                <span className="text-[10px] text-accent-cyan font-bold uppercase mt-0.5 font-display">Reporte Detallado</span>
               </div>
               <button onClick={() => setSelectedDay(null)} className="text-text-dim hover:text-white transition-colors">✕</button>
             </div>
@@ -638,6 +660,36 @@ function IconRef({ code, label }: { code: number, label: string }) {
         {getWeatherIcon(code, 24)}
       </div>
       <span className="text-[13px] font-bold uppercase tracking-tighter text-text-secondary leading-tight">{label}</span>
+    </div>
+  )
+}
+
+function StatusCardLightning({ data }: { data: { count: number, closest: number | null, status: string } | null }) {
+  return (
+    <div className="card group border-white/5 bg-background-card/30 p-3 transition-all hover:border-white/10 hover:bg-white/5">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-[11px] font-black uppercase tracking-widest text-text-muted">Monitor Rayos</span>
+        <div className={cn("transition-transform group-hover:scale-110", data?.count && data.count > 0 ? "text-accent-orange" : "text-text-muted")}>
+          <Zap size={14} className={cn(data?.count && data.count > 0 && "animate-pulse")} />
+        </div>
+      </div>
+      {!data ? (
+        <div className="h-6 w-16 animate-pulse rounded bg-white/5" />
+      ) : (
+        <>
+          <div className="flex items-baseline gap-2">
+            <p className={cn("text-xl font-display font-black leading-none tracking-tight", data.count > 0 ? "text-accent-orange" : "text-text-primary")}>
+              {data.count}
+            </p>
+            <span className="text-[10px] font-bold text-text-dim uppercase font-display">en zona</span>
+          </div>
+          <div className="mt-1.5 flex items-center justify-between">
+            <p className="text-[11px] font-bold uppercase tracking-tighter text-text-dim line-clamp-1 font-display">
+              {data.count > 0 ? `${data.closest?.toFixed(1)}km` : 'Sin actividad'}
+            </p>
+          </div>
+        </>
+      )}
     </div>
   )
 }
