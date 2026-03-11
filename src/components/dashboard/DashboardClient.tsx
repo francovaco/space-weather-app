@@ -30,8 +30,7 @@ interface DailyForecast {
   precipitation: number
   precipitation_prob: number
   models: {
-    ecmwf: { temp: number | null, wind: number | null, rain: number | null }
-    gfs: { temp: number | null, wind: number | null, rain: number | null }
+    gfs: { temp: number | null, wind: number | null, rain: number | null, hum: number | null, pres: number | null }
   }
 }
 
@@ -595,16 +594,17 @@ export function DashboardClient() {
 
             {/* Model Comparison Table */}
             <div className="mb-6 rounded-lg border border-white/5 bg-black/20 p-3">
-              <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-accent-cyan/80">Consenso de Modelos</p>
-              <div className="grid grid-cols-3 gap-2 border-b border-white/5 pb-1 mb-1 text-[9px] font-bold uppercase text-text-muted">
+              <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-accent-cyan/80">Comparación Modelo GFS (USA)</p>
+              <div className="grid grid-cols-2 gap-2 border-b border-white/5 pb-1 mb-1 text-[9px] font-bold uppercase text-text-muted">
                 <span>Dato</span>
-                <span className="text-center">ECMWF (EU)</span>
-                <span className="text-center">GFS (USA)</span>
+                <span className="text-right">Predicción GFS</span>
               </div>
               <div className="space-y-1.5">
-                <ModelRow label="Temp Máx" ecmwf={selectedDay.models.ecmwf.temp !== null ? `${Math.round(selectedDay.models.ecmwf.temp)}°` : '—'} gfs={selectedDay.models.gfs.temp !== null ? `${Math.round(selectedDay.models.gfs.temp)}°` : '—'} />
-                <ModelRow label="Viento Máx" ecmwf={selectedDay.models.ecmwf.wind !== null ? `${Math.round(selectedDay.models.ecmwf.wind)}k/h` : '—'} gfs={selectedDay.models.gfs.wind !== null ? `${Math.round(selectedDay.models.gfs.wind)}k/h` : '—'} />
-                <ModelRow label="Lluvia" ecmwf={selectedDay.models.ecmwf.rain !== null ? `${selectedDay.models.ecmwf.rain.toFixed(1)}mm` : '—'} gfs={selectedDay.models.gfs.rain !== null ? `${selectedDay.models.gfs.rain.toFixed(1)}mm` : '—'} />
+                <ModelRow label="Temp Máx" val={selectedDay.models.gfs.temp !== null ? `${Math.round(selectedDay.models.gfs.temp)}°` : '—'} />
+                <ModelRow label="Viento Máx" val={selectedDay.models.gfs.wind !== null ? `${Math.round(selectedDay.models.gfs.wind)}k/h` : '—'} />
+                <ModelRow label="Lluvia" val={selectedDay.models.gfs.rain !== null ? `${selectedDay.models.gfs.rain.toFixed(1)}mm` : '—'} />
+                <ModelRow label="Humedad" val={selectedDay.models.gfs.hum !== null ? `${Math.round(selectedDay.models.gfs.hum)}%` : '—'} />
+                <ModelRow label="Presión" val={selectedDay.models.gfs.pres !== null ? `${Math.round(selectedDay.models.gfs.pres)}` : '—'} />
               </div>
             </div>
 
@@ -709,12 +709,11 @@ function StatusCardLightning({ data }: { data: { count: number, closest: number 
   )
 }
 
-function ModelRow({ label, ecmwf, gfs }: { label: string, ecmwf: string, gfs: string }) {
+function ModelRow({ label, val }: { label: string, val: string }) {
   return (
-    <div className="grid grid-cols-3 gap-2 text-[10px] font-display">
+    <div className="grid grid-cols-2 gap-2 text-[10px] font-display">
       <span className="text-text-muted uppercase font-bold">{label}</span>
-      <span className="text-center font-black text-text-primary tabular-nums">{ecmwf}</span>
-      <span className="text-center font-black text-text-primary tabular-nums">{gfs}</span>
+      <span className="text-right font-black text-text-primary tabular-nums">{val}</span>
     </div>
   )
 }
