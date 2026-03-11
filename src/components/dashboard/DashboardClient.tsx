@@ -83,12 +83,12 @@ function formatTime(iso: string) {
 }
 
 function getWeatherIcon(code: number, size = 24, className = "") {
-  // Mapeo estricto a la iconografía permitida
+  // Mapeo estricto a las 6 categorías permitidas
   if (code === 0) return <Sun size={size} className={cn("text-amber-400", className)} />
-  if (code <= 48) return <Cloud size={size} className={cn("text-sky-300", className)} />
-  if (code <= 67) return <CloudRain size={size} className={cn("text-blue-400", className)} />
-  if (code <= 77) return <Snowflake size={size} className={cn("text-white", className)} />
-  if (code <= 82) return <CloudRain size={size} className={cn("text-indigo-400", className)} />
+  if (code <= 2) return <Cloud size={size} className={cn("text-sky-300", className)} />
+  if (code <= 48) return <Cloud size={size} className={cn("text-slate-400", className)} />
+  if (code >= 71 && code <= 77) return <Snowflake size={size} className={cn("text-white", className)} />
+  if (code <= 82) return <CloudRain size={size} className={cn("text-blue-400", className)} />
   return <CloudLightning size={size} className={cn("text-orange-500", className)} />
 }
 
@@ -532,10 +532,10 @@ export function DashboardClient() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <IconRef code={0} label="Despejado" />
-              <IconRef code={3} label="Parcialmente Nublado" />
-              <IconRef code={61} label="Lluvia / Llovizna" />
+              <IconRef code={1} label="Parcialmente Nublado" />
+              <IconRef code={3} label="Nublado" />
+              <IconRef code={80} label="Lluvia" />
               <IconRef code={71} label="Nieve / Aguanieve" />
-              <IconRef code={80} label="Chaparrones" />
               <IconRef code={95} label="Tormenta Eléctrica" />
             </div>
           </div>

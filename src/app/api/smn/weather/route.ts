@@ -43,12 +43,11 @@ export async function GET(req: NextRequest) {
 
     const getDesc = (code: number) => {
       if (code === 0) return 'Despejado'
-      if (code <= 3) return 'Parcialmente Nublado'
-      if (code <= 48) return 'Bruma / Niebla'
-      if (code <= 67) return 'Lluvia'
-      if (code <= 82) return 'Chaparrones'
-      if (code >= 95) return 'Tormentas'
-      return 'Nublado'
+      if (code <= 2) return 'Parcialmente Nublado'
+      if (code <= 48) return 'Nublado'
+      if (code <= 82) return 'Lluvia'
+      if (code <= 77) return 'Nieve / Aguanieve'
+      return 'Tormenta Eléctrica'
     }
 
     return NextResponse.json({
