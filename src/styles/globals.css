@@ -256,6 +256,7 @@
    Solo se desplaza si el contenido es más ancho que el contenedor (100cqw).
    Calcula la diferencia exacta para mostrar el final del texto.
 */
-.marquee-container:hover .marquee-content {
+.marquee-container:hover .marquee-content,
+.group:hover .marquee-container .marquee-content {
   transform: translateX(min(0px, calc(100cqw - 100%)));
 }

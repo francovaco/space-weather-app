@@ -117,9 +117,9 @@ export function WeatherPill() {
 
       <div className="h-3 w-px bg-border" />
 
-      <div className="flex items-center gap-1.5 text-text-muted min-w-0 max-w-[100px]">
+      <div className="flex items-center gap-1.5 text-text-muted w-24">
         <MapPin size={10} className="text-accent-cyan shrink-0" />
-        <div className="marquee-container">
+        <div className="marquee-container flex-1">
           <span className="marquee-content text-[10px] font-black uppercase tracking-widest font-display">
             {weather.current.name}
           </span>
