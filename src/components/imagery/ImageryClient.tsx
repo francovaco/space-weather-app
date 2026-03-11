@@ -411,6 +411,22 @@ function ChannelGrid({ onSelect }:{ onSelect:(c:Channel)=>void }) {
   )
 }
 
+// ── Global Queue for Thumbnails to prevent network saturation ──────────
+const thumbQueue: (() => Promise<void>)[] = []
+let activeThumbRequests = 0
+const MAX_CONCURRENT_THUMBS = 2
+
+async function processThumbQueue() {
+  if (activeThumbRequests >= MAX_CONCURRENT_THUMBS || thumbQueue.length === 0) return
+  const next = thumbQueue.shift()
+  if (next) {
+    activeThumbRequests++
+    try { await next() } catch(e){}
+    activeThumbRequests--
+    processThumbQueue()
+  }
+}
+
 function ChannelCard({ channel:ch, onSelect, latestTs }:{ channel:Channel; onSelect:(c:Channel)=>void; latestTs: string | null }) {
   const [thumbUrl, setThumbUrl] = useState<string | null>(null)
   const [ok,setOk] = useState(true)
@@ -425,7 +441,7 @@ function ChannelCard({ channel:ch, onSelect, latestTs }:{ channel:Channel; onSel
         setInView(true)
         observer.disconnect()
       }
-    }, { rootMargin: '200px' })
+    }, { rootMargin: '100px' })
     if (containerRef.current) observer.observe(containerRef.current)
     return () => observer.disconnect()
   }, [])
@@ -436,12 +452,9 @@ function ChannelCard({ channel:ch, onSelect, latestTs }:{ channel:Channel; onSel
     const thumbRaw = isGlm ? `${CDN_GLM}/latest.jpg` : `${CDN_ABI}/${ch.id}/latest.jpg`
     const thumbSrc = proxy(thumbRaw)
 
-    async function load() {
+    const loadTask = async () => {
+      if (controller.signal.aborted) return
       try {
-        // Small random stagger to avoid simultaneous requests
-        await new Promise(r => setTimeout(r, Math.random() * 400))
-        if (controller.signal.aborted) return
-
         const res = await fetch(thumbSrc, { signal: controller.signal })
         if (!res.ok) throw new Error()
         const blob = await res.blob()
@@ -455,8 +468,14 @@ function ChannelCard({ channel:ch, onSelect, latestTs }:{ channel:Channel; onSel
       }
     }
 
-    load()
-    return () => controller.abort()
+    thumbQueue.push(loadTask)
+    processThumbQueue()
+
+    return () => {
+      controller.abort()
+      const idx = thumbQueue.indexOf(loadTask)
+      if (idx > -1) thumbQueue.splice(idx, 1)
+    }
   }, [ch.id, isGlm, inView])
 
   useEffect(() => {
@@ -600,8 +619,8 @@ function AnimationView({ channel, onBack }:{ channel:Channel; onBack:()=>void })
 
     async function preload() {
       const queue = [...frames.entries()]
-      // Concurrency limit of 4 to leave some room for other requests
-      const workers = Array(4).fill(null).map(async () => {
+      // Concurrency limit of 2 to leave room for navigation and other requests
+      const workers = Array(2).fill(null).map(async () => {
         while (queue.length > 0) {
           if (controller.signal.aborted) break
           const item = queue.shift()

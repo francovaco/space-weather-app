@@ -163,7 +163,7 @@ export function Sidebar() {
       )}
     >
       {/* Logo area */}
-      <Link href="/" className="flex h-14 items-center border-b border-border hover:bg-border/40 transition-colors">
+      <Link href="/" prefetch={false} className="flex h-14 items-center border-b border-border hover:bg-border/40 transition-colors">
         {sidebarOpen ? (
           <span className="font-display text-xs font-bold uppercase tracking-widest text-primary px-3">
             Monitor Espacial
@@ -304,9 +304,9 @@ function NavItemComponent({ item, pathname, collapsed, expanded, onToggle, depth
                           <Link
                             key={sub.label}
                             href={sub.href!}
+                            prefetch={false}
                             ref={subActive ? activeItemRef : null}
                             onClick={() => setPopoverOpen(false)}
-                            prefetch={false}
                             className={cn(
                               'flex items-center gap-2 px-3 py-1.5 text-xs transition-colors',
                               'hover:bg-border/60 hover:text-text-primary',
@@ -324,14 +324,15 @@ function NavItemComponent({ item, pathname, collapsed, expanded, onToggle, depth
                 const childActive = child.href ? pathname === child.href : false
                 return (
                   <Link
-                    key={child.label}
-                    href={child.href!}
-                    ref={childActive ? activeItemRef : null}
+                    key={sub.label}
+                    href={sub.href!}
+                    prefetch={false}
+                    ref={subActive ? activeItemRef : null}
                     onClick={() => setPopoverOpen(false)}
                     className={cn(
                       'flex items-center gap-2 px-3 py-1.5 text-xs transition-colors',
                       'hover:bg-border/60 hover:text-text-primary',
-                      childActive ? 'bg-primary/10 text-primary' : 'text-text-secondary'
+                      subActive ? 'bg-primary/10 text-primary' : 'text-text-secondary'
                     )}
                   >
                     <span className="shrink-0">{child.icon}</span>
