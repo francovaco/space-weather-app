@@ -713,18 +713,6 @@ function StatusCardLightning({ data }: { data: { count: number, closest: number 
 }
 
 function StatusCardNasaPrecip({ data }: { data: { last24h: number | null, last7d: number, monthTotal: number, latestDate: string, source: string } | null }) {
-  const [lat, setLat] = useState<string | null>(null)
-  const [lon, setLon] = useState<string | null>(null)
-
-  useEffect(() => {
-    setLat(localStorage.getItem('last_lat'))
-    setLon(localStorage.getItem('last_lon'))
-  }, [])
-
-  const verifyUrl = (lat && lon)
-    ? `https://power.larc.nasa.gov/data-access-viewer/`
-    : `https://power.larc.nasa.gov/`
-
   return (
     <div className="card group border-white/10 bg-background-card/30 p-3 transition-all hover:border-accent-teal/30 hover:bg-white/5">
       <div className="flex items-center justify-between mb-2">
@@ -743,24 +731,13 @@ function StatusCardNasaPrecip({ data }: { data: { last24h: number | null, last7d
             </p>
             <span className="text-[10px] font-bold text-text-dim uppercase font-display">{data.last24h !== null ? 'mm (24h)' : 'Sin datos'}</span>
           </div>
-          <div className="mt-1.5 flex items-end justify-between">
-            <div className="space-y-0.5">
-              <p className="text-[10px] font-bold uppercase tracking-tighter text-text-dim line-clamp-1 font-display">
-                7 d: {data.last7d.toFixed(1)}mm · Mes: {Math.round(data.monthTotal)}mm
-              </p>
-              <p className="text-[9px] font-bold uppercase tracking-tighter text-text-muted line-clamp-1 font-display opacity-60">
-                NASA GPM · {data.latestDate}
-              </p>
-            </div>
-            <a 
-              href={verifyUrl} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="ml-2 flex h-5 w-5 items-center justify-center rounded bg-accent-teal/10 text-accent-teal hover:bg-accent-teal hover:text-black transition-all"
-              title="Verificar en NASA POWER"
-            >
-              <ExternalLink size={10} />
-            </a>
+          <div className="mt-2 space-y-1">
+            <p className="text-[11px] font-black uppercase tracking-tighter text-text-dim line-clamp-1 font-display">
+              7 d: {data.last7d.toFixed(1)}mm · Mes: {Math.round(data.monthTotal)}mm
+            </p>
+            <p className="text-[10px] font-black uppercase tracking-tighter text-text-muted line-clamp-1 font-display opacity-70">
+              NASA GPM · {data.latestDate}
+            </p>
           </div>
         </>
       )}
