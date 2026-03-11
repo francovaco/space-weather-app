@@ -87,42 +87,44 @@ export function timeRangeToParam(range: string): string {
   return map[range] ?? '1-day'
 }
 
+const SWPC_BASE = process.env.NEXT_PUBLIC_SWPC_SERVICES || 'https://services.swpc.noaa.gov'
+
 /** 
  * SWPC real-time JSON endpoints (called from API routes server-side)
  * Exported for use in Next.js API route handlers
  */
 export const SWPC_ENDPOINTS = {
   // Magnetometer — updates every 1 min
-  magnetometer1h: 'https://services.swpc.noaa.gov/json/goes/primary/magnetometers-1-hour.json',
-  magnetometer6h: 'https://services.swpc.noaa.gov/json/goes/primary/magnetometers-6-hour.json',
-  magnetometer1d: 'https://services.swpc.noaa.gov/json/goes/primary/magnetometers-1-day.json',
-  magnetometer3d: 'https://services.swpc.noaa.gov/json/goes/primary/magnetometers-3-day.json',
-  magnetometer7d: 'https://services.swpc.noaa.gov/json/goes/primary/magnetometers-7-day.json',
+  magnetometer1h: `${SWPC_BASE}/json/goes/primary/magnetometers-1-hour.json`,
+  magnetometer6h: `${SWPC_BASE}/json/goes/primary/magnetometers-6-hour.json`,
+  magnetometer1d: `${SWPC_BASE}/json/goes/primary/magnetometers-1-day.json`,
+  magnetometer3d: `${SWPC_BASE}/json/goes/primary/magnetometers-3-day.json`,
+  magnetometer7d: `${SWPC_BASE}/json/goes/primary/magnetometers-7-day.json`,
 
   // X-Ray Flux — updates every 1 min
-  xray1h: 'https://services.swpc.noaa.gov/json/goes/primary/xrays-1-hour.json',
-  xray6h: 'https://services.swpc.noaa.gov/json/goes/primary/xrays-6-hour.json',
-  xray1d: 'https://services.swpc.noaa.gov/json/goes/primary/xrays-1-day.json',
-  xray3d: 'https://services.swpc.noaa.gov/json/goes/primary/xrays-3-day.json',
-  xray7d: 'https://services.swpc.noaa.gov/json/goes/primary/xrays-7-day.json',
+  xray1h: `${SWPC_BASE}/json/goes/primary/xrays-1-hour.json`,
+  xray6h: `${SWPC_BASE}/json/goes/primary/xrays-6-hour.json`,
+  xray1d: `${SWPC_BASE}/json/goes/primary/xrays-1-day.json`,
+  xray3d: `${SWPC_BASE}/json/goes/primary/xrays-3-day.json`,
+  xray7d: `${SWPC_BASE}/json/goes/primary/xrays-7-day.json`,
 
   // Electron Flux — updates every 5 min
-  electrons1h: 'https://services.swpc.noaa.gov/json/goes/primary/integral-electrons-1-hour.json',
-  electrons6h: 'https://services.swpc.noaa.gov/json/goes/primary/integral-electrons-6-hour.json',
-  electrons1d: 'https://services.swpc.noaa.gov/json/goes/primary/integral-electrons-1-day.json',
-  electrons3d: 'https://services.swpc.noaa.gov/json/goes/primary/integral-electrons-3-day.json',
-  electrons7d: 'https://services.swpc.noaa.gov/json/goes/primary/integral-electrons-7-day.json',
+  electrons1h: `${SWPC_BASE}/json/goes/primary/integral-electrons-1-hour.json`,
+  electrons6h: `${SWPC_BASE}/json/goes/primary/integral-electrons-6-hour.json`,
+  electrons1d: `${SWPC_BASE}/json/goes/primary/integral-electrons-1-day.json`,
+  electrons3d: `${SWPC_BASE}/json/goes/primary/integral-electrons-3-day.json`,
+  electrons7d: `${SWPC_BASE}/json/goes/primary/integral-electrons-7-day.json`,
 
   // Proton Flux — updates every 5 min
-  protons1h: 'https://services.swpc.noaa.gov/json/goes/primary/integral-protons-1-hour.json',
-  protons6h: 'https://services.swpc.noaa.gov/json/goes/primary/integral-protons-6-hour.json',
-  protons1d: 'https://services.swpc.noaa.gov/json/goes/primary/integral-protons-1-day.json',
-  protons3d: 'https://services.swpc.noaa.gov/json/goes/primary/integral-protons-3-day.json',
-  protons7d: 'https://services.swpc.noaa.gov/json/goes/primary/integral-protons-7-day.json',
+  protons1h: `${SWPC_BASE}/json/goes/primary/integral-protons-1-hour.json`,
+  protons6h: `${SWPC_BASE}/json/goes/primary/integral-protons-6-hour.json`,
+  protons1d: `${SWPC_BASE}/json/goes/primary/integral-protons-1-day.json`,
+  protons3d: `${SWPC_BASE}/json/goes/primary/integral-protons-3-day.json`,
+  protons7d: `${SWPC_BASE}/json/goes/primary/integral-protons-7-day.json`,
 
   // Aurora ovation — updates every 5 min
-  aurora: 'https://services.swpc.noaa.gov/json/ovation_aurora_latest.json',
+  aurora: `${SWPC_BASE}/json/ovation_aurora_latest.json`,
 
   // Kp index
-  kp1h: 'https://services.swpc.noaa.gov/json/goes/primary/estimated-planetary-k-index-1-hour.json',
+  kp1h: `${SWPC_BASE}/json/goes/primary/estimated-planetary-k-index-1-hour.json`,
 } as const

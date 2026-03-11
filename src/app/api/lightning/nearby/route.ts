@@ -29,9 +29,11 @@ export async function GET(req: NextRequest) {
     const minLon = lon - 1.5
     const maxLon = lon + 1.5
 
+    const NOAA_BASE = process.env.NEXT_PUBLIC_NOAA_NOWCOAST || 'https://nowcoast.noaa.gov'
+
     // NOAA NOWCOAST real-time lightning strikes (last 1 hour)
     // Using spatial query for the bounding box
-    const noaaUrl = `https://nowcoast.noaa.gov/arcgis/rest/services/nowcoast/sat_meteo_em_lightning_strikes_1hr_time/MapServer/0/query?f=json&where=1%3D1&geometry=${minLon},${minLat},${maxLon},${maxLat}&geometryType=esriGeometryEnvelope&spatialRel=esriSpatialRelIntersects&outFields=*&returnGeometry=true`
+    const noaaUrl = `${NOAA_BASE}/arcgis/rest/services/nowcoast/sat_meteo_em_lightning_strikes_1hr_time/MapServer/0/query?f=json&where=1%3D1&geometry=${minLon},${minLat},${maxLon},${maxLat}&geometryType=esriGeometryEnvelope&spatialRel=esriSpatialRelIntersects&outFields=*&returnGeometry=true`
 
     const response = await fetch(noaaUrl, { next: { revalidate: 60 } })
     if (!response.ok) throw new Error('NOAA API error')

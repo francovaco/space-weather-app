@@ -16,20 +16,23 @@ export async function GET(req: NextRequest) {
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 15000)
 
+    const OPEN_METEO_BASE = process.env.NEXT_PUBLIC_OPEN_METEO_API || 'https://api.open-meteo.com/v1'
+    const BIGDATACLOUD_BASE = process.env.NEXT_PUBLIC_BIGDATACLOUD_API || 'https://api.bigdatacloud.net/data/reverse-geocode-client'
+
     // PETICIÓN 1: Clima base (Open-Meteo Best Match)
     // Usamos esta para el panel principal y el pronóstico de 7 días.
-    const coreUrl = `https://api.open-meteo.com/v1/forecast?latitude=${fixedLat}&longitude=${fixedLon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,wind_speed_10m,wind_direction_10m,surface_pressure,visibility,uv_index,precipitation&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max,wind_speed_10m_max,precipitation_sum,precipitation_probability_max&timezone=auto`
+    const coreUrl = `${OPEN_METEO_BASE}/forecast?latitude=${fixedLat}&longitude=${fixedLon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,wind_speed_10m,wind_direction_10m,surface_pressure,visibility,uv_index,precipitation&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max,wind_speed_10m_max,precipitation_sum,precipitation_probability_max&timezone=auto`
     const weatherRes = await fetch(coreUrl, { signal: controller.signal, next: { revalidate: 900 } })
     if (!weatherRes.ok) throw new Error('Core weather failed')
     const data = await weatherRes.json()
 
     // PETICIÓN 2: Modelo GFS (Exclusivo para la tabla de comparación)
-    const gfsUrl = `https://api.open-meteo.com/v1/forecast?latitude=${fixedLat}&longitude=${fixedLon}&models=gfs_seamless&daily=temperature_2m_max,wind_speed_10m_max,precipitation_sum,relative_humidity_2m_mean,surface_pressure_max&timezone=auto`
+    const gfsUrl = `${OPEN_METEO_BASE}/forecast?latitude=${fixedLat}&longitude=${fixedLon}&models=gfs_seamless&daily=temperature_2m_max,wind_speed_10m_max,precipitation_sum,relative_humidity_2m_mean,surface_pressure_max&timezone=auto`
     const gfsRes = await fetch(gfsUrl, { signal: controller.signal, next: { revalidate: 3600 } }).catch(() => null)
     const gfsData = gfsRes && gfsRes.ok ? await gfsRes.json() : null
 
     // PETICIÓN 3: Nombre de ciudad
-    const geoRes = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${fixedLat}&longitude=${fixedLon}&localityLanguage=es`).catch(() => null)
+    const geoRes = await fetch(`${BIGDATACLOUD_BASE}?latitude=${fixedLat}&longitude=${fixedLon}&localityLanguage=es`).catch(() => null)
     const geoData = geoRes ? await geoRes.json() : null
     const cityName = geoData?.city || geoData?.locality || 'Ubicación Detectada'
 

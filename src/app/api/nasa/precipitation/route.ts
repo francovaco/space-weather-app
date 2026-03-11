@@ -16,8 +16,9 @@ export async function GET(req: NextRequest) {
     start.setDate(now.getDate() - 35) // Buffer for lag
 
     const formatDate = (d: Date) => d.toISOString().split('T')[0].replace(/-/g, '')
+    const NASA_BASE = process.env.NEXT_PUBLIC_NASA_POWER_API || 'https://power.larc.nasa.gov/api'
     
-    const url = `https://power.larc.nasa.gov/api/temporal/daily/point?parameters=PRECTOTCORR&community=RE&longitude=${lon}&latitude=${lat}&start=${formatDate(start)}&end=${formatDate(end)}&format=JSON`
+    const url = `${NASA_BASE}/temporal/daily/point?parameters=PRECTOTCORR&community=RE&longitude=${lon}&latitude=${lat}&start=${formatDate(start)}&end=${formatDate(end)}&format=JSON`
 
     const res = await fetch(url, { next: { revalidate: 3600 } })
     if (!res.ok) throw new Error('NASA POWER API failed')

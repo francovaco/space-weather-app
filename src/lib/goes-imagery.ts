@@ -3,7 +3,7 @@
 // ============================================================
 import type { ABIBand, GOESSector, ImageResolution } from '@/types/goes'
 
-const CDN = 'https://cdn.star.nesdis.noaa.gov/GOES19/ABI'
+const CDN = process.env.NEXT_PUBLIC_GOES19_CDN || 'https://cdn.star.nesdis.noaa.gov/GOES19/ABI'
 
 /** 
  * Build the URL for a specific ABI band image from the NESDIS CDN.
@@ -54,8 +54,9 @@ export function buildImageListUrl(band: ABIBand, sector: GOESSector): string {
  * Pattern: https://www.star.nesdis.noaa.gov/GOES/GOES19_sector_band.gif
  */
 export function buildAnimatedGifUrl(band: ABIBand, sector: GOESSector): string {
+  const STAR_BASE = process.env.NEXT_PUBLIC_STAR_BASE || 'https://www.star.nesdis.noaa.gov'
   const paddedBand = band.padStart(2, '0')
-  return `https://www.star.nesdis.noaa.gov/GOES/GOES19_${sector}_Band${paddedBand}.gif`
+  return `${STAR_BASE}/GOES/GOES19_${sector}_Band${paddedBand}.gif`
 }
 
 /**
