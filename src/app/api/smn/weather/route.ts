@@ -14,18 +14,17 @@ export async function GET(req: NextRequest) {
 
   try {
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 12000)
+    const timeoutId = setTimeout(() => controller.abort(), 15000)
 
-    // 1. Peticiones en paralelo: Clima, Astronomía (Luna) y Geocodificación
-    const [weatherRes, astroRes, geoRes] = await Promise.all([
-      fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${fixedLat}&longitude=${fixedLon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,wind_speed_10m,wind_direction_10m,surface_pressure,visibility,uv_index,precipitation&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max,wind_speed_10m_max,precipitation_sum,precipitation_probability_max&timezone=auto`,
-        { signal: controller.signal, next: { revalidate: 900 } }
-      ),
-      fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${fixedLat}&longitude=${fixedLon}&daily=moonrise,moonset,moon_phase&timezone=auto`,
-        { signal: controller.signal, next: { revalidate: 3600 } }
-      ).catch(() => null),
+    // REQUEST 1: Core Weather Data
+    const coreUrl = `https://api.open-meteo.com/v1/forecast?latitude=${fixedLat}&longitude=${fixedLon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,wind_speed_10m,wind_direction_10m,surface_pressure,visibility,uv_index,precipitation&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max,wind_speed_10m_max,precipitation_sum,precipitation_probability_max&timezone=auto`
+
+    // REQUEST 2: Models Comparison
+    const modelsUrl = `https://api.open-meteo.com/v1/forecast?latitude=${fixedLat}&longitude=${fixedLon}&models=ecmwf_ifs04,gfs_seamless&daily=temperature_2m_max,wind_speed_10m_max,precipitation_sum&timezone=auto`
+
+    const [weatherRes, modelsRes, geoRes] = await Promise.all([
+      fetch(coreUrl, { signal: controller.signal, next: { revalidate: 900 } }),
+      fetch(modelsUrl, { signal: controller.signal, next: { revalidate: 3600 } }).catch(() => null),
       fetch(
         `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${fixedLat}&longitude=${fixedLon}&localityLanguage=es`,
         { signal: controller.signal, next: { revalidate: 86400 } }
@@ -34,11 +33,11 @@ export async function GET(req: NextRequest) {
 
     clearTimeout(timeoutId)
     
-    if (!weatherRes.ok) throw new Error('Weather API failed')
+    if (!weatherRes.ok) throw new Error(`Weather API failed: ${weatherRes.status}`)
 
     const data = await weatherRes.json()
-    const astroData = astroRes ? await astroRes.json() : null
-    const geoData = geoRes ? await geoRes.json() : null
+    const modelsData = modelsRes && modelsRes.ok ? await modelsRes.json() : null
+    const geoData = geoRes && geoRes.ok ? await geoRes.json() : null
     const cityName = geoData?.city || geoData?.locality || 'Ubicación Detectada'
 
     const getDesc = (code: number) => {
@@ -48,6 +47,11 @@ export async function GET(req: NextRequest) {
       if (code <= 82) return 'Lluvia'
       if (code <= 77) return 'Nieve / Aguanieve'
       return 'Tormenta Eléctrica'
+    }
+
+    const getModelVal = (field: string, modelName: string, index: number) => {
+      const key = `${field}_${modelName}`
+      return modelsData?.daily?.[key]?.[index] ?? null
     }
 
     return NextResponse.json({
@@ -66,9 +70,7 @@ export async function GET(req: NextRequest) {
         uv_index: data.current?.uv_index ?? 0,
         precipitation: data.current?.precipitation ?? 0,
         sunrise: data.daily?.sunrise?.[0] ?? '',
-        sunset: data.daily?.sunset?.[0] ?? '',
-        moonrise: astroData?.daily?.moonrise?.[0] ?? '',
-        moon_phase: astroData?.daily?.moon_phase?.[0] ?? 0
+        sunset: data.daily?.sunset?.[0] ?? ''
       },
       forecast: (data.daily?.time || []).map((time: string, i: number) => ({
         date: time,
@@ -82,8 +84,18 @@ export async function GET(req: NextRequest) {
         wind_speed: data.daily.wind_speed_10m_max?.[i] ?? 0,
         precipitation: data.daily.precipitation_sum?.[i] ?? 0,
         precipitation_prob: data.daily.precipitation_probability_max?.[i] ?? 0,
-        moonrise: astroData?.daily?.moonrise?.[i] ?? '',
-        moon_phase: astroData?.daily?.moon_phase?.[i] ?? 0
+        models: {
+          ecmwf: {
+            temp: getModelVal('temperature_2m_max', 'ecmwf_ifs04', i),
+            wind: getModelVal('wind_speed_10m_max', 'ecmwf_ifs04', i),
+            rain: getModelVal('precipitation_sum', 'ecmwf_ifs04', i)
+          },
+          gfs: {
+            temp: getModelVal('temperature_2m_max', 'gfs_seamless', i),
+            wind: getModelVal('wind_speed_10m_max', 'gfs_seamless', i),
+            rain: getModelVal('precipitation_sum', 'gfs_seamless', i)
+          }
+        }
       })),
       alerts: [],
       hasAlerts: false,

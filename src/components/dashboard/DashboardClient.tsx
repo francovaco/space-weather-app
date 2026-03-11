@@ -29,8 +29,10 @@ interface DailyForecast {
   wind_speed: number
   precipitation: number
   precipitation_prob: number
-  moonrise: string
-  moon_phase: number
+  models: {
+    ecmwf: { temp: number | null, wind: number | null, rain: number | null }
+    gfs: { temp: number | null, wind: number | null, rain: number | null }
+  }
 }
 
 interface WeatherData {
@@ -49,8 +51,6 @@ interface WeatherData {
     precipitation: number
     sunrise: string
     sunset: string
-    moonrise: string
-    moon_phase: number
     is_day: boolean
   } | null
   forecast: DailyForecast[]
@@ -306,7 +306,7 @@ export function DashboardClient() {
                 Plataforma avanzada de visualización de datos en tiempo real para el clima espacial y terrestre.
               </p>
               <p className="text-xs font-medium text-text-muted leading-relaxed uppercase tracking-tighter opacity-80">
-                Este sistema integra información crítica del satélite <span className="text-white">GOES-19</span>, datos actualizados del <span className="text-white">clima terrestre y local</span> y modelos físicos de alta precisión. Su propósito es proporcionar una alerta temprana sobre fenómenos solares, variaciones ionosféricas, condiciones climáticas locales y alertas meteorológicas extremas que afectan las comunicaciones, los sistemas <span className="text-white">GPS</span> y la infraestructura tecnológica en la región. <Link href="/space-weather" className="text-accent-cyan hover:text-white transition-colors border-b border-accent-cyan/30">Visita la sección de Clima Espacial para comprender los impactos y fenómenos detallados.</Link>
+                ESTE SISTEMA INTEGRA INFORMACIÓN DE LOS SISTEMAS DEL SATÉLITE GOES-19, DATOS ACTUALIZADOS DEL CLIMA TERRESTRE Y LOCAL Y MODELOS FÍSICOS DE ALTA PRECISIÓN. SU PROPÓSITO ES PROPORCIONAR UNA ALERTA TEMPRANA SOBRE FENÓMENOS SOLARES, VARIACIONES IONOSFÉRICAS, CONDICIONES CLIMÁTICAS LOCALES Y ALERTAS METEOROLÓGICAS EXTREMAS QUE AFECTAN A LA POBLACIÓN, LAS REDES ELÉCTRICAS, LAS COMUNICACIONES, LOS SISTEMAS GPS Y LA INFRAESTRUCTURA TECNOLÓGICA EN LA REGIÓN. <Link href="/space-weather" className="text-accent-cyan hover:text-white transition-colors border-b border-accent-cyan/30">VISITA LA SECCIÓN DE CLIMA ESPACIAL PARA COMPRENDER LOS IMPACTOS Y FENÓMENOS DETALLADOS.</Link>
               </p>
             </div>
           </div>
@@ -363,7 +363,7 @@ export function DashboardClient() {
                   </div>
 
                   {/* Center: Larger Details, Same Level */}
-                  <div className="grid grid-cols-5 gap-x-4 gap-y-2 flex-1 justify-center">
+                  <div className="grid grid-cols-5 gap-x-6 gap-y-2 flex-1 justify-center">
                     <WeatherDetail icon={<Wind size={14} className="text-accent-cyan" />} label="Viento" value={`${Math.round(weather!.current!.wind_speed)}k/h`} />
                     <WeatherDetail icon={<Navigation size={14} className="text-accent-cyan" style={{ transform: `rotate(${weather!.current!.wind_direction}deg)` }} />} label="Dir." value={getWindDir(weather!.current!.wind_direction)} />
                     <WeatherDetail icon={<Droplets size={14} className="text-accent-amber" />} label="Humedad" value={`${weather!.current!.humidity}%`} />
@@ -593,6 +593,21 @@ export function DashboardClient() {
               <WeatherDetail icon={<Activity size={14} className="text-accent-teal" />} label="Prob. Lluvia" value={`${selectedDay.precipitation_prob}%`} />
             </div>
 
+            {/* Model Comparison Table */}
+            <div className="mb-6 rounded-lg border border-white/5 bg-black/20 p-3">
+              <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-accent-cyan/80">Consenso de Modelos</p>
+              <div className="grid grid-cols-3 gap-2 border-b border-white/5 pb-1 mb-1 text-[9px] font-bold uppercase text-text-muted">
+                <span>Dato</span>
+                <span className="text-center">ECMWF (EU)</span>
+                <span className="text-center">GFS (USA)</span>
+              </div>
+              <div className="space-y-1.5">
+                <ModelRow label="Temp Máx" ecmwf={selectedDay.models.ecmwf.temp !== null ? `${Math.round(selectedDay.models.ecmwf.temp)}°` : '—'} gfs={selectedDay.models.gfs.temp !== null ? `${Math.round(selectedDay.models.gfs.temp)}°` : '—'} />
+                <ModelRow label="Viento Máx" ecmwf={selectedDay.models.ecmwf.wind !== null ? `${Math.round(selectedDay.models.ecmwf.wind)}k/h` : '—'} gfs={selectedDay.models.gfs.wind !== null ? `${Math.round(selectedDay.models.gfs.wind)}k/h` : '—'} />
+                <ModelRow label="Lluvia" ecmwf={selectedDay.models.ecmwf.rain !== null ? `${selectedDay.models.ecmwf.rain.toFixed(1)}mm` : '—'} gfs={selectedDay.models.gfs.rain !== null ? `${selectedDay.models.gfs.rain.toFixed(1)}mm` : '—'} />
+              </div>
+            </div>
+
             <p className="text-[10px] text-text-muted leading-relaxed uppercase font-bold font-display border-t border-white/5 pt-4">
               Pronóstico detallado para la jornada. Los valores representan estimaciones basadas en modelos globales de alta resolución.
             </p>
@@ -608,9 +623,9 @@ function WeatherDetail({ icon, label, value }: { icon: React.ReactNode, label: s
     <div className="flex flex-col gap-0">
       <div className="flex items-center gap-1 text-text-dim">
         <div className="w-4 flex justify-center">{icon}</div>
-        <span className="text-[8px] font-display font-black uppercase tracking-tighter leading-none">{label}</span>
+        <span className="text-[11px] font-display font-black uppercase tracking-tighter leading-none">{label}</span>
       </div>
-      <span className="text-[11px] font-display font-bold text-text-primary tabular-nums ml-[20px] leading-none mt-0.5">{value}</span>
+      <span className="text-[15px] font-display font-bold text-text-primary tabular-nums ml-[24px] leading-none mt-0.5">{value}</span>
     </div>
   )
 }
@@ -690,6 +705,16 @@ function StatusCardLightning({ data }: { data: { count: number, closest: number 
           </div>
         </>
       )}
+    </div>
+  )
+}
+
+function ModelRow({ label, ecmwf, gfs }: { label: string, ecmwf: string, gfs: string }) {
+  return (
+    <div className="grid grid-cols-3 gap-2 text-[10px] font-display">
+      <span className="text-text-muted uppercase font-bold">{label}</span>
+      <span className="text-center font-black text-text-primary tabular-nums">{ecmwf}</span>
+      <span className="text-center font-black text-text-primary tabular-nums">{gfs}</span>
     </div>
   )
 }
