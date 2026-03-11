@@ -16,10 +16,10 @@ interface WeatherData {
 
 function getWeatherIcon(code: number, size = 12, className = "") {
   if (code === 0) return <Sun size={size} className={cn("text-amber-400", className)} />
-  if (code <= 2) return <CloudSun size={size} className={cn("text-sky-300", className)} />
-  if (code <= 48) return <Cloud size={size} className={cn("text-slate-400", className)} />
+  if (code === 1 || code === 2) return <CloudSun size={size} className={cn("text-sky-300", className)} />
+  if (code === 3 || (code >= 45 && code <= 48)) return <Cloud size={size} className={cn("text-slate-400", className)} />
   if (code >= 71 && code <= 77) return <Snowflake size={size} className={cn("text-white", className)} />
-  if (code <= 82) return <CloudRain size={size} className={cn("text-blue-400", className)} />
+  if (code >= 51 && code <= 82) return <CloudRain size={size} className={cn("text-blue-400", className)} />
   return <CloudLightning size={size} className={cn("text-orange-500", className)} />
 }
 

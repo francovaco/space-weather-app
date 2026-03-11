@@ -20,15 +20,15 @@ export async function GET(req: NextRequest) {
     const BIGDATACLOUD_BASE = process.env.NEXT_PUBLIC_BIGDATACLOUD_API || 'https://api.bigdatacloud.net/data/reverse-geocode-client'
 
     // PETICIÓN 1: Clima base (Open-Meteo Best Match)
-    // Usamos esta para el panel principal y el pronóstico de 7 días.
+    // Reducimos revalidate a 120s (2 min) para detectar cambios rápidos de nubosidad
     const coreUrl = `${OPEN_METEO_BASE}/forecast?latitude=${fixedLat}&longitude=${fixedLon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,wind_speed_10m,wind_direction_10m,surface_pressure,visibility,uv_index,precipitation&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max,wind_speed_10m_max,precipitation_sum,precipitation_probability_max&timezone=auto`
-    const weatherRes = await fetch(coreUrl, { signal: controller.signal, next: { revalidate: 900 } })
+    const weatherRes = await fetch(coreUrl, { signal: controller.signal, next: { revalidate: 120 } })
     if (!weatherRes.ok) throw new Error('Core weather failed')
     const data = await weatherRes.json()
 
     // PETICIÓN 2: Modelo GFS (Exclusivo para la tabla de comparación)
     const gfsUrl = `${OPEN_METEO_BASE}/forecast?latitude=${fixedLat}&longitude=${fixedLon}&models=gfs_seamless&daily=temperature_2m_max,wind_speed_10m_max,precipitation_sum,relative_humidity_2m_mean,surface_pressure_max&timezone=auto`
-    const gfsRes = await fetch(gfsUrl, { signal: controller.signal, next: { revalidate: 3600 } }).catch(() => null)
+    const gfsRes = await fetch(gfsUrl, { signal: controller.signal, next: { revalidate: 600 } }).catch(() => null)
     const gfsData = gfsRes && gfsRes.ok ? await gfsRes.json() : null
 
     // PETICIÓN 3: Nombre de ciudad
@@ -40,11 +40,12 @@ export async function GET(req: NextRequest) {
 
     const getDesc = (code: number) => {
       if (code === 0) return 'Despejado'
-      if (code <= 2) return 'Parcialmente Nublado'
-      if (code <= 48) return 'Nublado'
-      if (code <= 82) return 'Lluvia'
-      if (code <= 77) return 'Nieve / Aguanieve'
-      return 'Tormenta Eléctrica'
+      if (code === 1 || code === 2) return 'Parcialmente Nublado'
+      if (code === 3 || code === 45 || code === 48) return 'Nublado'
+      if (code >= 71 && code <= 77) return 'Nieve / Aguanieve'
+      if (code >= 51 && code <= 82) return 'Lluvia'
+      if (code >= 95) return 'Tormenta Eléctrica'
+      return 'Nublado'
     }
 
     return NextResponse.json({
