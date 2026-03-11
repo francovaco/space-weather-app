@@ -146,6 +146,7 @@ export function DashboardClient() {
   const [kpData, setKpData] = useState<KpIndexData[] | null>(null)
   const [goesData, setGoesData] = useState<GOESStatusData | null>(null)
   const [lightningData, setLightningData] = useState<{ count: number, closest: number | null, status: string } | null>(null)
+  const [nasaPrecipData, setNasaPrecipData] = useState<{ last24h: number, last7d: number, monthTotal: number, latestDate: string, source: string } | null>(null)
 
   useEffect(() => {
     let intervalId: any
@@ -165,11 +166,10 @@ export function DashboardClient() {
           if (lat !== undefined && lon !== undefined) {
             localStorage.setItem('last_lat', lat.toString())
             localStorage.setItem('last_lon', lon.toString())
-            // Also fetch lightning
-            fetch(`/api/lightning/nearby?lat=${lat}&lon=${lon}`)
-              .then(r => r.json())
-              .then(setLightningData)
-              .catch(() => null)
+            
+            // Also fetch extra data
+            fetch(`/api/lightning/nearby?lat=${lat}&lon=${lon}`).then(r => r.json()).then(setLightningData).catch(() => null)
+            fetch(`/api/nasa/precipitation?lat=${lat}&lon=${lon}`).then(r => r.json()).then(setNasaPrecipData).catch(() => null)
           }
         }
       } catch (err) { 
@@ -238,25 +238,23 @@ export function DashboardClient() {
     fetchSpace()
     const spaceInterval = setInterval(fetchSpace, 60000)
 
-    // Lightning polling
-    const fetchLightning = () => {
+    // Extra data polling
+    const fetchExtraData = () => {
       const lat = localStorage.getItem('last_lat')
       const lon = localStorage.getItem('last_lon')
       if (lat && lon) {
-        fetch(`/api/lightning/nearby?lat=${lat}&lon=${lon}`)
-          .then(r => r.json())
-          .then(setLightningData)
-          .catch(() => null)
+        fetch(`/api/lightning/nearby?lat=${lat}&lon=${lon}`).then(r => r.json()).then(setLightningData).catch(() => null)
+        fetch(`/api/nasa/precipitation?lat=${lat}&lon=${lon}`).then(r => r.json()).then(setNasaPrecipData).catch(() => null)
       }
     }
-    fetchLightning()
-    const lightningInterval = setInterval(fetchLightning, 60000)
+    fetchExtraData()
+    const extraInterval = setInterval(fetchExtraData, 300000)
 
     return () => {
       if (intervalId) clearInterval(intervalId)
       clearInterval(eqInterval)
       clearInterval(spaceInterval)
-      clearInterval(lightningInterval)
+      clearInterval(extraInterval)
     }
   }, [usingFallback])
 
@@ -519,11 +517,12 @@ export function DashboardClient() {
       </div>
 
       {/* Quick status cards */}
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
         <StatusCard label="Clase Rayos X" value={xrayInfo?.label ?? '—'} sub="Onda corta 0.1–0.8 nm" color={xrayInfo?.color ?? 'text-text-muted'} icon={<Zap size={14} />} href="/instruments/xray-flux" loading={!xrayData} />
         <StatusCard label="Flujo de Protones" value={proton ? (proton.flux as number).toFixed(2) : '—'} sub="≥10 MeV pfu" color={proton && (proton.flux as number) >= 10 ? 'text-accent-orange' : 'text-blue-400'} icon={<Activity size={14} />} href="/instruments/proton-flux" loading={!protonData} />
         <StatusCard label="Índice Kp" value={kpData?.at(-1) ? kpData.at(-1)!.kp.toFixed(1) : '—'} sub={kpInfo?.sub ?? 'Cargando…'} color={kpInfo?.color ?? 'text-text-muted'} icon={<Globe size={14} />} href="/instruments/kp-index" loading={!kpData} />
         <StatusCardLightning data={lightningData} />
+        <StatusCardNasaPrecip data={nasaPrecipData} />
         <StatusCard 
           label="GOES-19" 
           value={gStatus.label} 
@@ -706,6 +705,62 @@ function StatusCardLightning({ data }: { data: { count: number, closest: number 
             <p className="text-[11px] font-bold uppercase tracking-tighter text-text-dim line-clamp-1 font-display">
               {data.count > 0 ? `${data.closest?.toFixed(1)}km` : 'Sin actividad'}
             </p>
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+function StatusCardNasaPrecip({ data }: { data: { last24h: number | null, last7d: number, monthTotal: number, latestDate: string, source: string } | null }) {
+  const [lat, setLat] = useState<string | null>(null)
+  const [lon, setLon] = useState<string | null>(null)
+
+  useEffect(() => {
+    setLat(localStorage.getItem('last_lat'))
+    setLon(localStorage.getItem('last_lon'))
+  }, [])
+
+  const verifyUrl = (lat && lon)
+    ? `https://power.larc.nasa.gov/data-access-viewer/`
+    : `https://power.larc.nasa.gov/`
+
+  return (
+    <div className="card group border-white/10 bg-background-card/30 p-3 transition-all hover:border-accent-teal/30 hover:bg-white/5">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-[11px] font-black uppercase tracking-widest text-text-muted">Lluvia Satelital</span>
+        <div className={cn("transition-transform group-hover:scale-110", data ? "text-accent-teal" : "text-text-muted")}>
+          <CloudRain size={14} />
+        </div>
+      </div>
+      {!data ? (
+        <div className="h-6 w-16 animate-pulse rounded bg-white/5" />
+      ) : (
+        <>
+          <div className="flex items-baseline gap-2">
+            <p className="text-xl font-display font-black leading-none tracking-tight text-text-primary tabular-nums">
+              {data.last24h !== null ? data.last24h.toFixed(1) : 'S/D'}
+            </p>
+            <span className="text-[10px] font-bold text-text-dim uppercase font-display">{data.last24h !== null ? 'mm (24h)' : 'Sin datos'}</span>
+          </div>
+          <div className="mt-1.5 flex items-end justify-between">
+            <div className="space-y-0.5">
+              <p className="text-[10px] font-bold uppercase tracking-tighter text-text-dim line-clamp-1 font-display">
+                7 d: {data.last7d.toFixed(1)}mm · Mes: {Math.round(data.monthTotal)}mm
+              </p>
+              <p className="text-[9px] font-bold uppercase tracking-tighter text-text-muted line-clamp-1 font-display opacity-60">
+                NASA GPM · {data.latestDate}
+              </p>
+            </div>
+            <a 
+              href={verifyUrl} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="ml-2 flex h-5 w-5 items-center justify-center rounded bg-accent-teal/10 text-accent-teal hover:bg-accent-teal hover:text-black transition-all"
+              title="Verificar en NASA POWER"
+            >
+              <ExternalLink size={10} />
+            </a>
           </div>
         </>
       )}
