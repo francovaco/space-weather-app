@@ -93,12 +93,16 @@ function getWeatherIcon(code: number, size = 24, className = "") {
 
 async function fetchEarthquakes(): Promise<Earthquake[]> {
   try {
-    const res = await fetch('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson')
+    const res = await fetch('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson')
     const data = await res.json()
+    const now = Date.now()
+    const threeDaysAgo = now - (3 * 24 * 60 * 60 * 1000)
+
     return data.features
       .filter((f: any) => {
         const place = f.properties.place.toLowerCase()
-        return place.includes('argentina') || place.includes('chile')
+        const time = f.properties.time
+        return (place.includes('argentina') || place.includes('chile')) && time >= threeDaysAgo
       })
       .map((f: any) => {
         let placeParts = f.properties.place.split(', ')
@@ -119,7 +123,7 @@ async function fetchEarthquakes(): Promise<Earthquake[]> {
         }
       })
       .sort((a: any, b: any) => b.time - a.time)
-      .slice(0, 3)
+      .slice(0, 10) // Aumentamos un poco el límite ya que son 3 días
   } catch (err) {
     console.error('USGS fetch error:', err)
     return []
@@ -481,8 +485,8 @@ export function DashboardClient() {
                           {eq.place}, {eq.country} | Prof: {Math.round(eq.depth)}km
                         </span>
                       </div>
-                      <span className="text-[11px] text-text-dim uppercase tracking-tighter">
-                        {new Date(eq.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      <span className="text-[10px] text-text-dim uppercase tracking-tighter font-display font-black leading-none mt-1.5">
+                        {new Date(eq.time).toLocaleString('es-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }).replace(',', '')}
                       </span>
                     </div>
                     <span className={cn(
