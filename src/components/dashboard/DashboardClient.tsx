@@ -567,20 +567,20 @@ export function DashboardClient() {
           <div className="card w-full max-w-sm border-accent-cyan/30 shadow-2xl" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-6 border-b border-white/10 pb-4">
               <div className="flex flex-col">
-                <h3 className="text-sm font-black uppercase tracking-widest text-white">
+                <h3 className="text-base font-black uppercase tracking-widest text-white">
                   {new Date(selectedDay.date + 'T12:00:00').toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
                 </h3>
-                <span className="text-[10px] text-accent-cyan font-bold uppercase mt-0.5 font-display">Reporte Detallado</span>
+                <span className="text-xs text-accent-cyan font-bold uppercase mt-0.5 font-display">Reporte Detallado</span>
               </div>
               <button onClick={() => setSelectedDay(null)} className="text-text-dim hover:text-white transition-colors">✕</button>
             </div>
             
             <div className="flex items-center justify-between bg-white/5 rounded-xl p-4 mb-4">
               <div className="flex flex-col">
-                <span className="text-3xl font-display font-black text-white">{Math.round(selectedDay.max)}° / {Math.round(selectedDay.min)}°</span>
-                <span className="text-xs font-bold text-accent-cyan uppercase mt-1 font-display">{selectedDay.description}</span>
+                <span className="text-4xl font-display font-black text-white">{Math.round(selectedDay.max)}° / {Math.round(selectedDay.min)}°</span>
+                <span className="text-sm font-bold text-accent-cyan uppercase mt-1 font-display">{selectedDay.description}</span>
               </div>
-              {getWeatherIcon(selectedDay.weather_id, 56, "drop-shadow-glow-blue")}
+              {getWeatherIcon(selectedDay.weather_id, 64, "drop-shadow-glow-blue")}
             </div>
 
             <div className="grid grid-cols-2 gap-4 mb-6">
@@ -594,8 +594,8 @@ export function DashboardClient() {
 
             {/* Model Comparison Table */}
             <div className="mb-6 rounded-lg border border-white/5 bg-black/20 p-3">
-              <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-accent-cyan/80">Comparación Modelo GFS (USA)</p>
-              <div className="grid grid-cols-2 gap-2 border-b border-white/5 pb-1 mb-1 text-[9px] font-bold uppercase text-text-muted">
+              <p className="mb-2 text-[11px] font-black uppercase tracking-widest text-accent-cyan/80">Comparación Modelo GFS (USA)</p>
+              <div className="grid grid-cols-2 gap-2 border-b border-white/5 pb-1 mb-1 text-[10px] font-bold uppercase text-text-muted">
                 <span>Dato</span>
                 <span className="text-right">Predicción GFS</span>
               </div>
@@ -711,9 +711,9 @@ function StatusCardLightning({ data }: { data: { count: number, closest: number 
 
 function ModelRow({ label, val }: { label: string, val: string }) {
   return (
-    <div className="grid grid-cols-2 gap-2 text-[10px] font-display">
+    <div className="grid grid-cols-2 gap-2 text-[11px] font-display">
       <span className="text-text-muted uppercase font-bold">{label}</span>
-      <span className="text-right font-black text-text-primary tabular-nums">{val}</span>
+      <span className="text-right font-black text-text-primary tabular-nums text-[13px]">{val}</span>
     </div>
   )
 }
