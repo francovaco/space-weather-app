@@ -747,22 +747,21 @@ function AnimationView({ channel, onBack }:{ channel:Channel; onBack:()=>void })
                   <RefreshCw size={13}/> Reintentar
                 </button>
               </div>
-            ) : fetching ? (
+            ) : (fetching || !allLoaded) ? (
               <div className="flex h-full flex-col items-center justify-center gap-3">
                 <RefreshCw size={24} className="animate-spin text-primary"/>
-                <span className="text-sm text-text-muted">Consultando directorio NOAA…</span>
-              </div>
-            ) : !allLoaded ? (
-              <div className="flex h-full flex-col items-center justify-center gap-3">
-                <RefreshCw size={24} className="animate-spin text-primary"/>
-                <span className="text-sm text-text-muted">
-                  Precargando imágenes {loadedSet.size}/{total}…
-                </span>
-                <span className="text-xs text-text-dim">La animación iniciará cuando estén listas</span>
+                {total > 0 && (
+                  <>
+                    <span className="text-sm text-text-muted">
+                      Precargando imágenes {loadedSet.size}/{total}…
+                    </span>
+                    <span className="text-xs text-text-dim">La animación iniciará cuando esté lista</span>
+                  </>
+                )}
               </div>
             ) : frame ? (
               <>
-                <img key={`vis-${idx}-${frame.filename}`}
+                <img key="abi-main-frame"
                   src={frame.proxied}
                   alt={formatLabel(frame.filename)}
                   className="h-full w-full object-contain"/>
