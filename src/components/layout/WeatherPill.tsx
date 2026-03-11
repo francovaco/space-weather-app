@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { Cloud, CloudRain, Sun, MapPin, CloudLightning, Snowflake, AlertTriangle } from 'lucide-react'
+import { Cloud, CloudRain, Sun, MapPin, CloudLightning, Snowflake, AlertTriangle, CloudSun } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface WeatherData {
@@ -16,7 +16,7 @@ interface WeatherData {
 
 function getWeatherIcon(code: number, size = 12, className = "") {
   if (code === 0) return <Sun size={size} className={cn("text-amber-400", className)} />
-  if (code <= 2) return <Cloud size={size} className={cn("text-sky-300", className)} />
+  if (code <= 2) return <CloudSun size={size} className={cn("text-sky-300", className)} />
   if (code <= 48) return <Cloud size={size} className={cn("text-slate-400", className)} />
   if (code >= 71 && code <= 77) return <Snowflake size={size} className={cn("text-white", className)} />
   if (code <= 82) return <CloudRain size={size} className={cn("text-blue-400", className)} />
@@ -30,6 +30,7 @@ export function WeatherPill() {
   useEffect(() => {
     let currentLat: number | undefined
     let currentLon: number | undefined
+    let intervalId: NodeJS.Timeout
 
     const fetchWeather = async (lat?: number, lon?: number) => {
       try {
@@ -53,6 +54,12 @@ export function WeatherPill() {
       }
     }
 
+    const startPolling = (lat?: number, lon?: number) => {
+      if (intervalId) clearInterval(intervalId)
+      fetchWeather(lat, lon)
+      intervalId = setInterval(() => fetchWeather(lat, lon), 60000)
+    }
+
     // 1. Proactive Load from localStorage
     const savedLat = localStorage.getItem('last_lat')
     const savedLon = localStorage.getItem('last_lon')
@@ -60,9 +67,9 @@ export function WeatherPill() {
     if (savedLat && savedLon) {
       currentLat = parseFloat(savedLat)
       currentLon = parseFloat(savedLon)
-      fetchWeather(currentLat, currentLon)
+      startPolling(currentLat, currentLon)
     } else {
-      fetchWeather() // IP Fallback
+      startPolling() // IP Fallback
     }
 
     // 2. Background Update from GPS
@@ -72,14 +79,18 @@ export function WeatherPill() {
           const newLat = pos.coords.latitude
           const newLon = pos.coords.longitude
           if (!currentLat || Math.abs(currentLat - newLat) > 0.01) {
-            fetchWeather(newLat, newLon)
+            startPolling(newLat, newLon)
           }
         },
         () => {
-          if (!weather) fetchWeather()
+          if (!weather) startPolling()
         },
         { timeout: 5000, enableHighAccuracy: false }
       )
+    }
+
+    return () => {
+      if (intervalId) clearInterval(intervalId)
     }
   }, [])
 

@@ -4,7 +4,7 @@ import {
   AlertTriangle, ChevronRight, Snowflake, CheckCircle2, Eye, Gauge, 
   Wind, Droplets, MapPin, Sun, Cloud, CloudRain, CloudLightning, 
   Zap, Activity, Globe, Satellite, Info, Thermometer,
-  Sunrise, Sunset, Navigation
+  Sunrise, Sunset, Navigation, CloudSun
 } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
@@ -85,7 +85,7 @@ function formatTime(iso: string) {
 function getWeatherIcon(code: number, size = 24, className = "") {
   // Mapeo estricto a las 6 categorías permitidas
   if (code === 0) return <Sun size={size} className={cn("text-amber-400", className)} />
-  if (code <= 2) return <Cloud size={size} className={cn("text-sky-300", className)} />
+  if (code <= 2) return <CloudSun size={size} className={cn("text-sky-300", className)} />
   if (code <= 48) return <Cloud size={size} className={cn("text-slate-400", className)} />
   if (code >= 71 && code <= 77) return <Snowflake size={size} className={cn("text-white", className)} />
   if (code <= 82) return <CloudRain size={size} className={cn("text-blue-400", className)} />
@@ -329,11 +329,14 @@ export function DashboardClient() {
                 <div className="flex h-24 items-center justify-center flex-1"><span className="h-4 w-4 animate-spin rounded-full border-2 border-accent-cyan border-t-transparent" /></div>
               ) : (
                 <div className="flex items-center gap-10 flex-1 px-4">
-                  {/* Left: Temp & Location */}
+                  {/* Left: Temp, Icon & Location */}
                   <div className="flex flex-col shrink-0">
-                    <span className="font-display text-4xl font-black text-text-primary tabular-nums tracking-tighter leading-none">
-                      {Math.round(weather!.current!.temp)}°C
-                    </span>
+                    <div className="flex items-center gap-3">
+                      <span className="font-display text-4xl font-black text-text-primary tabular-nums tracking-tighter leading-none">
+                        {Math.round(weather!.current!.temp)}°C
+                      </span>
+                      {getWeatherIcon(weather!.current!.weather_id, 44, "drop-shadow-glow-blue")}
+                    </div>
                     <p className="mt-1.5 text-[14px] font-black text-accent-cyan uppercase tracking-wide font-display">{weather!.current!.name}</p>
                     <p className="text-[11px] text-text-muted font-bold mt-0.5 tracking-tight uppercase font-display">{weather!.current!.description}</p>
                   </div>
@@ -351,11 +354,6 @@ export function DashboardClient() {
                     <WeatherDetail icon={<Zap size={14} className="text-accent-amber" />} label="Índice UV" value={`${weather!.current!.uv_index.toFixed(1)}`} />
                     <WeatherDetail icon={<CloudRain size={14} className="text-blue-400" />} label="Lluvia" value={`${weather!.current!.precipitation.toFixed(1)}mm`} />
                     <WeatherDetail icon={<Thermometer size={14} className="text-accent-red" />} label="ST" value={`${Math.round(weather!.current!.st || 0)}°C`} />
-                  </div>
-
-                  {/* Right: Icon */}
-                  <div className="flex flex-col items-end shrink-0">
-                    {getWeatherIcon(weather!.current!.weather_id, 48, "drop-shadow-glow-blue")}
                   </div>
                 </div>
               )}
