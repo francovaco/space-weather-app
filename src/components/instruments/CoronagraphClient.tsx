@@ -125,6 +125,7 @@ function CoronagraphPlayer({ frames }: { frames: CoronaFrame[] }) {
   const [idx, setIdx] = useState(0)
   const [playing, setPlaying] = useState(false)
   const [loaded, setLoaded] = useState(false)
+  const [loadError, setLoadError] = useState(false)
   const [loadProgress, setLoadProgress] = useState(0)
   const [activeFrames, setActiveFrames] = useState<CoronaFrame[]>([])
   const FPS_STEPS = [1, 2, 3, 4, 5, 8, 10, 15, 20]
@@ -141,6 +142,7 @@ function CoronagraphPlayer({ frames }: { frames: CoronaFrame[] }) {
     setIdx(0)
     setPlaying(false)
     setLoaded(false)
+    setLoadError(false)
     setLoadProgress(0)
     setActiveFrames([])
   }, [frames])
@@ -184,8 +186,7 @@ function CoronagraphPlayer({ frames }: { frames: CoronaFrame[] }) {
           setLoaded(true)
           setPlaying(true)
         } else {
-          // If all failed, show something at least to avoid infinite loading
-          setActiveFrames(frames)
+          setLoadError(true)
           setLoaded(true)
         }
       }
@@ -237,8 +238,17 @@ function CoronagraphPlayer({ frames }: { frames: CoronaFrame[] }) {
         </div>
       )}
 
+      {loaded && loadError && (
+        <div className="flex flex-col items-center justify-center py-24 gap-3">
+          <span className="text-red-400 font-medium">No se pudieron cargar las imágenes</span>
+          <p className="text-xs text-text-muted text-center max-w-sm px-4">
+            Es posible que las imágenes más recientes no estén disponibles temporalmente en los servidores de SWPC/NOAA.
+          </p>
+        </div>
+      )}
+
       {/* Image */}
-      {loaded && (
+      {loaded && !loadError && (
         <>
         <div className="relative mx-auto bg-black" style={{ maxWidth: 600 }}>
         <img

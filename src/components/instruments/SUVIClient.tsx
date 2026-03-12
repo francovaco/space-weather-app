@@ -132,6 +132,7 @@ function SuviPlayer({ frames }: { frames: SuviFrame[] }) {
   const [idx, setIdx] = useState(0)
   const [playing, setPlaying] = useState(false)
   const [loaded, setLoaded] = useState(false)
+  const [loadError, setLoadError] = useState(false)
   const [loadProgress, setLoadProgress] = useState(0)
   const [activeFrames, setActiveFrames] = useState<SuviFrame[]>([])
   const FPS_STEPS = [1, 2, 3, 4, 5, 8, 10, 15, 20]
@@ -148,6 +149,7 @@ function SuviPlayer({ frames }: { frames: SuviFrame[] }) {
     setIdx(0)
     setPlaying(false)
     setLoaded(false)
+    setLoadError(false)
     setLoadProgress(0)
     setActiveFrames([])
   }, [frames])
@@ -191,8 +193,7 @@ function SuviPlayer({ frames }: { frames: SuviFrame[] }) {
           setLoaded(true)
           setPlaying(true)
         } else {
-          // If all failed, show something at least to avoid infinite loading
-          setActiveFrames(frames)
+          setLoadError(true)
           setLoaded(true)
         }
       }
@@ -244,7 +245,16 @@ function SuviPlayer({ frames }: { frames: SuviFrame[] }) {
         </div>
       )}
 
-      {loaded && current && (
+      {loaded && loadError && (
+        <div className="flex flex-col items-center justify-center py-24 gap-3">
+          <span className="text-red-400 font-medium">No se pudieron cargar las imágenes</span>
+          <p className="text-xs text-text-muted text-center max-w-sm px-4">
+            Es posible que las imágenes más recientes no estén disponibles temporalmente en los servidores de SWPC/NOAA.
+          </p>
+        </div>
+      )}
+
+      {loaded && !loadError && current && (
         <>
       {/* Image */}
       <div className="relative mx-auto bg-black" style={{ maxWidth: 600 }}>

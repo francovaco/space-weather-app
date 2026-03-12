@@ -29,10 +29,17 @@ export async function GET(req: NextRequest) {
     if (!res.ok) return NextResponse.json({ error: 'Upstream error' }, { status: 502 })
     const raw: RawFrame[] = await res.json()
 
-    const frames = raw.map((f) => ({
-      url: f.url.startsWith('http') ? f.url : `${SWPC_BASE}${f.url}`,
-      time_tag: parseTimestampFromUrl(f.url),
-    }))
+    const frames = raw.map((f) => {
+      let fullUrl = f.url
+      if (!fullUrl.startsWith('http')) {
+        const path = f.url.startsWith('/') ? f.url : `/${f.url}`
+        fullUrl = `${SWPC_BASE}${path}`
+      }
+      return {
+        url: fullUrl,
+        time_tag: parseTimestampFromUrl(f.url),
+      }
+    })
 
     return NextResponse.json(frames, { headers: { 'Cache-Control': 'public, max-age=280, s-maxage=300', 'X-Data-Source': url } })
   } catch (err) {
