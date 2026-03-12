@@ -3,7 +3,7 @@
 // src/components/instruments/MagnetometerClient.tsx
 // Interactive GOES Magnetometer chart with auto-refresh
 // ============================================================
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { LoadingMessage, ErrorMessage, EmptyMessage } from '@/components/ui/StatusMessages'
 import { PlotlyChart, PLOTLY_DARK_LAYOUT, PLOTLY_DEFAULT_CONFIG } from '@/components/charts/PlotlyChart'
 import { TimeRangeSelector } from '@/components/ui/TimeRangeSelector'
@@ -43,32 +43,64 @@ export function MagnetometerClient() {
     intervalMs: REFRESH_INTERVALS.ONE_MIN,
   })
 
-  const plotData: Plotly.Data[] = [
-    {
-      x: samples?.map((s) => s.time_tag),
-      y: normalize ? normalizeSeries(samples?.map(s => s.Hp) || []) : samples?.map((s) => s.Hp),
-      type: 'scattergl' as const, mode: 'lines' as const, name: 'Hp (Paralelo)', line: { color: '#ef4444', width: 1.5 },
-      hovertemplate: normalize ? '%{y:.1f}%<extra>Hp</extra>' : '%{y:.2f} nT<extra>Hp</extra>',
-    },
-    {
-      x: samples?.map((s) => s.time_tag),
-      y: normalize ? normalizeSeries(samples?.map(s => s.He) || []) : samples?.map((s) => s.He),
-      type: 'scattergl' as const, mode: 'lines' as const, name: 'He (Tierra)', line: { color: '#3b82f6', width: 1.5 },
-      hovertemplate: normalize ? '%{y:.1f}%<extra>He</extra>' : '%{y:.2f} nT<extra>He</extra>',
-    },
-    {
-      x: samples?.map((s) => s.time_tag),
-      y: normalize ? normalizeSeries(samples?.map(s => s.Hn) || []) : samples?.map((s) => s.Hn),
-      type: 'scattergl' as const, mode: 'lines' as const, name: 'Hn (Normal)', line: { color: '#10b981', width: 1.5 },
-      hovertemplate: normalize ? '%{y:.1f}%<extra>Hn</extra>' : '%{y:.2f} nT<extra>Hn</extra>',
-    },
-    {
-      x: samples?.map((s) => s.time_tag),
-      y: normalize ? normalizeSeries(samples?.map(s => s.total) || []) : samples?.map((s) => s.total),
-      type: 'scattergl' as const, mode: 'lines' as const, name: 'Total', line: { color: '#f59e0b', width: 2 },
-      hovertemplate: normalize ? '%{y:.1f}%<extra>Total</extra>' : '%{y:.2f} nT<extra>Total</extra>',
-    },
-  ]
+  const plotData: Plotly.Data[] = useMemo(() => {
+    if (!samples) return []
+    
+    return [
+      {
+        x: samples.map((s) => s.time_tag),
+        y: normalize ? normalizeSeries(samples.map(s => s.Hp)) : samples.map((s) => s.Hp),
+        customdata: samples.map(s => s.Hp),
+        type: 'scattergl' as const, mode: 'lines' as const, name: 'Hp (Paralelo)', line: { color: '#ef4444', width: 1.5 },
+        hovertemplate: '%{customdata:.2f} nT<extra>Hp</extra>',
+      },
+      {
+        x: samples.map((s) => s.time_tag),
+        y: normalize ? normalizeSeries(samples.map(s => s.He)) : samples.map((s) => s.He),
+        customdata: samples.map(s => s.He),
+        type: 'scattergl' as const, mode: 'lines' as const, name: 'He (Tierra)', line: { color: '#3b82f6', width: 1.5 },
+        hovertemplate: '%{customdata:.2f} nT<extra>He</extra>',
+      },
+      {
+        x: samples.map((s) => s.time_tag),
+        y: normalize ? normalizeSeries(samples.map(s => s.Hn)) : samples.map((s) => s.Hn),
+        customdata: samples.map(s => s.Hn),
+        type: 'scattergl' as const, mode: 'lines' as const, name: 'Hn (Normal)', line: { color: '#10b981', width: 1.5 },
+        hovertemplate: '%{customdata:.2f} nT<extra>Hn</extra>',
+      },
+      {
+        x: samples.map((s) => s.time_tag),
+        y: normalize ? normalizeSeries(samples.map(s => s.total)) : samples.map((s) => s.total),
+        customdata: samples.map(s => s.total),
+        type: 'scattergl' as const, mode: 'lines' as const, name: 'Total', line: { color: '#f59e0b', width: 2 },
+        hovertemplate: '%{customdata:.2f} nT<extra>Total</extra>',
+      },
+    ]
+  }, [samples, normalize])
+
+  const yAxisConfig = useMemo(() => {
+    if (!normalize || !samples || samples.length === 0) return { autorange: true }
+    
+    // Use Total as reference for axis labels
+    const totalVals = samples.map(s => s.total).filter(v => v !== null && !isNaN(v))
+    if (totalVals.length === 0) return { range: [0, 105] }
+    
+    const min = Math.min(...totalVals)
+    const max = Math.max(...totalVals)
+    
+    const tickVals = [0, 25, 50, 75, 100]
+    const tickTexts = tickVals.map(pct => {
+      const val = min + (pct / 100) * (max - min)
+      return val.toFixed(1)
+    })
+
+    return {
+      tickvals: tickVals,
+      ticktext: tickTexts,
+      range: [0, 105],
+      type: 'linear'
+    }
+  }, [samples, normalize])
 
   const layout: Partial<Plotly.Layout> = {
     ...PLOTLY_DARK_LAYOUT,
@@ -76,8 +108,9 @@ export function MagnetometerClient() {
     xaxis: { ...PLOTLY_DARK_LAYOUT.xaxis, type: 'date', automargin: true },
     yaxis: {
       ...PLOTLY_DARK_LAYOUT.yaxis,
-      title: { text: normalize ? 'Campo Relativo (%)' : 'Campo Magnético (nT)', font: { size: 11, color: '#64748b' } },
-      autorange: true, range: normalize ? [0, 105] : undefined, automargin: true,
+      title: { text: 'Campo Magnético (nT)', font: { size: 11, color: '#64748b' } },
+      ...yAxisConfig,
+      automargin: true,
     },
     margin: { l: 60, r: 20, t: 40, b: 65 },
     hovermode: 'x unified',
