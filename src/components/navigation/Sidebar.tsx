@@ -146,7 +146,7 @@ const NAV_ITEMS: NavItem[] = [
 export function Sidebar() {
   const { sidebarOpen } = useUIStore()
   const pathname = usePathname()
-  const [expanded, setExpanded] = useState<string[]>(['Instruments'])
+  const [expanded, setExpanded] = useState<string[]>(['Instrumentos'])
 
   const toggleExpand = (label: string) => {
     setExpanded((prev) =>
@@ -324,15 +324,15 @@ function NavItemComponent({ item, pathname, collapsed, expanded, onToggle, depth
                 const childActive = child.href ? pathname === child.href : false
                 return (
                   <Link
-                    key={sub.label}
-                    href={sub.href!}
+                    key={child.label}
+                    href={child.href!}
                     prefetch={false}
-                    ref={subActive ? activeItemRef : null}
+                    ref={childActive ? activeItemRef : null}
                     onClick={() => setPopoverOpen(false)}
                     className={cn(
                       'flex items-center gap-2 px-3 py-1.5 text-xs transition-colors',
                       'hover:bg-border/60 hover:text-text-primary',
-                      subActive ? 'bg-primary/10 text-primary' : 'text-text-secondary'
+                      childActive ? 'bg-primary/10 text-primary' : 'text-text-secondary'
                     )}
                   >
                     <span className="shrink-0">{child.icon}</span>

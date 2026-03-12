@@ -3,7 +3,7 @@
 // src/components/charts/PlotlyChart.tsx
 // Dark-themed Plotly.js wrapper for SWPC instrument data
 // ============================================================
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
 
 // We import Plotly lazily to avoid SSR issues
@@ -68,18 +68,17 @@ export const PLOTLY_DEFAULT_CONFIG: Partial<Plotly.Config> = {
 
 export function PlotlyChart({ data, layout, config, className, style }: PlotlyChartProps) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const plotRef = useRef<typeof import('plotly.js-dist-min') | null>(null)
-  const readyRef = useRef(false)
+  const [plotly, setPlotly] = useState<typeof import('plotly.js-dist-min') | null>(null)
 
-  // One-time Plotly import
+  // One-time Plotly import and locale registration
   useEffect(() => {
     let cancelled = false
     ;(async () => {
-      const Plotly = await import('plotly.js-dist-min')
+      const PlotlyModule = await import('plotly.js-dist-min')
       if (cancelled) return
 
-      // Register Spanish locale for modebar tooltips
-      Plotly.register({
+      // Register Spanish locale
+      PlotlyModule.register({
         moduleType: 'locale',
         name: 'es',
         dictionary: {
@@ -103,11 +102,6 @@ export function PlotlyChart({ data, layout, config, className, style }: PlotlyCh
           'Download plot': 'Descargar gráfico',
           'Edit in Chart Studio': 'Editar en Chart Studio',
           'Produced with Plotly.js': 'Creado con Plotly.js',
-          'Click to enter Colorscale title': 'Clic para ingresar título de escala de color',
-          'Click to enter Plot title': 'Clic para ingresar título del gráfico',
-          'Click to enter X axis title': 'Clic para ingresar título del eje X',
-          'Click to enter Y axis title': 'Clic para ingresar título del eje Y',
-          'new text': 'nuevo texto',
           'Trace': 'Traza',
           'trace': 'traza',
         },
@@ -120,34 +114,25 @@ export function PlotlyChart({ data, layout, config, className, style }: PlotlyCh
         },
       } as never)
 
-      plotRef.current = Plotly
-      readyRef.current = true
-      // Trigger initial render
-      if (containerRef.current) {
-        const mergedLayout = buildLayout(layout)
-        const mergedConfig = buildConfig(Plotly, config)
-        await Plotly.react(containerRef.current, data, mergedLayout, mergedConfig)
-      }
+      setPlotly(PlotlyModule)
     })()
     return () => {
       cancelled = true
-      if (containerRef.current && plotRef.current) {
-        plotRef.current.purge(containerRef.current)
+      if (containerRef.current && plotly) {
+        plotly.purge(containerRef.current)
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Update plot when data/layout/config change (without purge)
+  // Update plot when data/layout/config change
   useEffect(() => {
-    if (!readyRef.current || !plotRef.current || !containerRef.current) return
-    const Plotly = plotRef.current
+    if (!plotly || !containerRef.current) return
     const mergedLayout = buildLayout(layout)
-    const mergedConfig = buildConfig(Plotly, config)
-    Plotly.react(containerRef.current, data, mergedLayout, mergedConfig)
-  }, [data, layout, config])
+    const mergedConfig = buildConfig(plotly, config)
+    plotly.react(containerRef.current, data, mergedLayout, mergedConfig)
+  }, [plotly, data, layout, config])
 
-  // Prevent page scroll when scrolling over chart (for scroll-zoom)
+  // Prevent page scroll when scrolling over chart
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
