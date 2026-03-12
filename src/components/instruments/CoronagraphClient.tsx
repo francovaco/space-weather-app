@@ -8,7 +8,7 @@ import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
 import { getCoronagraphFrames } from '@/lib/swpc-api'
 import { UsageImpacts } from '@/components/ui/UsageImpacts'
 import { SectionDetails } from '@/components/ui/SectionDetails'
-import { cn } from '@/lib/utils'
+import { cn, proxyImg } from '@/lib/utils'
 import type { CoronagraphSource } from '@/types/swpc'
 import { CORONAGRAPH_SOURCES } from '@/types/swpc'
 import { Play, Pause, SkipBack, SkipForward, RefreshCw, Download } from 'lucide-react'
@@ -93,8 +93,17 @@ export function CoronagraphClient() {
             <span className="text-xs text-red-400">Error al cargar datos del coronógrafo</span>
           </div>
         )}
-        {frames && frames.length > 0 && (
-          <CoronagraphPlayer frames={frames} />
+        {frames && (
+          frames.length > 0 ? (
+            <CoronagraphPlayer frames={frames} />
+          ) : (
+            <div className="flex flex-col items-center justify-center py-24 gap-3">
+              <span className="text-red-400 font-medium">No hay imágenes disponibles</span>
+              <p className="text-xs text-text-muted text-center max-w-sm px-4">
+                Es posible que las imágenes más recientes no estén disponibles temporalmente.
+              </p>
+            </div>
+          )
         )}
       </div>
 
@@ -174,7 +183,7 @@ function CoronagraphPlayer({ frames }: { frames: CoronaFrame[] }) {
               if (!cancelled) setLoadProgress(Math.round((doneCount / frames.length) * 100))
               resolve()
             }
-            img.src = f.url
+            img.src = proxyImg(f.url)
           }))
         )
       }
@@ -253,7 +262,7 @@ function CoronagraphPlayer({ frames }: { frames: CoronaFrame[] }) {
         <div className="relative mx-auto bg-black" style={{ maxWidth: 600 }}>
         <img
           ref={imgRef}
-          src={current.url}
+          src={proxyImg(current.url)}
           alt="Coronagraph frame"
           className="h-auto w-full"
           draggable={false}

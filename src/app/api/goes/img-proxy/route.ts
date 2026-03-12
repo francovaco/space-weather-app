@@ -32,8 +32,10 @@ export async function GET(req: NextRequest) {
     }
 
     const ct  = upstream.headers.get('content-type') ?? 'image/jpeg'
-    // Timestamped frames are immutable → cache 24h; symlinks update every 10 min → 5 min
-    const maxAge = /\/\d{11}_/.test(raw) ? 86400 : 300
+    // Timestamped frames are immutable → cache 24h
+    // Patterns: ABI (11 digits), LASCO/CCOR (YYYYMMDD_HHMM), SUVI (YYYYMMDDTHHMMSSZ)
+    const isImmutable = /\/\d{11}_/.test(raw) || /\/\d{8}_\d{4}_/.test(raw) || /\/\d{8}T\d{6}Z_/.test(raw)
+    const maxAge = isImmutable ? 86400 : 300
 
     return new NextResponse(upstream.body, {
       headers: {

@@ -5,6 +5,12 @@ import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import { format, formatInTimeZone } from 'date-fns-tz'
 
+/** Proxy an external image URL via our local API proxy */
+export function proxyImg(url: string): string {
+  if (!url) return ''
+  return `/api/goes/img-proxy?url=${encodeURIComponent(url)}`
+}
+
 /** Merge Tailwind class names safely */
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
