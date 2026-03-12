@@ -28,10 +28,9 @@ export function useAnimationPlayer({ frames, onFrameChange }: UseAnimationPlayer
 
   // Animation tick
   const tick = useCallback(() => {
-    const { currentFrame, totalFrames, mode, direction } = useAnimationStore.getState()
+    const { currentFrame, totalFrames, mode } = useAnimationStore.getState()
 
     if (totalFrames === 0) return
-
     if (mode === 'rock') {
       let next = currentFrame + directionRef.current
       if (next >= totalFrames) {

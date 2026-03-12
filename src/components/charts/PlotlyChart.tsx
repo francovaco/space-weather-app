@@ -72,7 +72,9 @@ export function PlotlyChart({ data, layout, config, className, style }: PlotlyCh
 
   // One-time Plotly import and locale registration
   useEffect(() => {
+    if (plotly) return
     let cancelled = false
+    const node = containerRef.current
     ;(async () => {
       const PlotlyModule = await import('plotly.js-dist-min')
       if (cancelled) return
@@ -118,11 +120,11 @@ export function PlotlyChart({ data, layout, config, className, style }: PlotlyCh
     })()
     return () => {
       cancelled = true
-      if (containerRef.current && plotly) {
-        plotly.purge(containerRef.current)
+      if (node && plotly) {
+        plotly.purge(node)
       }
     }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [plotly])
 
   // Update plot when data/layout/config change
   useEffect(() => {

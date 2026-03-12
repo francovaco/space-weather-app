@@ -51,8 +51,6 @@ const IMPACTS = [
 // Color Scales & Helpers
 // ───────────────────────────────────────────────
 
-interface ColorPoint { r: number; g: number; b: number; val: number }
-
 const WAM_SCALES = {
   density: {
     unit: '10⁻¹¹ kg/m³',

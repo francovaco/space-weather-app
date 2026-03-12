@@ -47,7 +47,7 @@ const defaultState: AnimationPlayerState = {
 
 export const useAnimationStore = create<AnimationStore>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       ...defaultState,
 
       play: () => set({ isPlaying: true }),

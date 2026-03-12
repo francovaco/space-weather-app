@@ -3,11 +3,12 @@
 // src/components/navigation/Sidebar.tsx
 // ============================================================
 import Link from 'next/link'
+import NextImage from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useUIStore } from '@/stores/uiStore'
 import { cn } from '@/lib/utils'
 import {
-  Satellite, BookOpen, Activity, Image, Zap, Radio,
+  Satellite, BookOpen, Activity, Image as ImageIcon, Zap, Radio,
   Sun, Wind, Eye, Globe, ChevronDown, ChevronRight,
   Gauge, Layers, SunDim, BarChart3, CloudSun, BrainCircuit,
   Info, Shield, Orbit,
@@ -41,9 +42,8 @@ const NAV_ITEMS: NavItem[] = [
   {
     label: 'Imágenes ABI',
     href: '/imagery',
-    icon: <Image size={15} />,
-  },
-  {
+    icon: <ImageIcon size={15} />,
+  },  {
     label: 'Instrumentos',
     icon: <Activity size={15} />,
     children: [
@@ -169,7 +169,7 @@ export function Sidebar() {
             Monitor Espacial
           </span>
         ) : (
-          <img src="/assets/logo.png" alt="Logo" className="mx-auto h-12 w-auto object-contain p-1" />
+          <NextImage src="/assets/logo.png" alt="Logo" width={200} height={48} className="mx-auto h-12 w-auto object-contain p-1" />
         )}
       </Link>
 

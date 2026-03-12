@@ -2,7 +2,7 @@
 // ============================================================
 // src/hooks/useAutoRefresh.ts — Polling hook for live data
 // ============================================================
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 
 interface UseAutoRefreshOptions {
   queryKey: string[]

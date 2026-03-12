@@ -3,7 +3,7 @@
 // ============================================================
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
-import { format, formatInTimeZone } from 'date-fns-tz'
+import { formatInTimeZone } from 'date-fns-tz'
 
 /** Proxy an external image URL via our local API proxy */
 export function proxyImg(url: string): string {

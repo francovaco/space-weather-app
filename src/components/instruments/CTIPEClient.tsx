@@ -10,7 +10,6 @@ import { UsageImpacts } from '@/components/ui/UsageImpacts'
 import { SectionDetails } from '@/components/ui/SectionDetails'
 import { LoadingMessage, ErrorMessage, EmptyMessage, PreloadProgress } from '@/components/ui/StatusMessages'
 import { Play, Pause, SkipBack, SkipForward, Download } from 'lucide-react'
-import { proxyImg } from '@/lib/utils'
 
 // ───────────────────────────────────────────────
 // Color Scales & Helpers

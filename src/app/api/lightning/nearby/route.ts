@@ -40,7 +40,14 @@ export async function GET(req: NextRequest) {
     
     const data = await response.json()
     
-    const strikes = (data.features || []).map((f: any) => {
+    interface Strike {
+      lat: number
+      lon: number
+      distance: number
+      time: number
+    }
+
+    const strikes: Strike[] = (data.features || []).map((f: { geometry: { x: number, y: number }, attributes: { last_strike_time?: number } }) => {
       const sLat = f.geometry.y
       const sLon = f.geometry.x
       const dist = calculateDistance(lat, lon, sLat, sLon)
@@ -51,8 +58,8 @@ export async function GET(req: NextRequest) {
         time: f.attributes.last_strike_time || Date.now()
       }
     })
-    .filter((s: any) => s.distance <= 100) // 100km radius
-    .sort((a: any, b: any) => a.distance - b.distance)
+    .filter((s: Strike) => s.distance <= 100) // 100km radius
+    .sort((a: Strike, b: Strike) => a.distance - b.distance)
 
     return NextResponse.json({
       count: strikes.length,

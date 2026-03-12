@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import {
   Play, Pause, SkipBack, SkipForward, RotateCcw,
   Download, Grid3x3, ExternalLink, ChevronLeft,
@@ -421,7 +421,7 @@ async function processThumbQueue() {
   const next = thumbQueue.shift()
   if (next) {
     activeThumbRequests++
-    try { await next() } catch(e){}
+    try { await next() } catch {}
     activeThumbRequests--
     processThumbQueue()
   }
@@ -629,11 +629,11 @@ function AnimationView({ channel, onBack }:{ channel:Channel; onBack:()=>void })
           const [i, f] = item
           
           try {
-            const res = await fetch(f.proxied, { signal: controller.signal })
+            await fetch(f.proxied, { signal: controller.signal })
             // We just need to trigger the download into browser cache
             markLoaded(i, curKey)
-          } catch (e: any) {
-            if (e.name !== 'AbortError') markLoaded(i, curKey)
+          } catch (e: unknown) {
+            if (e instanceof Error && e.name !== 'AbortError') markLoaded(i, curKey)
           }
         }
       })

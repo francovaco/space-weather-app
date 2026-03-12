@@ -12,7 +12,7 @@ import { LoadingMessage, ErrorMessage, EmptyMessage, PreloadProgress } from '@/c
 import { cn, proxyImg } from '@/lib/utils'
 import type { CoronagraphSource } from '@/types/swpc'
 import { CORONAGRAPH_SOURCES } from '@/types/swpc'
-import { Play, Pause, SkipBack, SkipForward, RefreshCw, Download } from 'lucide-react'
+import { Play, Pause, SkipBack, SkipForward, Download } from 'lucide-react'
 
 interface CoronaFrame {
   url: string

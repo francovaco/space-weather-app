@@ -7,7 +7,7 @@ import { UsageImpacts } from '@/components/ui/UsageImpacts'
 import { SectionDetails } from '@/components/ui/SectionDetails'
 import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
 import { getSolarSynopticMap } from '@/lib/swpc-api'
-import { LoadingMessage, ErrorMessage, EmptyMessage } from '@/components/ui/StatusMessages'
+import { LoadingMessage, ErrorMessage } from '@/components/ui/StatusMessages'
 
 interface SynopticData {
   url: string
