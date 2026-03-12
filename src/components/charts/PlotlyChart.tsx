@@ -5,6 +5,7 @@
 // ============================================================
 import { useEffect, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
+import { Skeleton } from '@/components/ui/Skeleton'
 
 // We import Plotly lazily to avoid SSR issues
 interface PlotlyChartProps {
@@ -13,6 +14,7 @@ interface PlotlyChartProps {
   config?: Partial<Plotly.Config>
   className?: string
   style?: React.CSSProperties
+  loading?: boolean
 }
 
 // Dark theme defaults matching NOAA/SWPC chart aesthetics
@@ -66,7 +68,7 @@ export const PLOTLY_DEFAULT_CONFIG: Partial<Plotly.Config> = {
   locale: 'es',
 }
 
-export function PlotlyChart({ data, layout, config, className, style }: PlotlyChartProps) {
+export function PlotlyChart({ data, layout, config, className, style, loading }: PlotlyChartProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [plotly, setPlotly] = useState<typeof import('plotly.js-dist-min') | null>(null)
 
@@ -128,11 +130,11 @@ export function PlotlyChart({ data, layout, config, className, style }: PlotlyCh
 
   // Update plot when data/layout/config change
   useEffect(() => {
-    if (!plotly || !containerRef.current) return
+    if (!plotly || !containerRef.current || loading) return
     const mergedLayout = buildLayout(layout)
     const mergedConfig = buildConfig(plotly, config)
     plotly.react(containerRef.current, data, mergedLayout, mergedConfig)
-  }, [plotly, data, layout, config])
+  }, [plotly, data, layout, config, loading])
 
   // Prevent page scroll when scrolling over chart
   useEffect(() => {
@@ -146,11 +148,35 @@ export function PlotlyChart({ data, layout, config, className, style }: PlotlyCh
   }, [])
 
   return (
-    <div
-      ref={containerRef}
-      className={cn('plotly-dark min-h-64 w-full', className)}
-      style={style}
-    />
+    <div className={cn('relative w-full', className)} style={{ minHeight: 300, ...style }}>
+      {(!plotly || loading) && (
+        <div className="absolute inset-0 z-10 flex flex-col gap-4 p-4 bg-background-card/50 backdrop-blur-sm rounded-lg">
+          <div className="flex justify-between items-center">
+             <Skeleton className="h-4 w-32 bg-white/5" />
+             <div className="flex gap-2">
+               <Skeleton className="h-4 w-16 bg-white/5" />
+               <Skeleton className="h-4 w-4 bg-white/5 rounded-full" />
+             </div>
+          </div>
+          <div className="flex-1 w-full flex items-end gap-2 pb-2">
+             <Skeleton className="h-3/4 w-full bg-white/5 rounded-t" />
+             <Skeleton className="h-1/2 w-full bg-white/5 rounded-t" />
+             <Skeleton className="h-2/3 w-full bg-white/5 rounded-t" />
+             <Skeleton className="h-full w-full bg-white/5 rounded-t" />
+             <Skeleton className="h-1/3 w-full bg-white/5 rounded-t" />
+          </div>
+          <div className="h-4 w-full flex justify-between">
+            <Skeleton className="h-3 w-12 bg-white/5" />
+            <Skeleton className="h-3 w-12 bg-white/5" />
+            <Skeleton className="h-3 w-12 bg-white/5" />
+          </div>
+        </div>
+      )}
+      <div
+        ref={containerRef}
+        className={cn('plotly-dark h-full w-full', (!plotly || loading) && 'invisible')}
+      />
+    </div>
   )
 }
 
