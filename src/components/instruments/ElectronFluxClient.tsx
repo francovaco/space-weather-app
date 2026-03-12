@@ -10,6 +10,7 @@ import { UsageImpacts } from '@/components/ui/UsageImpacts'
 import { SectionDetails } from '@/components/ui/SectionDetails'
 import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
 import { getElectronFluxData, timeRangeToParam } from '@/lib/swpc-api'
+import { LoadingMessage, ErrorMessage, EmptyMessage } from '@/components/ui/StatusMessages'
 import type { TimeRange } from '@/types/swpc'
 
 interface ElectronSample {
@@ -150,18 +151,17 @@ export function ElectronFluxClient() {
 
       {/* Chart */}
       <div className="card relative overflow-hidden">
-        {isLoading && (
-          <div className="flex items-center justify-center py-24">
-            <div className="flex items-center gap-2 text-xs text-text-muted">
-              <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-accent-cyan border-t-transparent" />
-              Cargando datos de flujo de electrones…
-            </div>
-          </div>
+        {isLoading && !rawData && (
+          <LoadingMessage message="Cargando datos de flujo de electrones…" />
         )}
         {isError && (
-          <div className="flex items-center justify-center py-24">
-            <span className="text-xs text-red-400">Error al cargar datos de flujo de electrones</span>
-          </div>
+          <ErrorMessage 
+            message="Error al cargar datos" 
+            description="No se pudieron obtener las lecturas de flujo de electrones de GOES."
+          />
+        )}
+        {rawData && rawData.length === 0 && (
+          <EmptyMessage message="No hay datos disponibles para este rango." />
         )}
         {rawData && rawData.length > 0 && (
           <PlotlyChart
@@ -169,6 +169,8 @@ export function ElectronFluxClient() {
             layout={layout}
             config={config}
             className="min-h-[420px]"
+          />
+        )}
           />
         )}
         {/* Last update indicator */}

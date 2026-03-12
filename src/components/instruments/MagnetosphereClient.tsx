@@ -4,6 +4,7 @@
 // Geospace Magnetosphere Movies — Density, Pressure, Velocity
 // ============================================================
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { LoadingMessage, ErrorMessage, PreloadProgress } from '@/components/ui/StatusMessages'
 import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
 import { getMagnetosphereFrames } from '@/lib/swpc-api'
 import { UsageImpacts } from '@/components/ui/UsageImpacts'
@@ -208,17 +209,13 @@ function MagnetospherePanel({ type, desc }: { type: MagnetosphereType; desc: str
       </h2>
 
       {isLoading && !frames && (
-        <div className="flex items-center justify-center py-20">
-          <div className="flex items-center gap-2 text-xs text-text-muted">
-            <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-accent-cyan border-t-transparent" />
-            Cargando cuadros…
-          </div>
-        </div>
+        <LoadingMessage message="Cargando cuadros de Geospace..." />
       )}
       {isError && (
-        <div className="flex items-center justify-center py-20">
-          <span className="text-xs text-red-400">Error al cargar datos de Geospace</span>
-        </div>
+        <ErrorMessage 
+          message="Error al cargar datos de Geospace" 
+          description="No se pudo obtener la secuencia de imágenes del modelo Geospace."
+        />
       )}
       {frames && frames.length > 0 && <MagnetospherePlayer frames={frames} type={type} />}
     </div>
@@ -375,15 +372,7 @@ function MagnetospherePlayer({ frames, type }: { frames: MagnetosphereFrame[]; t
   return (
     <div className="flex flex-col gap-3">
       {!loaded && (
-        <div className="flex flex-col items-center justify-center py-16 gap-3">
-          <div className="flex items-center gap-2 text-xs text-text-muted">
-            <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-accent-cyan border-t-transparent" />
-            Precargando imágenes… {loadProgress}%
-          </div>
-          <div className="h-1 w-48 overflow-hidden rounded-full bg-border">
-            <div className="h-full bg-accent-cyan transition-all duration-200" style={{ width: `${loadProgress}%` }} />
-          </div>
-        </div>
+        <PreloadProgress progress={loadProgress} />
       )}
 
       {loaded && current && (

@@ -9,6 +9,7 @@ import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
 import { getWAMIPEFrames } from '@/lib/swpc-api'
 import { UsageImpacts } from '@/components/ui/UsageImpacts'
 import { SectionDetails } from '@/components/ui/SectionDetails'
+import { LoadingMessage, ErrorMessage, EmptyMessage, PreloadProgress } from '@/components/ui/StatusMessages'
 import { Play, Pause, SkipBack, SkipForward, Download } from 'lucide-react'
 import { cn, proxyImg } from '@/lib/utils'
 
@@ -255,28 +256,24 @@ function WAMIPEPanel({ view, desc }: { view: WAMIPEView; desc: string }) {
       </h2>
 
       {isLoading && !frames && (
-        <div className="flex items-center justify-center py-20">
-          <div className="flex items-center gap-2 text-xs text-text-muted">
-            <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-accent-cyan border-t-transparent" />
-            Cargando cuadros…
-          </div>
-        </div>
+        <LoadingMessage message="Cargando cuadros…" className="py-20" />
       )}
       {isError && (
-        <div className="flex items-center justify-center py-20">
-          <span className="text-xs text-red-400">Error al cargar datos de WAM-IPE</span>
-        </div>
+        <ErrorMessage 
+          message="Error al cargar datos" 
+          description="No se pudieron obtener los cuadros del modelo WAM-IPE."
+          className="py-20"
+        />
       )}
       {frames && (
         frames.length > 0 ? (
           <WAMIPEPlayer frames={frames} viewType={view} />
         ) : (
-          <div className="flex flex-col items-center justify-center py-20 gap-3">
-            <span className="text-red-400 font-medium">No hay imágenes disponibles</span>
-            <p className="text-xs text-text-muted text-center max-w-sm px-4">
-              Es posible que los datos del modelo no estén disponibles temporalmente.
-            </p>
-          </div>
+          <EmptyMessage 
+            message="No hay imágenes disponibles" 
+            description="Es posible que los datos del modelo no estén disponibles temporalmente."
+            className="py-20"
+          />
         )
       )}
     </div>
@@ -483,24 +480,15 @@ function WAMIPEPlayer({ frames, viewType }: { frames: WAMIPEFrame[]; viewType: W
   return (
     <div className="flex flex-col gap-3">
       {!loaded && (
-        <div className="flex flex-col items-center justify-center py-16 gap-3">
-          <div className="flex items-center gap-2 text-xs text-text-muted">
-            <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-accent-cyan border-t-transparent" />
-            Precargando imágenes… {loadProgress}%
-          </div>
-          <div className="h-1 w-48 overflow-hidden rounded-full bg-border">
-            <div className="h-full bg-accent-cyan transition-all duration-200" style={{ width: `${loadProgress}%` }} />
-          </div>
-        </div>
+        <PreloadProgress progress={loadProgress} />
       )}
 
       {loaded && loadError && (
-        <div className="flex flex-col items-center justify-center py-20 gap-3">
-          <span className="text-red-400 font-medium">No se pudieron cargar las imágenes</span>
-          <p className="text-xs text-text-muted text-center max-w-sm px-4">
-            Es posible que las imágenes más recientes no estén disponibles temporalmente.
-          </p>
-        </div>
+        <EmptyMessage 
+          message="Error de carga" 
+          description="Las imágenes individuales no pudieron descargarse por el momento."
+          className="py-20"
+        />
       )}
 
       {loaded && !loadError && current && (

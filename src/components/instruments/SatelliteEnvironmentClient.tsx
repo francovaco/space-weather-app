@@ -10,6 +10,7 @@ import { TimeRangeSelector } from '@/components/ui/TimeRangeSelector'
 import { SectionDetails } from '@/components/ui/SectionDetails'
 import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
 import { getProtonFluxData, getElectronFluxData, getXRayFluxData, timeRangeToParam } from '@/lib/swpc-api'
+import { LoadingMessage, ErrorMessage } from '@/components/ui/StatusMessages'
 import type { TimeRange } from '@/types/swpc'
 
 // ── Types ─────────────────────────────────────────────
@@ -74,17 +75,10 @@ function ChartCard({
   return (
     <div className="card relative overflow-hidden">
       {isLoading && (
-        <div className="flex items-center justify-center py-16">
-          <div className="flex items-center gap-2 text-xs text-text-muted">
-            <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-accent-cyan border-t-transparent" />
-            Cargando {title}…
-          </div>
-        </div>
+        <LoadingMessage message={`Cargando ${title}…`} className="py-16" />
       )}
       {isError && (
-        <div className="flex items-center justify-center py-16">
-          <span className="text-xs text-red-400">Error al cargar {title}</span>
-        </div>
+        <ErrorMessage message={`Error al cargar ${title}`} className="py-16" />
       )}
       {children}
     </div>

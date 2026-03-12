@@ -22,10 +22,13 @@ export async function GET() {
     if (!res.ok) return NextResponse.json({ error: 'Upstream error' }, { status: 502 })
     const raw: RawFrame[] = await res.json()
 
-    const frames = raw.map((f) => ({
-      url: f.url.startsWith('http') ? f.url : `${SWPC_BASE}${f.url}`,
-      time_tag: f.time_tag ?? parseTimestampFromUrl(f.url),
-    }))
+    const frames = raw.map((f) => {
+      const fullUrl = f.url.startsWith('http') ? f.url : `${SWPC_BASE}${f.url}`
+      return {
+        url: `/api/goes/img-proxy?url=${encodeURIComponent(fullUrl)}`,
+        time_tag: f.time_tag ?? parseTimestampFromUrl(f.url),
+      }
+    })
 
     return NextResponse.json(frames, { headers: { 'Cache-Control': 'public, max-age=55, s-maxage=60' } })
   } catch (err) {

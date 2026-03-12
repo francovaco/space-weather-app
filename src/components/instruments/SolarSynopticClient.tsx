@@ -7,6 +7,7 @@ import { UsageImpacts } from '@/components/ui/UsageImpacts'
 import { SectionDetails } from '@/components/ui/SectionDetails'
 import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
 import { getSolarSynopticMap } from '@/lib/swpc-api'
+import { LoadingMessage, ErrorMessage, EmptyMessage } from '@/components/ui/StatusMessages'
 
 interface SynopticData {
   url: string
@@ -54,18 +55,14 @@ export function SolarSynopticClient() {
 
       {/* Image */}
       <div className="card relative overflow-hidden">
-        {isLoading && (
-          <div className="flex items-center justify-center py-24">
-            <div className="flex items-center gap-2 text-xs text-text-muted">
-              <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-accent-cyan border-t-transparent" />
-              Cargando mapa sinóptico…
-            </div>
-          </div>
+        {isLoading && !data && (
+          <LoadingMessage message="Cargando mapa sinóptico…" />
         )}
         {isError && (
-          <div className="flex items-center justify-center py-24">
-            <span className="text-xs text-red-400">Error al cargar el mapa sinóptico</span>
-          </div>
+          <ErrorMessage 
+            message="Error al cargar el mapa" 
+            description="No se pudo obtener la imagen del mapa sinóptico solar por el momento."
+          />
         )}
         {data && (
           <div className="flex flex-col items-center">

@@ -8,6 +8,7 @@ import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
 import { getSolarWindFrames } from '@/lib/swpc-api'
 import { UsageImpacts } from '@/components/ui/UsageImpacts'
 import { SectionDetails } from '@/components/ui/SectionDetails'
+import { LoadingMessage, ErrorMessage, EmptyMessage, PreloadProgress } from '@/components/ui/StatusMessages'
 import { Play, Pause, SkipBack, SkipForward, Download, Wind } from 'lucide-react'
 import { useSolarWindSpeed } from '@/components/layout/SpaceWeatherBar'
 
@@ -71,17 +72,19 @@ export function SolarWindClient() {
       {/* Animation player */}
       <div className="card relative overflow-hidden">
         {isLoading && !frames && (
-          <div className="flex items-center justify-center py-24">
-            <div className="flex items-center gap-2 text-xs text-text-muted">
-              <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-accent-cyan border-t-transparent" />
-              Cargando cuadros WSA-ENLIL…
-            </div>
-          </div>
+          <LoadingMessage message="Cargando cuadros WSA-ENLIL…" />
         )}
         {isError && (
-          <div className="flex items-center justify-center py-24">
-            <span className="text-xs text-red-400">Error al cargar datos del modelo ENLIL</span>
-          </div>
+          <ErrorMessage 
+            message="Error al cargar el modelo ENLIL" 
+            description="No se pudieron obtener las rutas de los cuadros del modelo."
+          />
+        )}
+        {frames && frames.length === 0 && (
+          <EmptyMessage 
+            message="No hay cuadros disponibles" 
+            description="El modelo WSA-ENLIL no ha generado cuadros recientes en las últimas horas."
+          />
         )}
         {frames && frames.length > 0 && (
           <EnlilPlayer frames={frames} />
@@ -138,11 +141,16 @@ function EnlilPlayer({ frames }: { frames: EnlilFrame[] }) {
   // Preload frames in batches, filter failures, then auto-play
   useEffect(() => {
     let cancelled = false
-    const BATCH = 8
+    const BATCH = 12
     const ok: (EnlilFrame | null)[] = new Array(frames.length).fill(null)
     let doneCount = 0
 
     async function preloadAll() {
+      if (frames.length === 0) {
+        if (!cancelled) setLoaded(true)
+        return
+      }
+
       for (let i = 0; i < frames.length; i += BATCH) {
         if (cancelled) return
         const batch = frames.slice(i, i + BATCH)
@@ -213,18 +221,14 @@ function EnlilPlayer({ frames }: { frames: EnlilFrame[] }) {
     <div className="flex flex-col gap-3">
       {/* Loading progress */}
       {!loaded && (
-        <div className="flex flex-col items-center justify-center py-16 gap-3">
-          <div className="flex items-center gap-2 text-xs text-text-muted">
-            <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-accent-cyan border-t-transparent" />
-            Precargando imágenes… {loadProgress}%
-          </div>
-          <div className="h-1 w-48 overflow-hidden rounded-full bg-border">
-            <div
-              className="h-full bg-accent-cyan transition-all duration-200"
-              style={{ width: `${loadProgress}%` }}
-            />
-          </div>
-        </div>
+        <PreloadProgress progress={loadProgress} />
+      )}
+
+      {loaded && activeFrames.length === 0 && (
+        <EmptyMessage 
+          message="No se pudieron cargar las imágenes" 
+          description="Las imágenes individuales del modelo no están disponibles por el momento."
+        />
       )}
 
       {loaded && current && (

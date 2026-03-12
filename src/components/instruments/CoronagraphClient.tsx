@@ -8,6 +8,7 @@ import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
 import { getCoronagraphFrames } from '@/lib/swpc-api'
 import { UsageImpacts } from '@/components/ui/UsageImpacts'
 import { SectionDetails } from '@/components/ui/SectionDetails'
+import { LoadingMessage, ErrorMessage, EmptyMessage, PreloadProgress } from '@/components/ui/StatusMessages'
 import { cn, proxyImg } from '@/lib/utils'
 import type { CoronagraphSource } from '@/types/swpc'
 import { CORONAGRAPH_SOURCES } from '@/types/swpc'
@@ -81,28 +82,22 @@ export function CoronagraphClient() {
       {/* Animation player */}
       <div className="card relative overflow-hidden">
         {isLoading && !frames && (
-          <div className="flex items-center justify-center py-24">
-            <div className="flex items-center gap-2 text-xs text-text-muted">
-              <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-accent-cyan border-t-transparent" />
-              Cargando cuadros del coronógrafo…
-            </div>
-          </div>
+          <LoadingMessage message="Cargando cuadros del coronógrafo…" />
         )}
         {isError && (
-          <div className="flex items-center justify-center py-24">
-            <span className="text-xs text-red-400">Error al cargar datos del coronógrafo</span>
-          </div>
+          <ErrorMessage 
+            message="Error al cargar el coronógrafo"
+            description="No se pudieron obtener los datos de la fuente seleccionada."
+          />
         )}
         {frames && (
           frames.length > 0 ? (
             <CoronagraphPlayer frames={frames} />
           ) : (
-            <div className="flex flex-col items-center justify-center py-24 gap-3">
-              <span className="text-red-400 font-medium">No hay imágenes disponibles</span>
-              <p className="text-xs text-text-muted text-center max-w-sm px-4">
-                Es posible que las imágenes más recientes no estén disponibles temporalmente.
-              </p>
-            </div>
+            <EmptyMessage 
+              message="No hay imágenes recientes"
+              description="Es posible que las imágenes de esta fuente no estén disponibles temporalmente."
+            />
           )
         )}
       </div>
@@ -233,27 +228,14 @@ function CoronagraphPlayer({ frames }: { frames: CoronaFrame[] }) {
     <div className="flex flex-col gap-3">
       {/* Loading progress */}
       {!loaded && (
-        <div className="flex flex-col items-center justify-center py-16 gap-3">
-          <div className="flex items-center gap-2 text-xs text-text-muted">
-            <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-accent-cyan border-t-transparent" />
-            Precargando imágenes… {loadProgress}%
-          </div>
-          <div className="h-1 w-48 overflow-hidden rounded-full bg-border">
-            <div
-              className="h-full bg-accent-cyan transition-all duration-200"
-              style={{ width: `${loadProgress}%` }}
-            />
-          </div>
-        </div>
+        <PreloadProgress progress={loadProgress} />
       )}
 
       {loaded && loadError && (
-        <div className="flex flex-col items-center justify-center py-24 gap-3">
-          <span className="text-red-400 font-medium">No se pudieron cargar las imágenes</span>
-          <p className="text-xs text-text-muted text-center max-w-sm px-4">
-            Es posible que las imágenes más recientes no estén disponibles temporalmente.
-          </p>
-        </div>
+        <EmptyMessage 
+          message="Error de carga" 
+          description="Las imágenes individuales no pudieron descargarse por el momento."
+        />
       )}
 
       {/* Image */}

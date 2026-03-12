@@ -8,6 +8,7 @@ import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
 import { getAuroraFrames } from '@/lib/swpc-api'
 import { UsageImpacts } from '@/components/ui/UsageImpacts'
 import { SectionDetails } from '@/components/ui/SectionDetails'
+import { LoadingMessage, ErrorMessage, EmptyMessage, PreloadProgress } from '@/components/ui/StatusMessages'
 import { Play, Pause, SkipBack, SkipForward, Download } from 'lucide-react'
 
 interface AuroraFrame {
@@ -161,20 +162,16 @@ function AuroraPanel({ pole, label }: { pole: 'north' | 'south'; label: string }
       </h2>
 
       {isLoading && !frames && (
-        <div className="flex items-center justify-center py-20">
-          <div className="flex items-center gap-2 text-xs text-text-muted">
-            <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-accent-cyan border-t-transparent" />
-            Cargando cuadros…
-          </div>
-        </div>
+        <LoadingMessage message="Cargando cuadros…" className="py-20" />
       )}
       {isError && (
-        <div className="flex items-center justify-center py-20">
-          <span className="text-xs text-red-400">Error al cargar datos</span>
-        </div>
+        <ErrorMessage message="Error al cargar datos" className="py-20" />
       )}
       {frames && frames.length > 0 && (
         <AuroraPlayer frames={frames} />
+      )}
+      {frames && frames.length === 0 && (
+        <EmptyMessage message="No hay pronóstico disponible" className="py-20" />
       )}
     </div>
   )
@@ -337,18 +334,11 @@ function AuroraPlayer({ frames }: { frames: AuroraFrame[] }) {
     <div className="flex flex-col gap-3">
       {/* Loading progress */}
       {!loaded && (
-        <div className="flex flex-col items-center justify-center py-16 gap-3">
-          <div className="flex items-center gap-2 text-xs text-text-muted">
-            <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-accent-cyan border-t-transparent" />
-            Precargando imágenes… {loadProgress}%
-          </div>
-          <div className="h-1 w-48 overflow-hidden rounded-full bg-border">
-            <div
-              className="h-full bg-accent-cyan transition-all duration-200"
-              style={{ width: `${loadProgress}%` }}
-            />
-          </div>
-        </div>
+        <PreloadProgress progress={loadProgress} />
+      )}
+
+      {loaded && activeFrames.length === 0 && (
+        <EmptyMessage message="No se pudieron cargar las imágenes" className="py-20" />
       )}
 
       {loaded && current && (

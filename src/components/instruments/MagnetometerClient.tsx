@@ -10,6 +10,7 @@ import { UsageImpacts } from '@/components/ui/UsageImpacts'
 import { SectionDetails } from '@/components/ui/SectionDetails'
 import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
 import { getMagnetometerData, timeRangeToParam } from '@/lib/swpc-api'
+import { LoadingMessage, ErrorMessage, EmptyMessage } from '@/components/ui/StatusMessages'
 import type { TimeRange } from '@/types/swpc'
 import { cn } from '@/lib/utils'
 
@@ -188,18 +189,17 @@ export function MagnetometerClient() {
 
       {/* Chart */}
       <div className="card relative overflow-hidden">
-        {isLoading && (
-          <div className="flex items-center justify-center py-24">
-            <div className="flex items-center gap-2 text-xs text-text-muted">
-              <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-accent-cyan border-t-transparent" />
-              Cargando datos del magnetómetro…
-            </div>
-          </div>
+        {isLoading && !rawData && (
+          <LoadingMessage message="Cargando datos del magnetómetro…" />
         )}
         {isError && (
-          <div className="flex items-center justify-center py-24">
-            <span className="text-xs text-red-400">Error al cargar datos del magnetómetro</span>
-          </div>
+          <ErrorMessage 
+            message="Error al cargar datos" 
+            description="No se pudieron obtener las lecturas del magnetómetro GOES."
+          />
+        )}
+        {rawData && rawData.length === 0 && (
+          <EmptyMessage message="No hay datos disponibles para este rango." />
         )}
         {rawData && rawData.length > 0 && (
           <PlotlyChart

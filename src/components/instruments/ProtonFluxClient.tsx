@@ -4,6 +4,7 @@
 // Interactive GOES Proton Flux chart with auto-refresh
 // ============================================================
 import { useState } from 'react'
+import { LoadingMessage, ErrorMessage, EmptyMessage } from '@/components/ui/StatusMessages'
 import { PlotlyChart, PLOTLY_DARK_LAYOUT, PLOTLY_DEFAULT_CONFIG } from '@/components/charts/PlotlyChart'
 import { TimeRangeSelector } from '@/components/ui/TimeRangeSelector'
 import { UsageImpacts } from '@/components/ui/UsageImpacts'
@@ -159,17 +160,19 @@ export function ProtonFluxClient() {
       {/* Chart */}
       <div className="card relative overflow-hidden">
         {isLoading && (
-          <div className="flex items-center justify-center py-24">
-            <div className="flex items-center gap-2 text-xs text-text-muted">
-              <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-accent-cyan border-t-transparent" />
-              Cargando datos de flujo de protones…
-            </div>
-          </div>
+          <LoadingMessage message="Cargando datos de flujo de protones..." />
         )}
         {isError && (
-          <div className="flex items-center justify-center py-24">
-            <span className="text-xs text-red-400">Error al cargar datos de flujo de protones</span>
-          </div>
+          <ErrorMessage 
+            message="Error al cargar datos de flujo de protones" 
+            description="No se pudo establecer conexión con el servicio. Intente nuevamente en unos minutos."
+          />
+        )}
+        {rawData && rawData.length === 0 && (
+          <EmptyMessage 
+            message="No hay datos de flujo de protones" 
+            description="No se encontraron registros de flujo de protones para el período seleccionado."
+          />
         )}
         {rawData && rawData.length > 0 && (
           <PlotlyChart

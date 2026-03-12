@@ -4,6 +4,7 @@
 // ============================================================
 import { useQuery } from '@tanstack/react-query'
 import { formatInTimeZone } from 'date-fns-tz'
+import { LoadingMessage, ErrorMessage, EmptyMessage } from '@/components/ui/StatusMessages'
 import {
   Satellite, RefreshCw, ExternalLink, AlertTriangle,
   CheckCircle2, AlertCircle, XCircle, Clock, Info,
@@ -500,22 +501,28 @@ export function SatelliteStatusClient() {
         </div>
 
         {isLoading && (
-          <div className="card flex items-center justify-center gap-2 py-6">
-            <RefreshCw size={14} className="animate-spin text-primary" />
-            <span className="text-xs text-text-muted">Cargando anomalías…</span>
+          <div className="card">
+            <LoadingMessage message="Cargando anomalías…" className="py-12" />
           </div>
         )}
 
         {isError && (
-          <div className="card py-6 text-center text-xs text-red-400">
-            Error al cargar los datos de estado. Intentá de nuevo más tarde.
+          <div className="card">
+            <ErrorMessage 
+              message="Error al cargar anomalías" 
+              description="No se pudieron obtener los mensajes de estado por el momento."
+              className="py-12" 
+            />
           </div>
         )}
 
         {!isLoading && !isError && allAnomalies.length === 0 && (
-          <div className="card flex items-center justify-center gap-2 py-6 text-xs text-text-muted">
-            <CheckCircle2 size={14} className="text-green-400" />
-            No se registraron anomalías recientes
+          <div className="card">
+            <EmptyMessage 
+              message="Sin anomalías recientes" 
+              description="No se han registrado eventos o interrupciones en las últimas 24 horas."
+              className="py-12" 
+            />
           </div>
         )}
 

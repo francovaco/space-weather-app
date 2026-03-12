@@ -4,6 +4,7 @@
 // SUVI animation player with wavelength tabs
 // ============================================================
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { LoadingMessage, ErrorMessage, EmptyMessage, PreloadProgress } from '@/components/ui/StatusMessages'
 import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
 import { getSuviFrames } from '@/lib/swpc-api'
 import { UsageImpacts } from '@/components/ui/UsageImpacts'
@@ -88,28 +89,22 @@ export function SUVIClient() {
       {/* Animation player */}
       <div className="card relative overflow-hidden">
         {isLoading && !frames && (
-          <div className="flex items-center justify-center py-24">
-            <div className="flex items-center gap-2 text-xs text-text-muted">
-              <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-accent-cyan border-t-transparent" />
-              Cargando imágenes SUVI…
-            </div>
-          </div>
+          <LoadingMessage message="Cargando imágenes SUVI..." />
         )}
         {isError && (
-          <div className="flex items-center justify-center py-24">
-            <span className="text-xs text-red-400">Error al cargar imágenes SUVI</span>
-          </div>
+          <ErrorMessage 
+            message="Error al cargar imágenes SUVI" 
+            description="No se pudo obtener la lista de imágenes por el momento."
+          />
         )}
         {frames && (
           frames.length > 0 ? (
             <SuviPlayer frames={frames} />
           ) : (
-            <div className="flex flex-col items-center justify-center py-24 gap-3">
-              <span className="text-red-400 font-medium">No hay imágenes disponibles</span>
-              <p className="text-xs text-text-muted text-center max-w-sm px-4">
-                Es posible que las imágenes más recientes no estén disponibles temporalmente.
-              </p>
-            </div>
+            <EmptyMessage 
+              message="No hay imágenes SUVI disponibles" 
+              description="Es posible que las imágenes más recientes no estén disponibles temporalmente."
+            />
           )
         )}
       </div>
@@ -240,27 +235,14 @@ function SuviPlayer({ frames }: { frames: SuviFrame[] }) {
     <div className="flex flex-col gap-3">
       {/* Loading progress */}
       {!loaded && (
-        <div className="flex flex-col items-center justify-center py-16 gap-3">
-          <div className="flex items-center gap-2 text-xs text-text-muted">
-            <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-accent-cyan border-t-transparent" />
-            Precargando imágenes… {loadProgress}%
-          </div>
-          <div className="h-1 w-48 overflow-hidden rounded-full bg-border">
-            <div
-              className="h-full bg-accent-cyan transition-all duration-200"
-              style={{ width: `${loadProgress}%` }}
-            />
-          </div>
-        </div>
+        <PreloadProgress progress={loadProgress} />
       )}
 
       {loaded && loadError && (
-        <div className="flex flex-col items-center justify-center py-24 gap-3">
-          <span className="text-red-400 font-medium">No se pudieron cargar las imágenes</span>
-          <p className="text-xs text-text-muted text-center max-w-sm px-4">
-            Es posible que las imágenes más recientes no estén disponibles temporalmente.
-          </p>
-        </div>
+        <ErrorMessage 
+          message="No se pudieron cargar las imágenes" 
+          description="Hubo un problema al descargar los cuadros de la animación."
+        />
       )}
 
       {loaded && !loadError && current && (

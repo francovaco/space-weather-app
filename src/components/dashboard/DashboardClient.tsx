@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
+import { LoadingMessage, ErrorMessage, EmptyMessage } from '@/components/ui/StatusMessages'
 import { 
   XRayFluxData, 
   ProtonFluxData, 
@@ -324,11 +325,11 @@ export function DashboardClient() {
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-4">
         {/* Current Weather & Forecast */}
         {(!weatherLoading && !weather?.current) ? (
-          <div className="card lg:col-span-3 flex items-center justify-center h-[355px] border-dashed border-white/10 bg-white/5">
-            <div className="flex flex-col items-center gap-3 opacity-50">
-              <Cloud size={32} className="text-text-dim" />
-              <p className="text-xs font-black uppercase tracking-[0.2em] text-text-dim">Pronóstico no disponible</p>
-            </div>
+          <div className="card lg:col-span-3 h-[355px] flex items-center justify-center">
+            <EmptyMessage 
+              message="Pronóstico no disponible" 
+              description="No se pudieron obtener los datos meteorológicos locales del SMN."
+            />
           </div>
         ) : (
           <div className="lg:col-span-3 flex flex-col gap-3">
@@ -348,7 +349,7 @@ export function DashboardClient() {
               </div>
 
               {weatherLoading ? (
-                <div className="flex h-24 items-center justify-center flex-1"><span className="h-4 w-4 animate-spin rounded-full border-2 border-accent-cyan border-t-transparent" /></div>
+                <LoadingMessage message="Cargando clima…" className="flex-1 py-0" />
               ) : (
                 <div className="flex items-center gap-10 flex-1 px-4">
                   {/* Left: Temp, Icon & Location */}
@@ -388,7 +389,7 @@ export function DashboardClient() {
                 <div className="h-px flex-1 mx-8 bg-gradient-to-r from-accent-cyan/30 to-transparent" />
               </div>
               {weatherLoading ? (
-                <div className="flex h-24 flex-1 items-center justify-center"><span className="h-4 w-4 animate-spin rounded-full border-2 border-accent-cyan border-t-transparent" /></div>
+                <LoadingMessage message="Cargando pronóstico…" className="flex-1 py-0" />
               ) : (
                 <div className="grid grid-cols-7 gap-3 flex-1 items-center">
                   {weather!.forecast.map((f, i) => {

@@ -4,6 +4,7 @@
 // Planetary K-Index bar chart with color-coded Kp levels
 // Mirrors SWPC: https://www.swpc.noaa.gov/products/planetary-k-index
 // ============================================================
+import { LoadingMessage, ErrorMessage, EmptyMessage } from '@/components/ui/StatusMessages'
 import { PlotlyChart, PLOTLY_DARK_LAYOUT, PLOTLY_DEFAULT_CONFIG } from '@/components/charts/PlotlyChart'
 import { UsageImpacts } from '@/components/ui/UsageImpacts'
 import { SectionDetails } from '@/components/ui/SectionDetails'
@@ -199,17 +200,19 @@ export function KpIndexClient() {
       {/* Chart */}
       <div className="card relative overflow-hidden">
         {isLoading && (
-          <div className="flex items-center justify-center py-24">
-            <div className="flex items-center gap-2 text-xs text-text-muted">
-              <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-accent-cyan border-t-transparent" />
-              Cargando índice Kp…
-            </div>
-          </div>
+          <LoadingMessage message="Cargando índice Kp..." />
         )}
         {isError && (
-          <div className="flex items-center justify-center py-24">
-            <span className="text-xs text-red-400">Error al cargar datos del índice Kp</span>
-          </div>
+          <ErrorMessage 
+            message="Error al cargar datos del índice Kp" 
+            description="No se pudo obtener el índice planetario estimado por el momento."
+          />
+        )}
+        {samples && samples.length === 0 && (
+          <EmptyMessage 
+            message="No hay datos de Kp" 
+            description="No se encontraron registros de Kp para las últimas 24 horas."
+          />
         )}
         {samples && samples.length > 0 && (
           <PlotlyChart
