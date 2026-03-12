@@ -249,7 +249,7 @@ function SuviPlayer({ frames }: { frames: SuviFrame[] }) {
         <div className="flex flex-col items-center justify-center py-24 gap-3">
           <span className="text-red-400 font-medium">No se pudieron cargar las imágenes</span>
           <p className="text-xs text-text-muted text-center max-w-sm px-4">
-            Es posible que las imágenes más recientes no estén disponibles temporalmente en los servidores de SWPC/NOAA.
+            Es posible que las imágenes más recientes no estén disponibles temporalmente.
           </p>
         </div>
       )}
