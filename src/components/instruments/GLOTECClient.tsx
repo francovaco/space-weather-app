@@ -10,7 +10,7 @@ import { getGLOTECFrames } from '@/lib/swpc-api'
 import { UsageImpacts } from '@/components/ui/UsageImpacts'
 import { SectionDetails } from '@/components/ui/SectionDetails'
 import { Play, Pause, SkipBack, SkipForward, Download } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn, proxyImg } from '@/lib/utils'
 
 // ───────────────────────────────────────────────
 // Color Scales & Helpers
@@ -116,10 +116,6 @@ function getContainedBounds(cW: number, cH: number, iW: number, iH: number) {
   if (iAR > cAR) { rW = cW; rH = cW / iAR; oX = 0; oY = (cH - rH) / 2 }
   else { rH = cH; rW = cH * iAR; oX = (cW - rW) / 2; oY = 0 }
   return { rW, rH, oX, oY }
-}
-
-function proxyUrl(url: string) {
-  return `/api/goes/img-proxy?url=${encodeURIComponent(url)}`
 }
 
 // ───────────────────────────────────────────────
@@ -268,7 +264,18 @@ function GLOTECPanel({ view, type, desc }: { view: GLOTECView; type: GLOTECType;
           <span className="text-xs text-red-400">Error al cargar datos de GloTEC</span>
         </div>
       )}
-      {frames && frames.length > 0 && <GLOTECPlayer frames={frames} type={type} />}
+      {frames && (
+        frames.length > 0 ? (
+          <GLOTECPlayer frames={frames} type={type} />
+        ) : (
+          <div className="flex flex-col items-center justify-center py-20 gap-3">
+            <span className="text-red-400 font-medium">No hay imágenes disponibles</span>
+            <p className="text-xs text-text-muted text-center max-w-sm px-4">
+              Es posible que los datos del modelo no estén disponibles temporalmente.
+            </p>
+          </div>
+        )
+      )}
     </div>
   )
 }
@@ -277,6 +284,7 @@ function GLOTECPlayer({ frames, type }: { frames: GLOTECFrame[]; type: GLOTECTyp
   const [idx, setIdx] = useState(0)
   const [playing, setPlaying] = useState(false)
   const [loaded, setLoaded] = useState(false)
+  const [loadError, setLoadError] = useState(false)
   const [loadProgress, setLoadProgress] = useState(0)
   const [activeFrames, setActiveFrames] = useState<GLOTECFrame[]>([])
   const FPS_STEPS = [1, 2, 3, 4, 5, 8, 10, 15, 20]
@@ -298,6 +306,7 @@ function GLOTECPlayer({ frames, type }: { frames: GLOTECFrame[]; type: GLOTECTyp
     setIdx(0)
     setPlaying(false)
     setLoaded(false)
+    setLoadError(false)
     setLoadProgress(0)
     setActiveFrames([])
     setHoverInfo(null)
@@ -332,7 +341,7 @@ function GLOTECPlayer({ frames, type }: { frames: GLOTECFrame[]; type: GLOTECTyp
                   resolve()
                 }
                 // Use proxy to allow canvas reading
-                img.src = proxyUrl(f.url)
+                img.src = proxyImg(f.url)
               })
           )
         )
@@ -345,8 +354,7 @@ function GLOTECPlayer({ frames, type }: { frames: GLOTECFrame[]; type: GLOTECTyp
           setLoaded(true)
           setPlaying(true)
         } else {
-          // If all failed, show something at least to avoid infinite loading
-          setActiveFrames(frames)
+          setLoadError(true)
           setLoaded(true)
         }
       }
@@ -384,7 +392,7 @@ function GLOTECPlayer({ frames, type }: { frames: GLOTECFrame[]; type: GLOTECTyp
       const ctx = canvas.getContext('2d', { willReadFrequently: true })
       if (ctx) { ctx.drawImage(img, 0, 0); canvasReady.current = true }
     }
-    img.src = proxyUrl(current.url)
+    img.src = proxyImg(current.url)
   }, [playing, current])
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
@@ -450,7 +458,16 @@ function GLOTECPlayer({ frames, type }: { frames: GLOTECFrame[]; type: GLOTECTyp
         </div>
       )}
 
-      {loaded && current && (
+      {loaded && loadError && (
+        <div className="flex flex-col items-center justify-center py-20 gap-3">
+          <span className="text-red-400 font-medium">No se pudieron cargar las imágenes</span>
+          <p className="text-xs text-text-muted text-center max-w-sm px-4">
+            Es posible que las imágenes más recientes no estén disponibles temporalmente.
+          </p>
+        </div>
+      )}
+
+      {loaded && !loadError && current && (
         <>
           <div 
             ref={imgContRef}
@@ -462,7 +479,7 @@ function GLOTECPlayer({ frames, type }: { frames: GLOTECFrame[]; type: GLOTECTyp
             <canvas ref={canvasRef} className="hidden" />
             <img
               ref={imgRef}
-              src={proxyUrl(current.url)}
+              src={proxyImg(current.url)}
               alt={`GloTEC ${type} output`}
               className="max-h-[60vh] w-auto object-contain"
               draggable={false}

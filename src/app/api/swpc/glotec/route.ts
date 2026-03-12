@@ -45,11 +45,19 @@ export async function GET(req: NextRequest) {
       .filter((f) => f !== 'latest.png')
       // Sort to get newest last (for animation player)
       .sort()
+      .slice(-150) // Limit to avoid overloading
 
-    const frames = filenames.map((f) => ({
-      url: `${SWPC_BASE}${dirPath}${f}`,
-      time_tag: parseTimestamp(f) ?? '',
-    }))
+    const frames = filenames.map((f) => {
+      let fullUrl = f
+      if (!fullUrl.startsWith('http')) {
+        const path = f.startsWith('/') ? f : `${dirPath}${f}`
+        fullUrl = `${SWPC_BASE}${path}`
+      }
+      return {
+        url: fullUrl,
+        time_tag: parseTimestamp(f) ?? '',
+      }
+    })
 
     return NextResponse.json(frames, {
       headers: { 'Cache-Control': 'public, max-age=300, s-maxage=600' },
