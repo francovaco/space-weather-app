@@ -1,320 +1,132 @@
 'use client'
 // ============================================================
 // src/components/instruments/SolarWindClient.tsx
-// WSA-ENLIL Solar Wind Prediction animation player
+// Interactive Solar Wind chart (Speed & Temperature)
 // ============================================================
-import { useState, useRef, useEffect, useCallback } from 'react'
-import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
-import { getSolarWindFrames } from '@/lib/swpc-api'
+import { useState } from 'react'
+import { LoadingMessage, ErrorMessage, EmptyMessage } from '@/components/ui/StatusMessages'
+import { PlotlyChart, PLOTLY_DARK_LAYOUT, PLOTLY_DEFAULT_CONFIG } from '@/components/charts/PlotlyChart'
+import { TimeRangeSelector } from '@/components/ui/TimeRangeSelector'
+import { NormalizeToggle, normalizeSeries } from '@/components/ui/NormalizeToggle'
 import { UsageImpacts } from '@/components/ui/UsageImpacts'
 import { SectionDetails } from '@/components/ui/SectionDetails'
-import { LoadingMessage, ErrorMessage, EmptyMessage, PreloadProgress } from '@/components/ui/StatusMessages'
-import { Play, Pause, SkipBack, SkipForward, Download, Wind } from 'lucide-react'
-import { useSolarWindSpeed } from '@/components/layout/SpaceWeatherBar'
-
-interface EnlilFrame {
-  url: string
-  time_tag: string
-}
+import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
+import { getSolarWindFrames } from '@/lib/swpc-api'
 
 const USAGE = [
-  'Predicción de la velocidad y densidad del viento solar en la heliosfera interna',
-  'Pronóstico de tiempos de llegada de Eyecciones de Masa Coronal (CME) a la Tierra',
-  'Modelado tridimensional de la propagación del viento solar desde el Sol hasta 2 AU',
-  'Evaluación de condiciones interplanetarias para pronósticos de tormentas geomagnéticas',
-  'Visualización del plano eclíptico y meridional de la heliosfera',
-  'Monitoreo de regiones de interacción corrotantes (CIR) y corrientes de alta velocidad',
-  'Entrada fundamental para modelos de pronóstico geomagnético operacional',
+  'Monitoreo de la velocidad del plasma solar que impacta la magnetósfera',
+  'Identificación de corrientes de viento solar de alta velocidad (HSS) de agujeros coronales',
+  'Detección de ondas de choque interplanetarias asociadas a CMEs',
+  'Predicción del tiempo de llegada de tormentas geomagnéticas',
+  'Evaluación de la temperatura del plasma como indicador de estructuras solares',
+  'Entrada para modelos de predicción de auroras y actividad geomagnética',
 ]
 
 const IMPACTS = [
-  'Tormentas geomagnéticas causadas por CMEs de alta velocidad que impactan la magnetósfera',
-  'Interrupciones en redes de energía eléctrica por corrientes inducidas geomagnéticamente (GIC)',
-  'Degradación de señales GPS y GNSS durante perturbaciones del viento solar',
-  'Aumento de la tasa de radiación en rutas de aviación durante eventos de partículas energéticas',
-  'Arrastre atmosférico incrementado sobre satélites en órbita baja terrestre (LEO)',
-  'Interferencia en comunicaciones de alta frecuencia (HF) durante tormentas geomagnéticas',
-  'Riesgo para astronautas por eventos de partículas solares energéticas asociados a CMEs',
-  'Expansión del óvalo auroral hacia latitudes medias durante eventos severos de viento solar',
+  'Viento solar > 500 km/s puede desencadenar tormentas geomagnéticas menores (G1)',
+  'Choques de alta velocidad causan compresiones súbitas de la magnetósfera (SSC)',
+  'Aumento del riesgo de carga superficial en satélites por plasma caliente',
+  'Perturbaciones en la ionósfera que afectan señales de comunicación y GPS',
+  'Inducción de corrientes eléctricas en redes de energía terrestres',
+  'Variaciones en la densidad del viento solar que afectan el arrastre satelital',
 ]
 
 export function SolarWindClient() {
-  const { data: frames, isLoading, isError } = useAutoRefresh<EnlilFrame[]>({
-    queryKey: ['solar-wind-enlil'],
-    fetcher: () => getSolarWindFrames() as Promise<EnlilFrame[]>,
-    intervalMs: REFRESH_INTERVALS.ONE_MIN,
+  const [range, setRange] = useState<any>('1d') // Note: Fetcher currently fixed range
+  const [normalize, setNormalize] = useState(false)
+
+  const { data: samples, isLoading, isError } = useAutoRefresh<any[]>({
+    queryKey: ['solar-wind'],
+    fetcher: () => fetch('/api/swpc/solar-wind-speed').then(r => r.json()),
+    intervalMs: REFRESH_INTERVALS.FIVE_MIN,
   })
-  const { data: wind } = useSolarWindSpeed()
+
+  const plotData: Plotly.Data[] = [
+    {
+      x: samples?.map((s) => s.time_tag),
+      y: normalize ? normalizeSeries(samples?.map(s => s.wind_speed) || []) : samples?.map((s) => s.wind_speed),
+      type: 'scattergl' as const,
+      mode: 'lines' as const,
+      name: 'Velocidad (km/s)',
+      line: { color: '#22d3ee', width: 2 },
+      fill: 'tozeroy',
+      fillcolor: 'rgba(34,211,238,0.05)',
+      hovertemplate: normalize ? '%{y:.1f}% del máximo<extra>Velocidad</extra>' : '%{y:.1f} km/s<extra>Velocidad</extra>',
+    }
+  ]
+
+  const layout: Partial<Plotly.Layout> = {
+    ...PLOTLY_DARK_LAYOUT,
+    uirevision: `solar-wind-${normalize}`,
+    title: {
+      text: 'Viento Solar (Velocidad de Plasma)',
+      font: { size: 14, color: '#e2e8f0', family: 'JetBrains Mono, monospace' },
+      x: 0.01,
+      xanchor: 'left',
+    },
+    xaxis: {
+      ...PLOTLY_DARK_LAYOUT.xaxis,
+      title: { text: 'Tiempo Universal (UTC)', font: { size: 12, color: '#64748b' }, standoff: 10 },
+      type: 'date',
+    },
+    yaxis: {
+      ...PLOTLY_DARK_LAYOUT.yaxis,
+      title: { text: normalize ? 'Velocidad Relativa (%)' : 'Velocidad (km/s)', font: { size: 12, color: '#64748b' }, standoff: 5 },
+      range: normalize ? [0, 105] : undefined,
+      autorange: true,
+    },
+    margin: { l: 65, r: 20, t: 40, b: 100 },
+    hovermode: 'x unified',
+  }
 
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">
-            Predicción de Viento Solar WSA-ENLIL
+            Viento Solar
           </h1>
           <p className="mt-1 text-xs text-text-muted">
-            Modelo de propagación del viento solar · Predicción de llegada de CMEs · Actualización cada 1 min
+            DSCOVR / ACE · Velocidad de flujo de plasma en tiempo real · Actualización cada 5 min
           </p>
         </div>
-        <div className="flex items-center gap-2 rounded-md border border-border bg-background-card px-3 py-2 shrink-0">
-          <Wind size={14} className="text-accent-cyan" />
-          <div className="flex flex-col items-end">
-            <span className="section-label text-text-muted">Velocidad Actual</span>
-            <span className="font-display text-lg font-bold tabular-nums text-accent-cyan">
-              {wind?.WindSpeed ? `${wind.WindSpeed} km/s` : '— km/s'}
-            </span>
-          </div>
-        </div>
+        <NormalizeToggle normalize={normalize} onToggle={setNormalize} />
       </div>
 
-      {/* Animation player */}
+      {/* Chart */}
       <div className="card relative overflow-hidden">
-        {isLoading && !frames && (
-          <LoadingMessage message="Cargando cuadros WSA-ENLIL…" />
+        {isLoading && (
+          <LoadingMessage message="Cargando datos de viento solar..." />
         )}
         {isError && (
           <ErrorMessage 
-            message="Error al cargar el modelo ENLIL" 
-            description="No se pudieron obtener las rutas de los cuadros del modelo."
+            message="Error al cargar datos" 
+            description="No se pudo establecer conexión con el flujo de datos DSCOVR/ACE."
           />
         )}
-        {frames && frames.length === 0 && (
-          <EmptyMessage 
-            message="No hay cuadros disponibles" 
-            description="El modelo WSA-ENLIL no ha generado cuadros recientes en las últimas horas."
-          />
+        {samples && samples.length === 0 && (
+          <EmptyMessage message="No hay datos de viento solar disponibles." />
         )}
-        {frames && frames.length > 0 && (
-          <EnlilPlayer frames={frames} />
+        {samples && samples.length > 0 && (
+          <PlotlyChart
+            data={plotData}
+            layout={layout}
+            className="min-h-[400px]"
+          />
         )}
       </div>
 
-      {/* Usage & Impacts */}
       <UsageImpacts usage={USAGE} impacts={IMPACTS} />
 
-      {/* Detalles */}
       <SectionDetails>
         <p>
-          El modelo WSA-ENLIL es un modelo magnetohidrodinámico (MHD) tridimensional de la heliosfera interna que simula la propagación del viento solar desde el Sol hasta más allá de la órbita terrestre (~2 AU). WSA (Wang-Sheeley-Arge) proporciona las condiciones de contorno internas a partir de mapas sinópticos del campo magnético solar, y ENLIL resuelve las ecuaciones MHD para propagar las perturbaciones hacia el exterior.
+          El viento solar es un flujo continuo de partículas cargadas (principalmente protones y electrones) que emanan de la corona solar. Estos datos provienen de los satélites DSCOVR y ACE, situados en el punto de Lagrange L1, a unos 1.5 millones de km de la Tierra, lo que proporciona un aviso previo de 15 a 60 minutos antes del impacto.
         </p>
         <p>
-          Las animaciones muestran la densidad y velocidad del viento solar en el plano eclíptico (vista desde arriba del polo norte solar). Las espirales de color representan la estructura del viento solar: las regiones rojas/amarillas indican alta densidad (asociadas a CMEs o regiones de interacción), mientras las regiones azules representan viento rápido de baja densidad originado en agujeros coronales.
-        </p>
-        <p>
-          Cuando se detecta una CME en imágenes de coronógrafos, los forecasters del SWPC la incorporan al modelo para predecir su tiempo de tránsito hasta la Tierra (típicamente 1-3 días). El modelo es operacional y se ejecuta en el NCEP de la NOAA, proporcionando pronósticos vitales para la predicción de tormentas geomagnéticas.
+          La velocidad típica del viento solar varía entre 300 y 500 km/s. Durante eventos solares, como la llegada de una Eyección de Masa Coronal (CME) o corrientes de alta velocidad provenientes de agujeros coronales, la velocidad puede superar los 800-1000 km/s, provocando tormentas geomagnéticas severas.
         </p>
       </SectionDetails>
-    </div>
-  )
-}
-
-// ───────────────────────────────────────────────
-// Internal animation player (self-contained)
-// ───────────────────────────────────────────────
-
-function EnlilPlayer({ frames }: { frames: EnlilFrame[] }) {
-  const [idx, setIdx] = useState(0)
-  const [playing, setPlaying] = useState(false)
-  const [loaded, setLoaded] = useState(false)
-  const [loadProgress, setLoadProgress] = useState(0)
-  const [activeFrames, setActiveFrames] = useState<EnlilFrame[]>([])
-  const FPS_STEPS = [1, 2, 3, 4, 5, 8, 10, 15, 20]
-  const [fpsIdx, setFpsIdx] = useState(3) // default 4 fps
-  const speedMs = Math.round(1000 / FPS_STEPS[fpsIdx])
-  const imgRef = useRef<HTMLImageElement>(null)
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
-
-  const total = activeFrames.length
-  const current = activeFrames[Math.min(idx, Math.max(0, total - 1))]
-
-  // Reset when frames change
-  useEffect(() => {
-    setIdx(0)
-    setPlaying(false)
-    setLoaded(false)
-    setLoadProgress(0)
-    setActiveFrames([])
-  }, [frames])
-
-  // Preload frames in batches, filter failures, then auto-play
-  useEffect(() => {
-    let cancelled = false
-    const BATCH = 12
-    const ok: (EnlilFrame | null)[] = new Array(frames.length).fill(null)
-    let doneCount = 0
-
-    async function preloadAll() {
-      if (frames.length === 0) {
-        if (!cancelled) setLoaded(true)
-        return
-      }
-
-      for (let i = 0; i < frames.length; i += BATCH) {
-        if (cancelled) return
-        const batch = frames.slice(i, i + BATCH)
-        await Promise.all(
-          batch.map((f, bi) => new Promise<void>((resolve) => {
-            const img = new Image()
-            img.onload = () => {
-              ok[i + bi] = f
-              doneCount++
-              if (!cancelled) setLoadProgress(Math.round((doneCount / frames.length) * 100))
-              resolve()
-            }
-            img.onerror = () => {
-              // Mark as null so it gets filtered out
-              ok[i + bi] = null
-              doneCount++
-              if (!cancelled) setLoadProgress(Math.round((doneCount / frames.length) * 100))
-              resolve()
-            }
-            img.src = f.url
-          }))
-        )
-      }
-
-      if (!cancelled) {
-        const valid = ok.filter((f): f is EnlilFrame => f !== null)
-        if (valid.length > 0) {
-          setActiveFrames(valid)
-          setLoaded(true)
-          setPlaying(true)
-        } else {
-          // If all failed, show something at least to avoid infinite loading
-          setActiveFrames(frames)
-          setLoaded(true)
-        }
-      }
-    }
-
-    preloadAll()
-    return () => { cancelled = true }
-  }, [frames])
-
-  // Play/pause loop
-  useEffect(() => {
-    if (intervalRef.current) clearInterval(intervalRef.current)
-    if (playing && total > 1) {
-      intervalRef.current = setInterval(() => {
-        setIdx((prev) => (prev + 1) % total)
-      }, speedMs)
-    }
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current)
-    }
-  }, [playing, speedMs, total])
-
-  const prev = useCallback(() => setIdx((i) => (i - 1 + total) % total), [total])
-  const next = useCallback(() => setIdx((i) => (i + 1) % total), [total])
-
-  const fmtTime = (ts: string) => {
-    try {
-      return new Date(ts).toISOString().replace('T', ' ').slice(0, 16) + ' UTC'
-    } catch {
-      return ts
-    }
-  }
-
-  return (
-    <div className="flex flex-col gap-3">
-      {/* Loading progress */}
-      {!loaded && (
-        <PreloadProgress progress={loadProgress} />
-      )}
-
-      {loaded && activeFrames.length === 0 && (
-        <EmptyMessage 
-          message="No se pudieron cargar las imágenes" 
-          description="Las imágenes individuales del modelo no están disponibles por el momento."
-        />
-      )}
-
-      {loaded && current && (
-        <>
-          {/* Image */}
-          <div className="relative mx-auto bg-black" style={{ maxWidth: 800 }}>
-            <img
-              ref={imgRef}
-              src={current.url}
-              alt="WSA-ENLIL solar wind"
-              className="h-auto w-full"
-              draggable={false}
-            />
-            {/* Timestamp overlay */}
-            <div className="absolute bottom-2 right-2 rounded bg-black/60 px-2 py-0.5 font-data text-2xs text-text-secondary">
-              {fmtTime(current.time_tag)}
-            </div>
-          </div>
-
-          {/* Timeline slider */}
-          <input
-            type="range"
-            min={0}
-            max={Math.max(0, total - 1)}
-            value={idx}
-            onChange={(e) => setIdx(parseInt(e.target.value, 10))}
-            className="w-full accent-primary"
-          />
-
-          {/* Controls */}
-          <div className="player-controls flex-wrap">
-            <button className="ctrl-btn" onClick={prev} title="Cuadro anterior">
-              <SkipBack size={13} />
-            </button>
-            <button className="ctrl-btn" onClick={() => setPlaying(!playing)} title={playing ? 'Pausar' : 'Reproducir'}>
-              {playing ? <Pause size={13} /> : <Play size={13} />}
-            </button>
-            <button className="ctrl-btn" onClick={next} title="Cuadro siguiente">
-              <SkipForward size={13} />
-            </button>
-
-            <div className="h-4 w-px bg-border" />
-
-            {/* Speed */}
-            <button
-              className="ctrl-btn"
-              onClick={() => setFpsIdx((i) => Math.max(0, i - 1))}
-              title="Más lento"
-            >
-              <span className="text-2xs font-bold">−</span>
-            </button>
-            <span className="data-value text-text-muted">
-              {FPS_STEPS[fpsIdx]}fps
-            </span>
-            <button
-              className="ctrl-btn"
-              onClick={() => setFpsIdx((i) => Math.min(FPS_STEPS.length - 1, i + 1))}
-              title="Más rápido"
-            >
-              <span className="text-2xs font-bold">+</span>
-            </button>
-
-            {/* Frame counter */}
-            <span className="ml-auto data-value text-text-muted">
-              {idx + 1}/{total}
-            </span>
-
-            <div className="h-4 w-px bg-border" />
-
-            {/* Download current frame */}
-            <button
-              className="ctrl-btn"
-              onClick={() => {
-                const a = document.createElement('a')
-                a.href = current.url
-                a.download = current.url.split('/').pop() || 'frame.jpg'
-                a.target = '_blank'
-                a.click()
-              }}
-              title="Descargar imagen actual"
-            >
-              <Download size={13} />
-            </button>
-          </div>
-        </>
-      )}
     </div>
   )
 }

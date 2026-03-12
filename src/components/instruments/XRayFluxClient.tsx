@@ -7,6 +7,7 @@ import { useState } from 'react'
 import { LoadingMessage, ErrorMessage, EmptyMessage } from '@/components/ui/StatusMessages'
 import { PlotlyChart, PLOTLY_DARK_LAYOUT, PLOTLY_DEFAULT_CONFIG } from '@/components/charts/PlotlyChart'
 import { TimeRangeSelector } from '@/components/ui/TimeRangeSelector'
+import { NormalizeToggle, normalizeSeries } from '@/components/ui/NormalizeToggle'
 import { UsageImpacts } from '@/components/ui/UsageImpacts'
 import { SectionDetails } from '@/components/ui/SectionDetails'
 import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
@@ -35,16 +36,12 @@ const USAGE = [
 
 const IMPACTS = [
   'Erupciones de clase M/X causan apagones de radio HF en el lado diurno de la Tierra',
-  'Degradación de señales GPS y GNSS durante erupciones solares intensas',
   'Absorción de onda corta (SWF) que afecta comunicaciones aeronáuticas transoceánicas',
   'Aumento súbito de ionización en la región D de la ionósfera',
   'Posible generación de eventos de protones solares (SPE) tras erupciones clase X',
-  'Interferencia en sistemas de radar y vigilancia durante erupciones intensas',
-  'Riesgo de eyecciones de masa coronal (CME) asociadas a erupciones X',
   'Impacto en operaciones de lanzamiento espacial por condiciones de radiación elevada',
 ]
 
-// X-ray flare class thresholds (W/m²) for 0.1–0.8 nm band
 const FLARE_CLASSES = [
   { value: 1e-4, label: 'X' },
   { value: 1e-5, label: 'M' },
@@ -55,6 +52,7 @@ const FLARE_CLASSES = [
 
 export function XRayFluxClient() {
   const [range, setRange] = useState<TimeRange>('6h')
+  const [normalize, setNormalize] = useState(false)
 
   const { data: rawData, isLoading, isError } = useAutoRefresh<XRaySample[]>({
     queryKey: ['xray-flux', range],
@@ -62,147 +60,78 @@ export function XRayFluxClient() {
     intervalMs: REFRESH_INTERVALS.ONE_MIN,
   })
 
-  // Separate short and long wavelength bands
   const shortWave = rawData?.filter((d) => d.energy === '0.05-0.4nm') ?? []
   const longWave = rawData?.filter((d) => d.energy === '0.1-0.8nm') ?? []
 
   const plotData: Plotly.Data[] = [
     {
       x: longWave.map((d) => d.time_tag),
-      y: longWave.map((d) => d.flux),
+      y: normalize ? normalizeSeries(longWave.map((d) => d.flux)) : longWave.map((d) => d.flux),
       type: 'scattergl' as const,
       mode: 'lines' as const,
-      name: '0.1–0.8 nm (Onda larga)',
+      name: '0.1–0.8 nm',
       line: { color: '#ef4444', width: 1.5 },
-      hovertemplate: '%{y:.2e} W/m²<extra>0.1–0.8 nm</extra>',
+      hovertemplate: normalize ? '%{y:.1f}%<extra>0.1–0.8 nm</extra>' : '%{y:.2e} W/m²<extra>0.1–0.8 nm</extra>',
     },
     {
       x: shortWave.map((d) => d.time_tag),
-      y: shortWave.map((d) => d.flux),
+      y: normalize ? normalizeSeries(shortWave.map((d) => d.flux)) : shortWave.map((d) => d.flux),
       type: 'scattergl' as const,
       mode: 'lines' as const,
-      name: '0.05–0.4 nm (Onda corta)',
+      name: '0.05–0.4 nm',
       line: { color: '#3b82f6', width: 1.5 },
-      hovertemplate: '%{y:.2e} W/m²<extra>0.05–0.4 nm</extra>',
+      hovertemplate: normalize ? '%{y:.1f}%<extra>0.05–0.4 nm</extra>' : '%{y:.2e} W/m²<extra>0.05–0.4 nm</extra>',
     },
   ]
 
-  // Flare class annotation lines on the right Y axis
-  const shapes: Partial<Plotly.Shape>[] = FLARE_CLASSES.map((fc) => ({
-    type: 'line',
-    xref: 'paper',
-    yref: 'y',
-    x0: 1,
-    x1: 1.01,
-    y0: fc.value,
-    y1: fc.value,
-    line: { color: '#475569', width: 1 },
+  const shapes: Partial<Plotly.Shape>[] = normalize ? [] : FLARE_CLASSES.map((fc) => ({
+    type: 'line', xref: 'paper', yref: 'y', x0: 1, x1: 1.01, y0: fc.value, y1: fc.value, line: { color: '#475569', width: 1 },
   }))
 
-  const annotations: Partial<Plotly.Annotations>[] = FLARE_CLASSES.map((fc) => ({
-    xref: 'paper',
-    yref: 'y',
-    x: 1.02,
-    y: Math.log10(fc.value),
-    text: fc.label,
-    showarrow: false,
-    font: { size: 12, color: '#94a3b8', family: 'JetBrains Mono, monospace' },
-    xanchor: 'left' as const,
-    yanchor: 'middle' as const,
+  const annotations: Partial<Plotly.Annotations>[] = normalize ? [] : FLARE_CLASSES.map((fc) => ({
+    xref: 'paper', yref: 'y', x: 1.02, y: Math.log10(fc.value), text: fc.label, showarrow: false, font: { size: 11, color: '#94a3b8' },
   }))
 
   const layout: Partial<Plotly.Layout> = {
     ...PLOTLY_DARK_LAYOUT,
-    uirevision: range,
-    title: {
-      text: 'GOES Flujo de Rayos X',
-      font: { size: 14, color: '#e2e8f0', family: 'JetBrains Mono, monospace' },
-      x: 0.01,
-      xanchor: 'left',
-    },
-    xaxis: {
-      ...PLOTLY_DARK_LAYOUT.xaxis,
-      title: { text: 'Tiempo Universal (UTC)', font: { size: 12, color: '#64748b' }, standoff: 10 },
-      type: 'date',
-    },
+    uirevision: `${range}-${normalize}`,
+    xaxis: { ...PLOTLY_DARK_LAYOUT.xaxis, type: 'date' },
     yaxis: {
       ...PLOTLY_DARK_LAYOUT.yaxis,
-      title: { text: 'W/m²', font: { size: 12, color: '#64748b' }, standoff: 5 },
-      type: 'log',
-      range: [-9, -2],
-      dtick: 1,
-      exponentformat: 'power',
+      title: { text: normalize ? 'Flujo Relativo (%)' : 'Flujo (W/m²)', font: { size: 11, color: '#64748b' } },
+      type: normalize ? 'linear' : 'log',
+      range: normalize ? [0, 105] : [-9, -2],
+      dtick: normalize ? 25 : 1,
     },
-    legend: {
-      ...PLOTLY_DARK_LAYOUT.legend,
-      orientation: 'h',
-      x: 0.5,
-      xanchor: 'center',
-      y: -0.22,
-      font: { size: 11, color: '#94a3b8' },
-    },
-    margin: { l: 65, r: 40, t: 40, b: 100 },
+    margin: { l: 60, r: 40, t: 40, b: 60 },
     hovermode: 'x unified',
     shapes,
     annotations,
   }
 
-  const config: Partial<Plotly.Config> = {
-    ...PLOTLY_DEFAULT_CONFIG,
-    scrollZoom: true,
-  }
-
   return (
     <div className="space-y-4">
-      {/* Header + range */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">
-            Flujo de Rayos X Solar
-          </h1>
-          <p className="mt-1 text-xs text-text-muted">
-            GOES · Onda corta y onda larga · Actualización cada 1 minuto
-          </p>
+          <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">Flujo de Rayos X Solar</h1>
+          <p className="mt-1 text-xs text-text-muted">GOES · Onda corta y larga · Actualización cada 1 min</p>
         </div>
-        <TimeRangeSelector value={range} onChange={setRange} />
+        <div className="flex items-center gap-3">
+          <NormalizeToggle normalize={normalize} onToggle={setNormalize} />
+          <TimeRangeSelector value={range} onChange={setRange} />
+        </div>
       </div>
 
-      {/* Chart */}
-      <div className="card relative overflow-hidden">
-        {isLoading && (
-          <LoadingMessage message="Cargando datos de rayos X..." />
-        )}
-        {isError && (
-          <ErrorMessage 
-            message="Error al cargar datos de rayos X" 
-            description="No se pudo establecer conexión con el servicio. Intente nuevamente en unos minutos."
-          />
-        )}
-        {rawData && rawData.length === 0 && (
-          <EmptyMessage 
-            message="No hay datos de rayos X" 
-            description="No se encontraron registros de rayos X para el período seleccionado."
-          />
-        )}
+      <div className="card relative overflow-hidden flex flex-col" style={{ height: 450 }}>
+        {isLoading && !rawData && <LoadingMessage message="Cargando datos..." />}
+        {isError && <ErrorMessage message="Error al cargar datos" />}
+        {rawData && rawData.length === 0 && <EmptyMessage message="No hay datos de rayos X" />}
         {rawData && rawData.length > 0 && (
-          <PlotlyChart
-            data={plotData}
-            layout={layout}
-            config={config}
-            className="min-h-[420px]"
-          />
-        )}
-        {rawData && rawData.length > 0 && (
-          <div className="absolute right-2 top-1 text-[9px] text-text-dim">
-            Último dato: {new Date(rawData[rawData.length - 1].time_tag).toLocaleString('es-AR', { timeZone: 'UTC', hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' })} UTC
-          </div>
+          <PlotlyChart data={plotData} layout={layout} className="flex-1" />
         )}
       </div>
-
-      {/* Usage & Impacts */}
       <UsageImpacts usage={USAGE} impacts={IMPACTS} />
 
-      {/* Detalles */}
       <SectionDetails>
         <p>
           El sensor XRS (X-Ray Sensor) del satélite GOES mide el flujo de rayos X solares en dos bandas de longitud de onda: 0.05–0.4 nm (banda corta) y 0.1–0.8 nm (banda larga). Estos datos se utilizan para clasificar las fulguraciones solares en las escalas estándar A, B, C, M y X.

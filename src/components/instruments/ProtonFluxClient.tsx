@@ -3,10 +3,11 @@
 // src/components/instruments/ProtonFluxClient.tsx
 // Interactive GOES Proton Flux chart with auto-refresh
 // ============================================================
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { LoadingMessage, ErrorMessage, EmptyMessage } from '@/components/ui/StatusMessages'
 import { PlotlyChart, PLOTLY_DARK_LAYOUT, PLOTLY_DEFAULT_CONFIG } from '@/components/charts/PlotlyChart'
 import { TimeRangeSelector } from '@/components/ui/TimeRangeSelector'
+import { NormalizeToggle, normalizeSeries } from '@/components/ui/NormalizeToggle'
 import { UsageImpacts } from '@/components/ui/UsageImpacts'
 import { SectionDetails } from '@/components/ui/SectionDetails'
 import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
@@ -21,29 +22,24 @@ interface ProtonSample {
 }
 
 const USAGE = [
-  'Monitoreo de tormentas de radiación solar por protones energéticos',
-  'Emisión de alertas cuando el flujo de protones ≥10 MeV supera 10 pfu (nivel S1)',
-  'Evaluación de dosis de radiación para tripulaciones de aviación en rutas polares',
-  'Protección de astronautas y misiones espaciales tripuladas ante eventos de protones solares',
-  'Entrada para modelos de absorción en la región D de la ionósfera (D-RAP)',
-  'Evaluación de riesgo de daño por radiación en componentes electrónicos de satélites',
-  'Monitoreo de la actividad solar en conjunción con erupciones solares y CMEs',
+  'Monitoreo de Eventos de Protones Solares (SPE) tras eyecciones de masa coronal (CME) o llamaradas solares',
+  'Emisión de alertas y advertencias de inicio o persistencia de tormentas de radiación solar (Escala S)',
+  'Evaluación de riesgos de fallos electrónicos (SEU) y daños permanentes en satélites operativos',
+  'Gestión de comunicaciones de radio HF mediante el monitoreo de la ionización en casquetes polares',
+  'Evaluación de dosis de radiación para tripulaciones de aviación en rutas transpolares de alta latitud',
+  'Protección de astronautas en misiones espaciales tripuladas ante aumentos de partículas energéticas',
+  'Entrada crítica para modelos de absorción ionosférica en la región D (D-RAP)',
 ]
 
 const IMPACTS = [
-  'Tormentas de radiación solar que aumentan la exposición a radiación en vuelos polares',
-  'Degradación y fallos en paneles solares de satélites por bombardeo de protones energéticos',
-  'Errores en memorias de a bordo (SEU) y latch-up en electrónica de satélites',
-  'Absorción de señales HF en las regiones polares (Polar Cap Absorption, PCA)',
-  'Interferencia en comunicaciones de radio de alta frecuencia en latitudes altas',
-  'Riesgo para la salud de astronautas durante actividades extravehiculares (EVA)',
-  'Degradación de sensores ópticos e infrarrojos en satélites de observación',
-  'Impacto en operaciones de lanzamiento espacial por niveles elevados de radiación',
+  'Satélites: Aumento de la tasa de Eventos de Trastorno Único (SEU) y degradación de paneles solares',
+  'Aviación: Absorción en la Región D (PCA) que bloquea comunicaciones de radio HF en zonas polares',
+  'Navegación: Perturbaciones en señales satelitales que afectan la precisión de sistemas GPS y GNSS',
+  'Salud Espacial: Riesgo biológico para astronautas durante actividades extravehiculares (EVA)',
+  'Operaciones en Órbita: Necesidad de ejecutar maniobras de protección o apagado preventivo de sensores',
+  'Comunicaciones: Interferencia y ruido en enlaces satélite-tierra durante eventos intensos',
 ]
 
-
-
-// Energy bands to display with colors
 const ENERGY_BANDS = [
   { energy: '>=10 MeV',  label: '≥10 MeV',  color: '#ef4444' },
   { energy: '>=50 MeV',  label: '≥50 MeV',  color: '#f59e0b' },
@@ -51,8 +47,11 @@ const ENERGY_BANDS = [
   { energy: '>=500 MeV', label: '≥500 MeV', color: '#a855f7' },
 ]
 
+const PROTON_ALERT_THRESHOLD = 10
+
 export function ProtonFluxClient() {
   const [range, setRange] = useState<TimeRange>('1d')
+  const [normalize, setNormalize] = useState(false)
 
   const { data: rawData, isLoading, isError } = useAutoRefresh<ProtonSample[]>({
     queryKey: ['proton-flux', range],
@@ -60,148 +59,129 @@ export function ProtonFluxClient() {
     intervalMs: REFRESH_INTERVALS.FIVE_MIN,
   })
 
-  const plotData: Plotly.Data[] = rawData
-    ? ENERGY_BANDS.map((band) => {
-        const filtered = rawData.filter((d) => d.energy === band.energy)
-        return {
-          x: filtered.map((d) => d.time_tag),
-          y: filtered.map((d) => d.flux),
-          type: 'scattergl' as const,
-          mode: 'lines' as const,
-          name: band.label,
-          line: { color: band.color, width: 1.5 },
-          hovertemplate: `%{y:.2f} pfu<extra>${band.label}</extra>`,
-        }
-      })
-    : []
+  // Normalize visuals while keeping data precision for tooltips
+  const plotData: Plotly.Data[] = useMemo(() => {
+    if (!rawData) return []
+    return ENERGY_BANDS.map((band) => {
+      const filtered = rawData.filter((d) => d.energy === band.energy)
+      const realY = filtered.map(d => d.flux)
+      const visualY = normalize ? normalizeSeries(realY) : realY
+      
+      return {
+        x: filtered.map((d) => d.time_tag),
+        y: visualY,
+        customdata: realY,
+        type: 'scattergl' as const,
+        mode: 'lines' as const,
+        name: band.label,
+        line: { color: band.color, width: 1.5 },
+        hovertemplate: '%{customdata:.2f} MeV<extra>' + band.label + '</extra>',
+      }
+    })
+  }, [rawData, normalize])
 
+  // Smart threshold and axis mapping
+  const { thresholdY, yAxisConfig, labelSuffix } = useMemo(() => {
+    if (!rawData) return { thresholdY: 10, yAxisConfig: { type: 'log', range: [-2, 6] }, labelSuffix: '' }
+    
+    if (normalize) {
+      const refBand = rawData.filter(d => d.energy === '>=10 MeV').map(d => d.flux).filter(v => v !== null && !isNaN(v))
+      if (refBand.length === 0) return { thresholdY: 50, yAxisConfig: { range: [0, 105] }, labelSuffix: '' }
+      
+      const min = Math.min(...refBand)
+      const max = Math.max(...refBand)
+      
+      let calcY = ((PROTON_ALERT_THRESHOLD - min) / (max - min)) * 100
+      const isPinned = calcY > 120
+      const displayThresholdY = isPinned ? 115 : calcY
+      
+      const tickVals = [0, 25, 50, 75, 100]
+      const tickTexts = tickVals.map(v => (min + (v / 100) * (max - min)).toFixed(2))
 
+      return { 
+        thresholdY: displayThresholdY, 
+        yAxisConfig: {
+          tickvals: tickVals,
+          ticktext: tickTexts,
+          range: [0, isPinned ? 130 : Math.max(105, calcY + 10)],
+          type: 'linear'
+        },
+        labelSuffix: isPinned ? ' (Fuera de escala)' : ''
+      }
+    }
+    
+    return { thresholdY: 10, yAxisConfig: { type: 'log', range: [-2, 6] }, labelSuffix: '' }
+  }, [rawData, normalize])
 
   const layout: Partial<Plotly.Layout> = {
     ...PLOTLY_DARK_LAYOUT,
-    uirevision: range,
-    title: {
-      text: 'GOES Flujo Integral de Protones',
-      font: { size: 14, color: '#e2e8f0', family: 'JetBrains Mono, monospace' },
-      x: 0.01,
-      xanchor: 'left',
-    },
-    xaxis: {
-      ...PLOTLY_DARK_LAYOUT.xaxis,
-      title: { text: 'Tiempo Universal (UTC)', font: { size: 12, color: '#64748b' }, standoff: 10 },
-      type: 'date',
-    },
+    uirevision: `${range}-${normalize}`,
+    xaxis: { ...PLOTLY_DARK_LAYOUT.xaxis, type: 'date', automargin: true },
     yaxis: {
       ...PLOTLY_DARK_LAYOUT.yaxis,
-      title: { text: 'Protones (pfu)', font: { size: 12, color: '#64748b' }, standoff: 5 },
-      type: 'log',
-      range: [-2, 6],
-      dtick: 1,
-      exponentformat: 'power',
+      title: { text: 'Flujo Protones (MeV)', font: { size: 11, color: '#64748b' } },
+      ...yAxisConfig,
+      automargin: true,
     },
+    margin: { l: 65, r: 20, t: 40, b: 85 },
     legend: {
-      ...PLOTLY_DARK_LAYOUT.legend,
-      orientation: 'h',
-      x: 0.5,
-      xanchor: 'center',
-      y: -0.22,
-      font: { size: 11, color: '#94a3b8' },
+      orientation: 'h', x: 0.5, xanchor: 'center', y: -0.2,
+      font: { size: 11, color: '#94a3b8' }, bgcolor: 'transparent',
     },
-    margin: { l: 65, r: 20, t: 40, b: 100 },
     hovermode: 'x unified',
     shapes: [
       {
-        type: 'line',
-        xref: 'paper',
-        yref: 'y',
-        x0: 0,
-        x1: 1,
-        y0: 10,
-        y1: 10,
+        type: 'line', xref: 'paper', yref: 'y', x0: 0, x1: 1,
+        y0: normalize ? thresholdY! : PROTON_ALERT_THRESHOLD, 
+        y1: normalize ? thresholdY! : PROTON_ALERT_THRESHOLD,
         line: { color: '#ef4444', width: 1.5, dash: 'dash' },
       },
     ],
     annotations: [
       {
-        xref: 'paper',
-        yref: 'y',
-        x: 0,
-        y: 1,
-        text: 'Umbral de alerta SWPC 10 MeV',
+        xref: 'paper', yref: 'y', x: 0, 
+        y: normalize ? thresholdY! : Math.log10(PROTON_ALERT_THRESHOLD),
+        text: `Umbral alerta ≥10 MeV${labelSuffix}`,
         showarrow: false,
-        font: { size: 11, color: '#ef4444' },
-        xanchor: 'left' as const,
-        yanchor: 'bottom' as const,
-        yshift: 2,
+        font: { size: 10, color: '#ef4444', weight: 'bold' },
+        xanchor: 'left' as const, yanchor: 'bottom' as const, yshift: 4,
       },
     ],
   }
 
-  const config: Partial<Plotly.Config> = {
-    ...PLOTLY_DEFAULT_CONFIG,
-    scrollZoom: true,
-  }
-
   return (
     <div className="space-y-4">
-      {/* Header + range */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">
-            Flujo de Protones
-          </h1>
-          <p className="mt-1 text-xs text-text-muted">
-            GOES · Flujo integral de protones en múltiples niveles de energía · Actualización cada 5 min
-          </p>
+          <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">Flujo de Protones</h1>
+          <p className="mt-1 text-xs text-text-muted">GOES · Flujo integral en múltiples niveles de energía · Actualización cada 5 min</p>
         </div>
-        <TimeRangeSelector value={range} onChange={setRange} />
+        <div className="flex items-center gap-3">
+          <NormalizeToggle normalize={normalize} onToggle={setNormalize} />
+          <TimeRangeSelector value={range} onChange={setRange} />
+        </div>
       </div>
 
-      {/* Chart */}
-      <div className="card relative overflow-hidden">
-        {isLoading && (
-          <LoadingMessage message="Cargando datos de flujo de protones..." />
-        )}
-        {isError && (
-          <ErrorMessage 
-            message="Error al cargar datos de flujo de protones" 
-            description="No se pudo establecer conexión con el servicio. Intente nuevamente en unos minutos."
-          />
-        )}
-        {rawData && rawData.length === 0 && (
-          <EmptyMessage 
-            message="No hay datos de flujo de protones" 
-            description="No se encontraron registros de flujo de protones para el período seleccionado."
-          />
-        )}
+      <div className="card relative overflow-hidden flex flex-col" style={{ height: 450, minHeight: 450 }}>
+        {isLoading && !rawData && <LoadingMessage message="Cargando datos..." />}
+        {isError && <ErrorMessage message="Error al cargar datos" />}
+        {rawData && rawData.length === 0 && <EmptyMessage message="No hay datos de protones" />}
         {rawData && rawData.length > 0 && (
-          <PlotlyChart
-            data={plotData}
-            layout={layout}
-            config={config}
-            className="min-h-[420px]"
-          />
-        )}
-        {rawData && rawData.length > 0 && (
-          <div className="absolute right-2 top-1 text-[9px] text-text-dim">
-            Último dato: {new Date(rawData[rawData.length - 1].time_tag).toLocaleString('es-AR', { timeZone: 'UTC', hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' })} UTC
-          </div>
+          <PlotlyChart data={plotData} layout={layout} className="flex-1 w-full" />
         )}
       </div>
 
-      {/* Usage & Impacts */}
       <UsageImpacts usage={USAGE} impacts={IMPACTS} />
 
-      {/* Detalles */}
       <SectionDetails>
         <p>
-          El instrumento SEISS de GOES mide el flujo integral de protones energéticos en cuatro bandas de energía: ≥10 MeV, ≥50 MeV, ≥100 MeV y ≥500 MeV. Un evento de protones solares (SPE) se define cuando el flujo integral de protones ≥10 MeV supera las 10 pfu (unidades de flujo de partículas) durante al menos 15 minutos consecutivos.
+          El instrumento SEISS (Space Environment In Situ Suite) a bordo de la nueva generación de satélites GOES mide el flujo integral de protones energéticos en múltiples bandas de energía. Estos datos son fundamentales para la seguridad operativa en el espacio y la atmósfera superior, permitiendo la identificación de aumentos repentinos de partículas tras eyecciones de masa coronal (CME) o llamaradas solares.
         </p>
         <p>
-          Los eventos de protones solares están asociados a fulguraciones solares intensas y eyecciones de masa coronal (CME). Los protones acelerados en estos eventos pueden viajar a velocidades cercanas a la de la luz y alcanzar la Tierra en menos de una hora.
+          Una Tormenta de Radiación Solar comienza oficialmente cuando el flujo integral de protones ≥10 MeV alcanza o supera el valor de 10. El SWPC utiliza la escala S para clasificar estos eventos: S1 (Menor) en nivel 10, S2 (Moderada) en 100, S3 (Fuerte) en 1.000, S4 (Severa) en 10.000 y S5 (Extrema) en 100.000.
         </p>
         <p>
-          Las tormentas de radiación solar se clasifican de S1 a S5 según la escala NOAA. Un evento S1 (menor) comienza en 10 pfu, mientras que un evento S5 (extremo) supera las 100.000 pfu. Los eventos fuertes pueden causar absorción en casquetes polares (PCA), degradar las comunicaciones HF transpolare y aumentar la dosis de radiación para tripulaciones aéreas en rutas de alta latitud.
+          Además del flujo de 10 MeV, se monitorean partículas de mayor energía como las de ≥100 MeV. Se emiten alertas específicas cuando este flujo supera el nivel de 1, debido a que estas partículas tienen una capacidad de penetración mucho más alta en materiales blindados y tejido biológico, representando un riesgo crítico para astronautas y electrónica sensible.
         </p>
       </SectionDetails>
     </div>

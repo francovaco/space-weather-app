@@ -32,6 +32,7 @@ export const PLOTLY_DARK_LAYOUT: Partial<Plotly.Layout> = {
     tickcolor: '#1e2d42',
     zerolinecolor: '#1e2d42',
     tickfont: { size: 11, color: '#64748b' },
+    automargin: true,
   },
   yaxis: {
     gridcolor: 'rgba(30,45,66,0.8)',
@@ -40,6 +41,7 @@ export const PLOTLY_DARK_LAYOUT: Partial<Plotly.Layout> = {
     zerolinecolor: 'rgba(30,45,66,0.5)',
     tickfont: { size: 11, color: '#64748b' },
     exponentformat: 'e',
+    automargin: true,
   },
   legend: {
     bgcolor: 'rgba(6,10,18,0.8)',
@@ -47,13 +49,14 @@ export const PLOTLY_DARK_LAYOUT: Partial<Plotly.Layout> = {
     borderwidth: 1,
     font: { size: 11, color: '#94a3b8' },
   },
-  margin: { l: 60, r: 20, t: 30, b: 50 },
+  margin: { l: 10, r: 10, t: 40, b: 10, pad: 4 }, // margins are handled by automargin
   hovermode: 'x unified',
   hoverlabel: {
     bgcolor: 'rgba(6,10,18,0.95)',
     bordercolor: '#1e2d42',
     font: { size: 11, color: '#e2e8f0', family: 'JetBrains Mono, monospace' },
   },
+  autosize: true,
 }
 
 export const PLOTLY_DEFAULT_CONFIG: Partial<Plotly.Config> = {
@@ -136,19 +139,20 @@ export function PlotlyChart({ data, layout, config, className, style, loading }:
     plotly.react(containerRef.current, data, mergedLayout, mergedConfig)
   }, [plotly, data, layout, config, loading])
 
-  // Prevent page scroll when scrolling over chart
+  // Handle manual resize if needed
   useEffect(() => {
-    const el = containerRef.current
-    if (!el) return
-    const handler = (e: WheelEvent) => {
-      if (el.querySelector('.plotly')) e.preventDefault()
-    }
-    el.addEventListener('wheel', handler, { passive: false })
-    return () => el.removeEventListener('wheel', handler)
-  }, [])
+    if (!plotly || !containerRef.current) return
+    const ro = new ResizeObserver(() => {
+      if (containerRef.current) {
+        plotly.Plots.resize(containerRef.current)
+      }
+    })
+    ro.observe(containerRef.current)
+    return () => ro.disconnect()
+  }, [plotly])
 
   return (
-    <div className={cn('relative w-full', className)} style={{ minHeight: 300, ...style }}>
+    <div className={cn('relative flex flex-col w-full min-h-[300px]', className)} style={style}>
       {(!plotly || loading) && (
         <div className="absolute inset-0 z-10 flex flex-col gap-4 p-4 bg-background-card/50 backdrop-blur-sm rounded-lg">
           <div className="flex justify-between items-center">
@@ -165,16 +169,11 @@ export function PlotlyChart({ data, layout, config, className, style, loading }:
              <Skeleton className="h-full w-full bg-white/5 rounded-t" />
              <Skeleton className="h-1/3 w-full bg-white/5 rounded-t" />
           </div>
-          <div className="h-4 w-full flex justify-between">
-            <Skeleton className="h-3 w-12 bg-white/5" />
-            <Skeleton className="h-3 w-12 bg-white/5" />
-            <Skeleton className="h-3 w-12 bg-white/5" />
-          </div>
         </div>
       )}
       <div
         ref={containerRef}
-        className={cn('plotly-dark h-full w-full', (!plotly || loading) && 'invisible')}
+        className={cn('plotly-dark flex-1 w-full', (!plotly || loading) && 'invisible')}
       />
     </div>
   )

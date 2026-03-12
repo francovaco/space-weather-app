@@ -4,231 +4,119 @@
 // Interactive GOES Magnetometer chart with auto-refresh
 // ============================================================
 import { useState } from 'react'
+import { LoadingMessage, ErrorMessage, EmptyMessage } from '@/components/ui/StatusMessages'
 import { PlotlyChart, PLOTLY_DARK_LAYOUT, PLOTLY_DEFAULT_CONFIG } from '@/components/charts/PlotlyChart'
 import { TimeRangeSelector } from '@/components/ui/TimeRangeSelector'
+import { NormalizeToggle, normalizeSeries } from '@/components/ui/NormalizeToggle'
 import { UsageImpacts } from '@/components/ui/UsageImpacts'
 import { SectionDetails } from '@/components/ui/SectionDetails'
 import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
 import { getMagnetometerData, timeRangeToParam } from '@/lib/swpc-api'
-import { LoadingMessage, ErrorMessage, EmptyMessage } from '@/components/ui/StatusMessages'
-import type { TimeRange } from '@/types/swpc'
-
-interface MagSample {
-  time_tag: string
-  satellite: number
-  He: number | null
-  Hp: number | null
-  Hn: number | null
-  total: number | null
-  arcjet_flag: boolean
-}
+import type { TimeRange, MagnetometerReading } from '@/types/swpc'
 
 const USAGE = [
-  'Monitoreo en tiempo real de componentes del campo geomagnético (Hp, He, Hn) en órbita geoestacionaria',
-  'Interpretación de mediciones de partículas energéticas del GOES',
-  'Detección de inicio de tormentas geomagnéticas (Sudden Storm Commencement)',
-  'Construcción de modelos de campo magnético terrestre',
-  'Identificación de acumulación y liberación de energía en la magnetósfera durante tormentas y subtormentas',
-  'Indicación de cuando el viento solar ha empujado la magnetopausa dentro de la órbita geoestacionaria',
-  'Validación de modelos de gran escala del acoplamiento magnetósfera-ionósfera',
-  'Apoyo a decisiones de lanzamiento de cohetes sonda de investigación',
+  'Monitoreo del campo magnético ambiental en órbita geoestacionaria',
+  'Identificación de compresiones de la magnetósfera por viento solar',
+  'Detección de subtormentas magnetosféricas y reconfiguración del campo',
+  'Indicador de la intensidad de la corriente de anillo durante tormentas',
+  'Validación de modelos de la magnetósfera en tiempo real',
+  'Detección de ondas electromagnéticas de baja frecuencia (waves)',
+  'Seguimiento de la inclinación del campo magnético (magnetic tilting)',
 ]
 
 const IMPACTS = [
-  'Tormentas geomagnéticas que afectan redes de transmisión eléctrica causando corrientes inducidas geomagnéticamente (GIC)',
-  'Perturbaciones en sistemas de navegación GPS y posicionamiento de precisión',
-  'Interferencia en comunicaciones HF de radio de alta frecuencia',
-  'Degradación de comunicaciones satelitales por perturbaciones ionosféricas',
-  'Aumento del arrastre en satélites de órbita baja (LEO) por expansión atmosférica',
-  'Riesgo para operaciones de naves espaciales en órbita geoestacionaria por acumulación de carga eléctrica',
-  'Interrupciones en señales de aviación durante condiciones geo-magnéticas severas',
-  'Aumento de radiación en rutas polares de aviación durante eventos extremos',
-]
-
-// Components traces with NOAA-style colors
-const TRACES = [
-  { key: 'Hp' as const, label: 'Hp (paralelo al eje de spin)', color: '#ef4444' },  // red
-  { key: 'He' as const, label: 'He (radial, hacia afuera)',     color: '#22c55e' },  // green
-  { key: 'Hn' as const, label: 'Hn (normal, hacia el este)',    color: '#3b82f6' },  // blue
-  { key: 'total' as const, label: 'B Total',                    color: '#a855f7' },  // purple
+  'Las compresiones fuertes pueden exponer satélites geoestacionarios al viento solar',
+  'Cambios rápidos en el campo (dB/dt) inducen corrientes en cables de satélites',
+  'Interferencia con magnetopar de actitud (sensores de orientación) de satélites',
+  'Tormentas geomagnéticas que afectan la estabilidad de la órbita',
+  'Relación directa con la aparición de auroras en latitudes altas y medias',
+  'Aumento del riesgo de descargas electrostáticas en componentes externos',
 ]
 
 export function MagnetometerClient() {
   const [range, setRange] = useState<TimeRange>('6h')
+  const [normalize, setNormalize] = useState(false)
 
-  const { data: rawData, isLoading, isError } = useAutoRefresh<MagSample[]>({
+  const { data: samples, isLoading, isError } = useAutoRefresh<MagnetometerReading[]>({
     queryKey: ['magnetometer', range],
-    fetcher: () => getMagnetometerData(timeRangeToParam(range)) as Promise<MagSample[]>,
+    fetcher: () => getMagnetometerData(timeRangeToParam(range)) as Promise<MagnetometerReading[]>,
     intervalMs: REFRESH_INTERVALS.ONE_MIN,
   })
 
-  // Find arcjet intervals for annotation
-  const arcjetIntervals: { start: string; end: string }[] = []
-  if (rawData) {
-    let inArcjet = false
-    let start = ''
-    for (const s of rawData) {
-      if (s.arcjet_flag && !inArcjet) {
-        inArcjet = true
-        start = s.time_tag
-      } else if (!s.arcjet_flag && inArcjet) {
-        inArcjet = false
-        arcjetIntervals.push({ start, end: s.time_tag })
-      }
-    }
-    if (inArcjet && rawData.length > 0) {
-      arcjetIntervals.push({ start, end: rawData[rawData.length - 1].time_tag })
-    }
-  }
-
-  const plotData: Plotly.Data[] = rawData
-    ? TRACES.map(t => ({
-        x: rawData.map(s => s.time_tag),
-        y: rawData.map(s => s[t.key]),
-        type: 'scattergl' as const,
-        mode: 'lines' as const,
-        name: t.label,
-        line: { color: t.color, width: 1.5 },
-        hovertemplate: `%{y:.1f} nT<extra>${t.key}</extra>`,
-      }))
-    : []
-
-  // Arcjet shapes (gray vertical bands)
-  const shapes: Partial<Plotly.Shape>[] = arcjetIntervals.map(a => ({
-    type: 'rect',
-    xref: 'x',
-    yref: 'paper',
-    x0: a.start,
-    x1: a.end,
-    y0: 0,
-    y1: 1,
-    fillcolor: 'rgba(120,120,120,0.2)',
-    line: { width: 0 },
-  }))
-
-  // Arcjet annotations
-  const annotations: Partial<Plotly.Annotations>[] = arcjetIntervals.flatMap(a => [
+  const plotData: Plotly.Data[] = [
     {
-      x: a.start,
-      y: 1,
-      yref: 'paper' as const,
-      xref: 'x' as const,
-      text: 'Arcjet Start',
-      showarrow: true,
-      arrowhead: 0,
-      ax: 0,
-      ay: -25,
-      font: { size: 8, color: '#94a3b8' },
+      x: samples?.map((s) => s.time_tag),
+      y: normalize ? normalizeSeries(samples?.map(s => s.Hp) || []) : samples?.map((s) => s.Hp),
+      type: 'scattergl' as const, mode: 'lines' as const, name: 'Hp (Paralelo)', line: { color: '#ef4444', width: 1.5 },
+      hovertemplate: normalize ? '%{y:.1f}%<extra>Hp</extra>' : '%{y:.2f} nT<extra>Hp</extra>',
     },
     {
-      x: a.end,
-      y: 1,
-      yref: 'paper' as const,
-      xref: 'x' as const,
-      text: 'Arcjet End',
-      showarrow: true,
-      arrowhead: 0,
-      ax: 0,
-      ay: -25,
-      font: { size: 8, color: '#94a3b8' },
+      x: samples?.map((s) => s.time_tag),
+      y: normalize ? normalizeSeries(samples?.map(s => s.He) || []) : samples?.map((s) => s.He),
+      type: 'scattergl' as const, mode: 'lines' as const, name: 'He (Tierra)', line: { color: '#3b82f6', width: 1.5 },
+      hovertemplate: normalize ? '%{y:.1f}%<extra>He</extra>' : '%{y:.2f} nT<extra>He</extra>',
     },
-  ])
+    {
+      x: samples?.map((s) => s.time_tag),
+      y: normalize ? normalizeSeries(samples?.map(s => s.Hn) || []) : samples?.map((s) => s.Hn),
+      type: 'scattergl' as const, mode: 'lines' as const, name: 'Hn (Normal)', line: { color: '#10b981', width: 1.5 },
+      hovertemplate: normalize ? '%{y:.1f}%<extra>Hn</extra>' : '%{y:.2f} nT<extra>Hn</extra>',
+    },
+    {
+      x: samples?.map((s) => s.time_tag),
+      y: normalize ? normalizeSeries(samples?.map(s => s.total) || []) : samples?.map((s) => s.total),
+      type: 'scattergl' as const, mode: 'lines' as const, name: 'Total', line: { color: '#f59e0b', width: 2 },
+      hovertemplate: normalize ? '%{y:.1f}%<extra>Total</extra>' : '%{y:.2f} nT<extra>Total</extra>',
+    },
+  ]
 
   const layout: Partial<Plotly.Layout> = {
     ...PLOTLY_DARK_LAYOUT,
-    uirevision: range,
-    title: {
-      text: `GOES-19 Magnetómetro`,
-      font: { size: 14, color: '#e2e8f0', family: 'JetBrains Mono, monospace' },
-      x: 0.01,
-      xanchor: 'left',
-    },
-    xaxis: {
-      ...PLOTLY_DARK_LAYOUT.xaxis,
-      title: { text: 'Tiempo Universal (UTC)', font: { size: 12, color: '#64748b' }, standoff: 10 },
-      type: 'date',
-    },
+    uirevision: `${range}-${normalize}`,
+    xaxis: { ...PLOTLY_DARK_LAYOUT.xaxis, type: 'date', automargin: true },
     yaxis: {
       ...PLOTLY_DARK_LAYOUT.yaxis,
-      title: { text: 'nT (nanotesla)', font: { size: 12, color: '#64748b' }, standoff: 5 },
+      title: { text: normalize ? 'Campo Relativo (%)' : 'Campo Magnético (nT)', font: { size: 11, color: '#64748b' } },
+      autorange: true, range: normalize ? [0, 105] : undefined, automargin: true,
     },
-    legend: {
-      ...PLOTLY_DARK_LAYOUT.legend,
-      orientation: 'h',
-      x: 0.5,
-      xanchor: 'center',
-      y: -0.22,
-      font: { size: 11, color: '#94a3b8' },
-    },
-    margin: { l: 65, r: 20, t: 40, b: 100 },
+    margin: { l: 60, r: 20, t: 40, b: 65 },
     hovermode: 'x unified',
-    shapes,
-    annotations,
-  }
-
-  const config: Partial<Plotly.Config> = {
-    ...PLOTLY_DEFAULT_CONFIG,
-    scrollZoom: true,
   }
 
   return (
     <div className="space-y-4">
-      {/* Header + range selector */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">
-            Magnetómetro GOES
-          </h1>
-          <p className="mt-1 text-xs text-text-muted">
-            Componentes del campo geomagnético · Hp, He, Hn · Actualización cada 1 min
-          </p>
+          <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">Magnetómetro</h1>
+          <p className="mt-1 text-xs text-text-muted">GOES-19 · Componentes Hp, He, Hn y Campo Total · Actualización cada 1 min</p>
         </div>
-        <TimeRangeSelector value={range} onChange={setRange} />
+        <div className="flex items-center gap-3">
+          <NormalizeToggle normalize={normalize} onToggle={setNormalize} />
+          <TimeRangeSelector value={range} onChange={setRange} />
+        </div>
       </div>
 
-      {/* Chart */}
-      <div className="card relative overflow-hidden">
-        {isLoading && !rawData && (
-          <LoadingMessage message="Cargando datos del magnetómetro…" />
-        )}
-        {isError && (
-          <ErrorMessage 
-            message="Error al cargar datos" 
-            description="No se pudieron obtener las lecturas del magnetómetro GOES."
-          />
-        )}
-        {rawData && rawData.length === 0 && (
-          <EmptyMessage message="No hay datos disponibles para este rango." />
-        )}
-        {rawData && rawData.length > 0 && (
-          <PlotlyChart
-            data={plotData}
-            layout={layout}
-            config={config}
-            className="min-h-[420px]"
-          />
-        )}
-        {/* Last update indicator */}
-        {rawData && rawData.length > 0 && (
-          <div className="absolute right-2 top-1 text-[9px] text-text-dim">
-            Último dato: {new Date(rawData[rawData.length - 1].time_tag).toLocaleString('es-AR', { timeZone: 'UTC', hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' })} UTC
-          </div>
+      <div className="card relative overflow-hidden flex flex-col" style={{ height: 450, minHeight: 450 }}>
+        {isLoading && <LoadingMessage message="Cargando datos..." />}
+        {isError && <ErrorMessage message="Error al cargar datos" />}
+        {samples && samples.length === 0 && <EmptyMessage message="No hay datos disponibles." />}
+        {samples && samples.length > 0 && (
+          <PlotlyChart data={plotData} layout={layout} className="flex-1 w-full" />
         )}
       </div>
-
-      {/* Usage & Impacts */}
       <UsageImpacts usage={USAGE} impacts={IMPACTS} />
 
-      {/* Detalles */}
       <SectionDetails>
         <p>
-          El magnetómetro a bordo de GOES mide el campo magnético en la órbita geoestacionaria del satélite en tres componentes vectoriales (Hp, He, Hn). El componente Hp es paralelo al eje de rotación terrestre y apunta hacia el polo norte, He apunta radialmente hacia afuera desde la Tierra (perpendicular a Hp), y Hn completa el sistema ortogonal apuntando hacia el este.
+          El magnetómetro de flujo de tres ejes a bordo del satélite GOES mide la magnitud y dirección del campo magnético ambiental en la órbita geoestacionaria. El sistema de coordenadas utilizado es el <strong>PEN</strong>:
         </p>
-        <p>
-          Estas mediciones son fundamentales para la detección en tiempo real de tormentas geomagnéticas y compresiones de la magnetopausa. Las variaciones abruptas en la componente Hp indican la llegada de eyecciones de masa coronal (CME) o corrientes de choque del viento solar.
-        </p>
-        <p>
-          Los datos se actualizan cada minuto con resolución temporal de 1 segundo promediada. Las mediciones de campo magnético total (Bt) se calculan como la magnitud del vector resultante de las tres componentes.
+        <ul className="ml-4 mt-2 list-disc space-y-1 text-xs text-text-secondary">
+          <li><strong>Hp:</strong> Paralelo al eje de rotación de la Tierra (Norte).</li>
+          <li><strong>He:</strong> Perpendicular a Hp y dirigido hacia el centro de la Tierra.</li>
+          <li><strong>Hn:</strong> Normal a Hp y He, completando el sistema hacia el Este.</li>
+        </ul>
+        <p className="mt-4">
+          Durante periodos de calma, el magnetómetro mide principalmente el campo magnético terrestre (geomagnético) estirado por el viento solar. Sin embargo, durante tormentas geomagnéticas, se pueden observar variaciones bruscas causadas por corrientes eléctricas en la magnetósfera, compresiones del viento solar o la llegada de ondas de choque interplanetarias.
         </p>
       </SectionDetails>
     </div>
