@@ -527,6 +527,7 @@ function ChannelCard({ channel:ch, onSelect, latestTs }:{ channel:Channel; onSel
 
 // ── Animation view ─────────────────────────────────────────────
 function AnimationView({ channel, onBack }:{ channel:Channel; onBack:()=>void }) {
+  const topRef = useRef<HTMLDivElement>(null)
   const [frameCount,setFrameCount] = useState(24)
   const [playMode,setPlayMode]     = useState<PlayMode>('loop')
   const [playing,setPlaying]       = useState(false)
@@ -649,6 +650,13 @@ function AnimationView({ channel, onBack }:{ channel:Channel; onBack:()=>void })
   const allLoaded = total > 0 && loadedSet.size >= total
   const isGlm   = channel.id === 'EXTENT3'
 
+  // Scroll to top when opening animation view
+  useEffect(() => {
+    if (topRef.current) {
+      topRef.current.scrollIntoView({ behavior: 'instant', block: 'start' })
+    }
+  }, [])
+
   // ── Draw current frame to hidden canvas for pixel sampling ──
   useEffect(() => {
     canvasReady.current = false
@@ -702,7 +710,7 @@ function AnimationView({ channel, onBack }:{ channel:Channel; onBack:()=>void })
   const handleImgMouseLeave = useCallback(() => setHoverInfo(null), [])
 
   return (
-    <div className="space-y-4 pb-8">
+    <div className="space-y-4 pb-8" ref={topRef}>
       {/* Header */}
       <div className="flex items-center gap-3">
         <button onClick={onBack} className="ctrl-btn"><ChevronLeft size={16}/></button>
