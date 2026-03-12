@@ -39,10 +39,14 @@ export async function GET(req: NextRequest) {
       .map((m) => m.replace('href="', '').replace('"', ''))
       .filter((f) => f !== 'latest.png')
 
-    const frames = filenames.map((f) => ({
-      url: `${SWPC_BASE}${dirPath}${f}`,
-      time_tag: parseTimestamp(f) ?? '',
-    }))
+    const frames = filenames
+      .map((f) => ({
+        url: `${SWPC_BASE}${dirPath}${f}`,
+        time_tag: parseTimestamp(f) ?? '',
+      }))
+      .filter((f) => f.time_tag !== '')
+      .sort((a, b) => a.time_tag.localeCompare(b.time_tag))
+      .slice(-150) // Limit to a reasonable number
 
     return NextResponse.json(frames, {
       headers: { 'Cache-Control': 'public, max-age=55, s-maxage=60' },

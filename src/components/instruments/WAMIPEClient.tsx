@@ -10,7 +10,7 @@ import { getWAMIPEFrames } from '@/lib/swpc-api'
 import { UsageImpacts } from '@/components/ui/UsageImpacts'
 import { SectionDetails } from '@/components/ui/SectionDetails'
 import { Play, Pause, SkipBack, SkipForward, Download } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn, proxyImg } from '@/lib/utils'
 
 interface WAMIPEFrame {
   url: string
@@ -178,10 +178,6 @@ function getContainedBounds(cW: number, cH: number, iW: number, iH: number) {
   return { rW, rH, oX, oY }
 }
 
-function proxyUrl(url: string) {
-  return `/api/goes/img-proxy?url=${encodeURIComponent(url)}`
-}
-
 // ───────────────────────────────────────────────
 // Main Component
 // ───────────────────────────────────────────────
@@ -271,7 +267,18 @@ function WAMIPEPanel({ view, desc }: { view: WAMIPEView; desc: string }) {
           <span className="text-xs text-red-400">Error al cargar datos de WAM-IPE</span>
         </div>
       )}
-      {frames && frames.length > 0 && <WAMIPEPlayer frames={frames} viewType={view} />}
+      {frames && (
+        frames.length > 0 ? (
+          <WAMIPEPlayer frames={frames} viewType={view} />
+        ) : (
+          <div className="flex flex-col items-center justify-center py-20 gap-3">
+            <span className="text-red-400 font-medium">No hay imágenes disponibles</span>
+            <p className="text-xs text-text-muted text-center max-w-sm px-4">
+              Es posible que los datos del modelo no estén disponibles temporalmente.
+            </p>
+          </div>
+        )
+      )}
     </div>
   )
 }
@@ -280,6 +287,7 @@ function WAMIPEPlayer({ frames, viewType }: { frames: WAMIPEFrame[]; viewType: W
   const [idx, setIdx] = useState(0)
   const [playing, setPlaying] = useState(false)
   const [loaded, setLoaded] = useState(false)
+  const [loadError, setLoadError] = useState(false)
   const [loadProgress, setLoadProgress] = useState(0)
   const [activeFrames, setActiveFrames] = useState<WAMIPEFrame[]>([])
   const FPS_STEPS = [1, 2, 3, 4, 5, 8, 10, 15, 20]
@@ -301,6 +309,7 @@ function WAMIPEPlayer({ frames, viewType }: { frames: WAMIPEFrame[]; viewType: W
     setIdx(0)
     setPlaying(false)
     setLoaded(false)
+    setLoadError(false)
     setLoadProgress(0)
     setActiveFrames([])
     setHoverInfo(null)
@@ -334,7 +343,7 @@ function WAMIPEPlayer({ frames, viewType }: { frames: WAMIPEFrame[]; viewType: W
                   if (!cancelled) setLoadProgress(Math.round((doneCount / frames.length) * 100))
                   resolve()
                 }
-                img.src = proxyUrl(f.url)
+                img.src = proxyImg(f.url)
               })
           )
         )
@@ -347,8 +356,7 @@ function WAMIPEPlayer({ frames, viewType }: { frames: WAMIPEFrame[]; viewType: W
           setLoaded(true)
           setPlaying(true)
         } else {
-          // If all failed, show something at least to avoid infinite loading
-          setActiveFrames(frames)
+          setLoadError(true)
           setLoaded(true)
         }
       }
@@ -382,7 +390,7 @@ function WAMIPEPlayer({ frames, viewType }: { frames: WAMIPEFrame[]; viewType: W
       const ctx = canvas.getContext('2d', { willReadFrequently: true })
       if (ctx) { ctx.drawImage(img, 0, 0); canvasReady.current = true }
     }
-    img.src = proxyUrl(current.url)
+    img.src = proxyImg(current.url)
   }, [playing, current])
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
@@ -486,7 +494,16 @@ function WAMIPEPlayer({ frames, viewType }: { frames: WAMIPEFrame[]; viewType: W
         </div>
       )}
 
-      {loaded && current && (
+      {loaded && loadError && (
+        <div className="flex flex-col items-center justify-center py-20 gap-3">
+          <span className="text-red-400 font-medium">No se pudieron cargar las imágenes</span>
+          <p className="text-xs text-text-muted text-center max-w-sm px-4">
+            Es posible que las imágenes más recientes no estén disponibles temporalmente.
+          </p>
+        </div>
+      )}
+
+      {loaded && !loadError && current && (
         <>
           <div 
             ref={imgContRef}
@@ -497,7 +514,7 @@ function WAMIPEPlayer({ frames, viewType }: { frames: WAMIPEFrame[]; viewType: W
             <canvas ref={canvasRef} className="hidden" />
             <img
               ref={imgRef}
-              src={proxyUrl(current.url)}
+              src={proxyImg(current.url)}
               alt="WAM-IPE model output"
               className="max-h-[75vh] w-auto object-contain"
               draggable={false}
