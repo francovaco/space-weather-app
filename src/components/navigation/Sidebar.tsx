@@ -11,7 +11,7 @@ import {
   Satellite, BookOpen, Activity, Image as ImageIcon, Zap, Radio,
   Sun, Wind, Eye, Globe, ChevronDown, ChevronRight,
   Gauge, Layers, SunDim, BarChart3, CloudSun, BrainCircuit,
-  Info, Shield, Orbit,
+  Info, Shield, Orbit, Repeat2, GitCompare,
 } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 
@@ -43,7 +43,8 @@ const NAV_ITEMS: NavItem[] = [
     label: 'Imágenes ABI',
     href: '/imagery',
     icon: <ImageIcon size={15} />,
-  },  {
+  },
+  {
     label: 'Instrumentos',
     icon: <Activity size={15} />,
     children: [
@@ -51,6 +52,7 @@ const NAV_ITEMS: NavItem[] = [
       { label: 'Flujo de Rayos X', href: '/instruments/xray-flux', icon: <Zap size={13} /> },
       { label: 'Flujo de Electrones', href: '/instruments/electron-flux', icon: <Radio size={13} /> },
       { label: 'Flujo de Protones', href: '/instruments/proton-flux', icon: <Activity size={13} /> },
+      { label: 'Modo Comparativo', href: '/analysis/comparison', icon: <GitCompare size={13} /> },
       { label: 'SUVI Ultravioleta', href: '/instruments/suvi', icon: <Sun size={13} /> },
       { label: 'Coronógrafo', href: '/instruments/coronagraph', icon: <Eye size={13} /> },
       { label: 'Entorno Satélite', href: '/instruments/satellite-environment', icon: <Layers size={13} /> },

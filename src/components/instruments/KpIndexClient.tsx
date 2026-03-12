@@ -133,7 +133,7 @@ export function KpIndexClient() {
     ...PLOTLY_DARK_LAYOUT,
     uirevision: 'kp',
     title: {
-      text: 'Índice Planetario Kp (estimado)',
+      text: 'Índice Planetario Kp',
       font: { size: 14, color: '#e2e8f0', family: 'JetBrains Mono, monospace' },
       x: 0.01,
       xanchor: 'left',
@@ -205,7 +205,7 @@ export function KpIndexClient() {
         {isError && (
           <ErrorMessage 
             message="Error al cargar datos del índice Kp" 
-            description="No se pudo obtener el índice planetario estimado por el momento."
+            description="No se pudo obtener el índice planetario por el momento."
           />
         )}
         {samples && samples.length === 0 && (
@@ -265,7 +265,7 @@ export function KpIndexClient() {
           Valores de Kp de 0 a 3 indican condiciones geomagnéticas quietas. Un Kp de 4 se considera inestable, y valores de 5 a 9 indican tormentas geomagnéticas de intensidad creciente, correspondiéndose con las escalas G1 a G5 del SWPC (Kp5=G1 menor, Kp6=G2 moderada, Kp7=G3 fuerte, Kp8=G4 severa, Kp9=G5 extrema).
         </p>
         <p>
-          El índice se calcula cada 3 horas (8 valores al día) y el SWPC provee un índice Kp estimado en tiempo real basado en datos de magnetómetros. También se publica el índice ap, que es la equivalencia lineal del Kp y permite promediar para calcular el índice Ap diario.
+          El índice se calcula cada 3 horas (8 valores al día) y el SWPC provee un índice Kp en tiempo real basado en datos de magnetómetros. También se publica el índice ap, que es la equivalencia lineal del Kp y permite promediar para calcular el índice Ap diario.
         </p>
       </SectionDetails>
     </div>
