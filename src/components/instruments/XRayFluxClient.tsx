@@ -3,7 +3,7 @@
 // src/components/instruments/XRayFluxClient.tsx
 // Interactive GOES X-Ray Flux chart with auto-refresh
 // ============================================================
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { LoadingMessage, ErrorMessage, EmptyMessage } from '@/components/ui/StatusMessages'
 import { PlotlyChart, PLOTLY_DARK_LAYOUT, PLOTLY_DEFAULT_CONFIG } from '@/components/charts/PlotlyChart'
 import { TimeRangeSelector } from '@/components/ui/TimeRangeSelector'
@@ -25,21 +25,22 @@ interface XRaySample {
 }
 
 const USAGE = [
-  'Monitoreo continuo de la actividad solar en rayos X blandos',
-  'Clasificación de erupciones solares según escala GOES (A, B, C, M, X)',
-  'Emisión de alertas por erupciones solares de clase M y X',
-  'Indicador primario para pronóstico de tormentas de radiación solar',
-  'Entrada para modelos de propagación ionosférica y absorción HF (D-RAP)',
-  'Evaluación del impacto solar sobre sistemas de navegación GNSS',
-  'Seguimiento de la evolución temporal de regiones activas en el disco solar',
+  'Detección y clasificación en tiempo real de fulguraciones solares',
+  'Indicador primario para la emisión de alertas de Apagón de Radio (Escala R)',
+  'Determinación del inicio, pico y finalización de eventos eruptivos solares',
+  'Monitoreo de la actividad solar de fondo para el pronóstico de ciclos solares',
+  'Entrada crítica para los modelos de absorción de la Región D (D-RAP)',
+  'Evaluación del riesgo de Eventos de Partículas Energéticas (SPE) tras erupciones intensas',
+  'Referencia para la calibración de sensores de actitud en satélites operativos',
 ]
 
 const IMPACTS = [
-  'Erupciones de clase M/X causan apagones de radio HF en el lado diurno de la Tierra',
-  'Absorción de onda corta (SWF) que afecta comunicaciones aeronáuticas transoceánicas',
-  'Aumento súbito de ionización en la región D de la ionósfera',
-  'Posible generación de eventos de protones solares (SPE) tras erupciones clase X',
-  'Impacto en operaciones de lanzamiento espacial por condiciones de radiación elevada',
+  'Comunicaciones: Bloqueos de radio de alta frecuencia (HF) en el lado diurno de la Tierra',
+  'Navegación: Degradación de señales LF y errores en sistemas de posicionamiento GPS/GNSS',
+  'Aviación: Pérdida de comunicación en rutas transoceánicas y polares durante eventos M y X',
+  'Ionósfera: Perturbaciones ionosféricas repentinas (SID) que alteran la propagación de ondas',
+  'Satélites: Aumento del arrastre atmosférico en satélites de órbita baja (LEO) por expansión térmica',
+  'Tecnología: Ruido e interferencia en radares de vigilancia y defensa aérea',
 ]
 
 const FLARE_CLASSES = [
@@ -60,61 +61,94 @@ export function XRayFluxClient() {
     intervalMs: REFRESH_INTERVALS.ONE_MIN,
   })
 
-  const shortWave = rawData?.filter((d) => d.energy === '0.05-0.4nm') ?? []
-  const longWave = rawData?.filter((d) => d.energy === '0.1-0.8nm') ?? []
+  const shortWave = useMemo(() => rawData?.filter((d) => d.energy === '0.05-0.4nm') ?? [], [rawData])
+  const longWave = useMemo(() => rawData?.filter((d) => d.energy === '0.1-0.8nm') ?? [], [rawData])
 
-  const plotData: Plotly.Data[] = [
-    {
-      x: longWave.map((d) => d.time_tag),
-      y: normalize ? normalizeSeries(longWave.map((d) => d.flux)) : longWave.map((d) => d.flux),
-      type: 'scattergl' as const,
-      mode: 'lines' as const,
-      name: '0.1–0.8 nm',
-      line: { color: '#ef4444', width: 1.5 },
-      hovertemplate: normalize ? '%{y:.1f}%<extra>0.1–0.8 nm</extra>' : '%{y:.2e} W/m²<extra>0.1–0.8 nm</extra>',
-    },
-    {
-      x: shortWave.map((d) => d.time_tag),
-      y: normalize ? normalizeSeries(shortWave.map((d) => d.flux)) : shortWave.map((d) => d.flux),
-      type: 'scattergl' as const,
-      mode: 'lines' as const,
-      name: '0.05–0.4 nm',
-      line: { color: '#3b82f6', width: 1.5 },
-      hovertemplate: normalize ? '%{y:.1f}%<extra>0.05–0.4 nm</extra>' : '%{y:.2e} W/m²<extra>0.05–0.4 nm</extra>',
-    },
-  ]
+  const plotData: Plotly.Data[] = useMemo(() => {
+    return [
+      {
+        x: longWave.map((d) => d.time_tag),
+        y: normalize ? normalizeSeries(longWave.map((d) => d.flux)) : longWave.map((d) => d.flux),
+        customdata: longWave.map(d => d.flux),
+        type: 'scattergl' as const, mode: 'lines' as const, name: '0.1–0.8 nm',
+        line: { color: '#ef4444', width: 1.5 },
+        hovertemplate: '%{customdata:.2e} W/m²<extra>0.1–0.8 nm</extra>',
+      },
+      {
+        x: shortWave.map((d) => d.time_tag),
+        y: normalize ? normalizeSeries(shortWave.map((d) => d.flux)) : shortWave.map((d) => d.flux),
+        customdata: shortWave.map(d => d.flux),
+        type: 'scattergl' as const, mode: 'lines' as const, name: '0.05–0.4 nm',
+        line: { color: '#3b82f6', width: 1.5 },
+        hovertemplate: '%{customdata:.2e} W/m²<extra>0.05–0.4 nm</extra>',
+      },
+    ]
+  }, [longWave, shortWave, normalize])
 
-  const shapes: Partial<Plotly.Shape>[] = normalize ? [] : FLARE_CLASSES.map((fc) => ({
-    type: 'line', xref: 'paper', yref: 'y', x0: 1, x1: 1.01, y0: fc.value, y1: fc.value, line: { color: '#475569', width: 1 },
-  }))
+  const { yAxisConfig, classLines, classLabels } = useMemo(() => {
+    if (!rawData || longWave.length === 0) {
+      return { 
+        yAxisConfig: { type: 'log', range: [-9, -2] },
+        classLines: FLARE_CLASSES.map(fc => ({ y: Math.log10(fc.value), label: fc.label })),
+        classLabels: FLARE_CLASSES.map(fc => ({ y: Math.log10(fc.value), label: fc.label }))
+      }
+    }
 
-  const annotations: Partial<Plotly.Annotations>[] = normalize ? [] : FLARE_CLASSES.map((fc) => ({
-    xref: 'paper', yref: 'y', x: 1.02, y: Math.log10(fc.value), text: fc.label, showarrow: false, font: { size: 11, color: '#94a3b8' },
-  }))
+    if (normalize) {
+      const vals = longWave.map(d => d.flux).filter(v => v !== null && !isNaN(v))
+      const min = Math.min(...vals), max = Math.max(...vals)
+      const tickVals = [0, 25, 50, 75, 100]
+      const tickTexts = tickVals.map(pct => (min + (pct / 100) * (max - min)).toExponential(1))
+      const normalizedClasses = FLARE_CLASSES.map(fc => ({
+        y: ((fc.value - min) / (max - min)) * 100,
+        label: fc.label
+      })).filter(c => c.y >= -10 && c.y <= 120)
+
+      return {
+        yAxisConfig: { tickvals: tickVals, ticktext: tickTexts, range: [0, 105], type: 'linear' },
+        classLines: normalizedClasses,
+        classLabels: normalizedClasses
+      }
+    }
+
+    return {
+      yAxisConfig: { type: 'log', range: [-9, -2], dtick: 1 },
+      classLines: FLARE_CLASSES.map(fc => ({ y: fc.value, label: fc.label })),
+      classLabels: FLARE_CLASSES.map(fc => ({ y: Math.log10(fc.value), label: fc.label }))
+    }
+  }, [longWave, normalize, rawData])
 
   const layout: Partial<Plotly.Layout> = {
     ...PLOTLY_DARK_LAYOUT,
     uirevision: `${range}-${normalize}`,
-    xaxis: { ...PLOTLY_DARK_LAYOUT.xaxis, type: 'date' },
+    xaxis: { ...PLOTLY_DARK_LAYOUT.xaxis, type: 'date', automargin: true },
     yaxis: {
       ...PLOTLY_DARK_LAYOUT.yaxis,
-      title: { text: normalize ? 'Flujo Relativo (%)' : 'Flujo (W/m²)', font: { size: 11, color: '#64748b' } },
-      type: normalize ? 'linear' : 'log',
-      range: normalize ? [0, 105] : [-9, -2],
-      dtick: normalize ? 25 : 1,
+      title: { text: 'Flujo Rayos X (W/m²)', font: { size: 11, color: '#64748b' } },
+      ...yAxisConfig as any,
+      automargin: true,
     },
-    margin: { l: 60, r: 40, t: 40, b: 60 },
+    margin: { l: 65, r: 40, t: 40, b: 65 },
     hovermode: 'x unified',
-    shapes,
-    annotations,
+    shapes: classLines.map(cl => ({
+      type: 'line', xref: 'paper', yref: 'y', x0: 0, x1: 1,
+      y0: cl.y, y1: cl.y,
+      line: { color: 'rgba(71, 85, 105, 0.3)', width: 1, dash: 'dot' }
+    })),
+    annotations: classLabels.map(cl => ({
+      xref: 'paper', yref: 'y', x: 1.01, y: cl.y,
+      text: cl.label, showarrow: false,
+      font: { size: 11, color: '#94a3b8', family: 'JetBrains Mono, monospace' },
+      xanchor: 'left', yanchor: 'middle'
+    })),
   }
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">Flujo de Rayos X Solar</h1>
-          <p className="mt-1 text-xs text-text-muted">GOES · Onda corta y larga · Actualización cada 1 min</p>
+          <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">Flujo de Rayos X</h1>
+          <p className="mt-1 text-xs text-text-muted">GOES-19 · Banda corta y larga · Actualización cada 1 min</p>
         </div>
         <div className="flex items-center gap-3">
           <NormalizeToggle normalize={normalize} onToggle={setNormalize} />
@@ -122,25 +156,26 @@ export function XRayFluxClient() {
         </div>
       </div>
 
-      <div className="card relative overflow-hidden flex flex-col" style={{ height: 450 }}>
+      <div className="card relative overflow-hidden flex flex-col" style={{ height: 450, minHeight: 450 }}>
         {isLoading && !rawData && <LoadingMessage message="Cargando datos..." />}
         {isError && <ErrorMessage message="Error al cargar datos" />}
-        {rawData && rawData.length === 0 && <EmptyMessage message="No hay datos de rayos X" />}
+        {rawData && rawData.length === 0 && <EmptyMessage message="No hay datos disponibles." />}
         {rawData && rawData.length > 0 && (
-          <PlotlyChart data={plotData} layout={layout} className="flex-1" />
+          <PlotlyChart data={plotData} layout={layout} className="flex-1 w-full" />
         )}
       </div>
+
       <UsageImpacts usage={USAGE} impacts={IMPACTS} />
 
       <SectionDetails>
         <p>
-          El sensor XRS (X-Ray Sensor) del satélite GOES mide el flujo de rayos X solares en dos bandas de longitud de onda: 0.05–0.4 nm (banda corta) y 0.1–0.8 nm (banda larga). Estos datos se utilizan para clasificar las fulguraciones solares en las escalas estándar A, B, C, M y X.
+          El sensor de rayos X (XRS) a bordo de los satélites GOES mide el flujo solar en dos bandas de energía distintas: 0.05 a 0.4 nm (banda corta) y 0.1 a 0.8 nm (banda larga). Estas mediciones son la base científica para la clasificación de las fulguraciones solares en una escala logarítmica representada por las letras A, B, C, M y X.
         </p>
         <p>
-          Las fulguraciones solares de clase M y X son las más significativas para el clima espacial, ya que pueden provocar apagones de radio de alta frecuencia (HF) en el lado diurno de la Tierra en cuestión de minutos. La escala es logarítmica: cada letra representa un aumento de 10 veces en la intensidad del pico de flujo.
+          Cada letra en la escala indica un aumento de diez veces en la intensidad del flujo de rayos X. Las erupciones de clase M (moderada) y X (extrema) son las más críticas para el clima espacial terrestre, ya que pueden ionizar instantáneamente la atmósfera superior y causar apagones de radio HF que duran desde minutos hasta horas.
         </p>
         <p>
-          El flujo de rayos X de la banda larga (1–8 Å) es el principal indicador utilizado por el SWPC para emitir alertas de fulguraciones. Un evento de clase M5 o superior generalmente dispara una alerta de apagón de radio R1–R2, mientras que un evento X10+ puede producir un apagón R4–R5.
+          Los datos del canal de onda larga (0.1–0.8 nm) se utilizan directamente para determinar el nivel de la Escala R de NOAA (Radio Blackouts). Un evento R1 (menor) comienza cuando el flujo alcanza el nivel M1 (1e-5 W/m²), mientras que un evento R5 (extremo) se activa con niveles X20 o superiores, provocando el colapso total de las comunicaciones por radio en todo el lado diurno del planeta.
         </p>
       </SectionDetails>
     </div>
