@@ -31,10 +31,14 @@ export async function GET(req: NextRequest) {
     if (!res.ok) return NextResponse.json({ error: 'Upstream error' }, { status: 502 })
     const raw: RawFrame[] = await res.json()
 
+    if (source === 'LASCO-C3') {
+      console.log(`[API/coronagraph] LASCO-C3: fetched ${raw.length} frames from ${url}`)
+    }
+
     // Normalize: make URLs absolute + ensure time_tag exists
     const frames = raw.map((f) => ({
       url: f.url.startsWith('http') ? f.url : `${SWPC_BASE}${f.url}`,
-      time_tag: f.time_tag ?? parseTimestampFromUrl(f.url),
+      time_tag: (f.time_tag && f.time_tag.length > 0) ? f.time_tag : parseTimestampFromUrl(f.url),
     }))
 
     return NextResponse.json(frames, { headers: { 'Cache-Control': 'public, max-age=580, s-maxage=600', 'X-Data-Source': url } })
