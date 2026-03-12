@@ -236,14 +236,8 @@ function NavItemComponent({ item, pathname, collapsed, expanded, onToggle, depth
   const handlePopoverToggle = () => {
     if (!popoverOpen && btnRef.current) {
       const rect = btnRef.current.getBoundingClientRect()
-      // Center vertically relative to the button (button height is ~36px, popover height is capped at 480px)
-      // We aim for the middle of the popover to align with the middle of the button
-      const popoverHeight = 400 // Estimate
-      let top = rect.top + rect.height / 2 - popoverHeight / 2
-      
-      // Clamp to screen boundaries
-      top = Math.max(8, Math.min(top, window.innerHeight - popoverHeight - 8))
-      
+      // Use the middle of the button as the anchor point for the middle of the popover
+      const top = rect.top + rect.height / 2
       setPopoverPos({ top, left: rect.right + 4 })
     }
     setPopoverOpen(v => !v)
@@ -285,7 +279,7 @@ function NavItemComponent({ item, pathname, collapsed, expanded, onToggle, depth
           {popoverOpen && (
             <div
               ref={popoverRef}
-              className="fixed z-[200] min-w-48 max-h-[min(80vh,480px)] overflow-y-auto rounded-md border border-border bg-background-secondary py-1 shadow-xl scroll-py-10"
+              className="fixed z-[200] min-w-48 max-h-[min(90vh,600px)] -translate-y-1/2 overflow-y-auto rounded-md border border-border bg-background-secondary py-1 shadow-xl scroll-py-10"
               style={{ top: popoverPos.top, left: popoverPos.left }}
             >
               <p className="px-3 py-1.5 text-2xs font-bold uppercase tracking-wider text-text-muted">
