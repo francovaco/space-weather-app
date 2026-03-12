@@ -43,9 +43,56 @@ export function MagnetometerClient() {
     intervalMs: REFRESH_INTERVALS.ONE_MIN,
   })
 
+  // Detect Arcjet events (start and end)
+  const arcjetEvents = useMemo(() => {
+    if (!samples || samples.length === 0) return []
+    const events: { start: string; end?: string }[] = []
+    let activeEvent: { start: string; end?: string } | null = null
+
+    for (let i = 0; i < samples.length; i++) {
+      const s = samples[i] as any
+      // SWPC uses true/1 for arcjet_flag
+      const isArcjet = s.arcjet_flag === true || s.arcjet_flag === 1 || s.arcjet_flag === 'true'
+
+      if (isArcjet && !activeEvent) {
+        activeEvent = { start: s.time_tag }
+        events.push(activeEvent)
+      } else if (!isArcjet && activeEvent) {
+        activeEvent.end = s.time_tag
+        activeEvent = null
+      }
+    }
+    return events
+  }, [samples])
+
+  // Calculate Local Noon (N) and Midnight (M) markers for GOES-East (75.2° W)
+  // Local Midnight ~ 05:00 UTC, Local Noon ~ 17:00 UTC
+  const diurnalMarkers = useMemo(() => {
+    if (!samples || samples.length === 0) return []
+    const markers: { time: string; label: string }[] = []
+    const start = new Date(samples[0].time_tag)
+    const end = new Date(samples[samples.length - 1].time_tag)
+    
+    let curr = new Date(start)
+    curr.setUTCHours(5, 0, 0, 0) // First Midnight
+    if (curr < start) curr.setUTCDate(curr.getUTCDate() + 1)
+
+    while (curr <= end) {
+      markers.push({ time: curr.toISOString(), label: 'M' }) // Midnight
+      
+      const noon = new Date(curr)
+      noon.setUTCHours(17, 0, 0, 0)
+      if (noon <= end && noon >= start) {
+        markers.push({ time: noon.toISOString(), label: 'N' }) // Noon
+      }
+      
+      curr.setUTCDate(curr.getUTCDate() + 1)
+    }
+    return markers
+  }, [samples])
+
   const plotData: Plotly.Data[] = useMemo(() => {
     if (!samples) return []
-    
     return [
       {
         x: samples.map((s) => s.time_tag),
@@ -80,40 +127,52 @@ export function MagnetometerClient() {
 
   const yAxisConfig = useMemo(() => {
     if (!normalize || !samples || samples.length === 0) return { autorange: true }
-    
-    // Use Total as reference for axis labels
     const totalVals = samples.map(s => s.total).filter(v => v !== null && !isNaN(v))
     if (totalVals.length === 0) return { range: [0, 105] }
-    
-    const min = Math.min(...totalVals)
-    const max = Math.max(...totalVals)
-    
+    const min = Math.min(...totalVals), max = Math.max(...totalVals)
     const tickVals = [0, 25, 50, 75, 100]
-    const tickTexts = tickVals.map(pct => {
-      const val = min + (pct / 100) * (max - min)
-      return val.toFixed(1)
-    })
-
-    return {
-      tickvals: tickVals,
-      ticktext: tickTexts,
-      range: [0, 105],
-      type: 'linear'
-    }
+    const tickTexts = tickVals.map(pct => (min + (pct / 100) * (max - min)).toFixed(1))
+    return { tickvals: tickVals, ticktext: tickTexts, range: [0, 105], type: 'linear' }
   }, [samples, normalize])
+
+  // Combined shapes and annotations
+  const shapes: Partial<Plotly.Shape>[] = useMemo(() => {
+    const s: Partial<Plotly.Shape>[] = []
+    // Arcjet lines
+    arcjetEvents.forEach(event => {
+      s.push({ type: 'line', xref: 'x', yref: 'paper', x0: event.start, x1: event.start, y0: 0, y1: 1, line: { color: 'rgba(255, 255, 255, 0.4)', width: 1, dash: 'dot' } })
+      if (event.end) s.push({ type: 'line', xref: 'x', yref: 'paper', x0: event.end, x1: event.end, y0: 0, y1: 1, line: { color: 'rgba(255, 255, 255, 0.4)', width: 1, dash: 'dot' } })
+    })
+    // Noon/Midnight lines (subtle)
+    diurnalMarkers.forEach(m => {
+      s.push({ type: 'line', xref: 'x', yref: 'paper', x0: m.time, x1: m.time, y0: 0, y1: 0.05, line: { color: 'rgba(255, 255, 255, 0.2)', width: 1 } })
+    })
+    return s
+  }, [arcjetEvents, diurnalMarkers])
+
+  const annotations: Partial<Plotly.Annotations>[] = useMemo(() => {
+    const a: Partial<Plotly.Annotations>[] = []
+    // Arcjet labels
+    arcjetEvents.forEach(event => {
+      a.push({ x: event.start, y: 1, xref: 'x', yref: 'paper', text: 'Arcjet Start', showarrow: false, font: { size: 9, color: 'rgba(255, 255, 255, 0.6)' }, textangle: -90, xanchor: 'right', yanchor: 'top', yshift: -10 })
+      if (event.end) a.push({ x: event.end, y: 1, xref: 'x', yref: 'paper', text: 'Arcjet End', showarrow: false, font: { size: 9, color: 'rgba(255, 255, 255, 0.6)' }, textangle: -90, xanchor: 'right', yanchor: 'top', yshift: -10 })
+    })
+    // Noon/Midnight labels
+    diurnalMarkers.forEach(m => {
+      a.push({ x: m.time, y: 0, xref: 'x', yref: 'paper', text: m.label, showarrow: false, font: { size: 10, color: 'rgba(255, 255, 255, 0.4)', weight: 'bold' }, yanchor: 'bottom', yshift: 5 })
+    })
+    return a
+  }, [arcjetEvents, diurnalMarkers])
 
   const layout: Partial<Plotly.Layout> = {
     ...PLOTLY_DARK_LAYOUT,
     uirevision: `${range}-${normalize}`,
     xaxis: { ...PLOTLY_DARK_LAYOUT.xaxis, type: 'date', automargin: true },
-    yaxis: {
-      ...PLOTLY_DARK_LAYOUT.yaxis,
-      title: { text: 'Campo Magnético (nT)', font: { size: 11, color: '#64748b' } },
-      ...yAxisConfig,
-      automargin: true,
-    },
+    yaxis: { ...PLOTLY_DARK_LAYOUT.yaxis, title: { text: 'Campo Magnético (nT)', font: { size: 11, color: '#64748b' } }, ...yAxisConfig, automargin: true },
     margin: { l: 60, r: 20, t: 40, b: 65 },
     hovermode: 'x unified',
+    shapes,
+    annotations,
   }
 
   return (
@@ -148,6 +207,9 @@ export function MagnetometerClient() {
           <li><strong>He:</strong> Perpendicular a Hp y dirigido hacia el centro de la Tierra.</li>
           <li><strong>Hn:</strong> Normal a Hp y He, completando el sistema hacia el Este.</li>
         </ul>
+        <p className="mt-4 text-accent-cyan/80 text-[11px] italic">
+          Nota: Los marcadores <strong>Arcjet Start/End</strong> indican periodos de interferencia artificial. Los marcadores <strong>N</strong> y <strong>M</strong> indican el mediodía y la medianoche local en la longitud del satélite (75.2° W).
+        </p>
         <p className="mt-4">
           Durante periodos de calma, el magnetómetro mide principalmente el campo magnético terrestre (geomagnético) estirado por el viento solar. Sin embargo, durante tormentas geomagnéticas, se pueden observar variaciones bruscas causadas por corrientes eléctricas en la magnetósfera, compresiones del viento solar o la llegada de ondas de choque interplanetarias.
         </p>
