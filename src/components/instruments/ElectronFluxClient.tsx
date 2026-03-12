@@ -24,7 +24,7 @@ interface ElectronSample {
 const USAGE = [
   'Monitoreo de la intensidad del cinturón exterior de radiación de electrones en órbita geoestacionaria',
   'Evaluación del riesgo de carga interna (internal charging) en componentes de satélites',
-  'Emisión de alertas cuando el flujo de electrones >2 MeV supera 1000 pfu',
+  'Emisión de alertas cuando el flujo de electrones >2 MeV supera el nivel de 1000',
   'Indicador de inyección de electrones en la magnetósfera durante subtormentas',
   'Seguimiento de la población de electrones relativistas atrapados en el cinturón de Van Allen externo',
   'Entrada para modelos de pronóstico de electrones relativistas (REFM)',
@@ -58,29 +58,49 @@ export function ElectronFluxClient() {
 
   const plotData = useMemo((): Plotly.Data[] => {
     if (ge2.length === 0) return []
-    const yValues = normalize ? normalizeSeries(ge2.map(d => d.flux)) : ge2.map(d => d.flux)
+    const realY = ge2.map(d => d.flux)
+    const visualY = normalize ? normalizeSeries(realY) : realY
+    
     return [{
       x: ge2.map((d) => d.time_tag),
-      y: yValues,
+      y: visualY,
+      customdata: realY,
       type: 'scattergl',
       mode: 'lines',
       name: '≥2 MeV',
       line: { color: '#ef4444', width: 1.5 },
-      hovertemplate: normalize ? '%{y:.1f}%<extra>≥2 MeV</extra>' : '%{y:.1f} pfu<extra>≥2 MeV</extra>',
+      hovertemplate: '%{customdata:.1f} MeV<extra>≥2 MeV</extra>',
     }]
   }, [ge2, normalize])
 
-  // CRITICAL FIX: Plotly expects log10 coordinates for annotations on 'log' axes
-  const thresholdY = useMemo(() => {
+  // Threshold and axis mapping logic
+  const { thresholdY, yAxisConfig, labelSuffix } = useMemo(() => {
+    if (ge2.length === 0) return { thresholdY: 1000, yAxisConfig: { type: 'log' }, labelSuffix: '' }
+    
     if (normalize) {
-      if (ge2.length === 0) return 0
       const vals = ge2.map(d => d.flux).filter(v => v !== null && !isNaN(v))
-      const min = Math.min(...vals)
-      const max = Math.max(...vals)
-      if (max === min) return 50
-      return ((ALERT_THRESHOLD - min) / (max - min)) * 100
+      const min = Math.min(...vals), max = Math.max(...vals)
+      
+      let calcY = (max === min) ? 50 : ((ALERT_THRESHOLD - min) / (max - min)) * 100
+      const isPinned = calcY > 120
+      const displayThresholdY = isPinned ? 115 : calcY
+      
+      const tickVals = [0, 25, 50, 75, 100]
+      const tickTexts = tickVals.map(v => (min + (v / 100) * (max - min)).toFixed(0))
+
+      return { 
+        thresholdY: displayThresholdY, 
+        yAxisConfig: {
+          tickvals: tickVals,
+          ticktext: tickTexts,
+          range: [0, isPinned ? 130 : Math.max(105, calcY + 10)],
+          type: 'linear'
+        },
+        labelSuffix: isPinned ? ' (Fuera de escala)' : ''
+      }
     }
-    return Math.log10(ALERT_THRESHOLD) // log10(1000) = 3
+    
+    return { thresholdY: 1000, yAxisConfig: { type: 'log' }, labelSuffix: '' }
   }, [ge2, normalize])
 
   const layout: Partial<Plotly.Layout> = {
@@ -89,27 +109,27 @@ export function ElectronFluxClient() {
     xaxis: { ...PLOTLY_DARK_LAYOUT.xaxis, type: 'date', automargin: true },
     yaxis: {
       ...PLOTLY_DARK_LAYOUT.yaxis,
-      title: { text: normalize ? 'Flujo Relativo (%)' : 'Electrones (pfu)', font: { size: 11, color: '#64748b' } },
-      type: normalize ? 'linear' : 'log',
-      range: normalize ? [0, 105] : undefined,
-      dtick: normalize ? 25 : 1,
+      title: { text: 'Flujo Electrones (MeV)', font: { size: 11, color: '#64748b' } },
+      ...yAxisConfig as any,
       automargin: true,
     },
     margin: { l: 60, r: 40, t: 40, b: 65 },
     hovermode: 'x unified',
-    shapes: (normalize && (thresholdY < 0 || thresholdY > 100)) ? [] : [
+    shapes: [
       {
         type: 'line', xref: 'paper', yref: 'y', x0: 0, x1: 1,
-        y0: thresholdY, y1: thresholdY,
+        y0: normalize ? thresholdY! : ALERT_THRESHOLD, 
+        y1: normalize ? thresholdY! : ALERT_THRESHOLD,
         line: { color: '#f59e0b', width: 1.5, dash: 'dash' },
       }
     ],
-    annotations: (normalize && (thresholdY < 0 || thresholdY > 100)) ? [] : [
+    annotations: [
       {
-        xref: 'paper', yref: 'y', x: 0, y: thresholdY,
-        text: `Umbral alerta (${ALERT_THRESHOLD} pfu)`,
+        xref: 'paper', yref: 'y', x: 0, 
+        y: normalize ? thresholdY! : Math.log10(ALERT_THRESHOLD),
+        text: `Umbral alerta ≥2 MeV${labelSuffix}`,
         showarrow: false,
-        font: { size: 10, color: '#f59e0b' },
+        font: { size: 10, color: '#f59e0b', weight: 'bold' },
         xanchor: 'left', yanchor: 'bottom', yshift: 4,
       }
     ],
@@ -136,6 +156,7 @@ export function ElectronFluxClient() {
           <PlotlyChart data={plotData} layout={layout} className="flex-1 w-full" />
         )}
       </div>
+
       <UsageImpacts usage={USAGE} impacts={IMPACTS} />
 
       <SectionDetails>
@@ -143,7 +164,7 @@ export function ElectronFluxClient() {
           El instrumento SEISS (Space Environment In-Situ Suite) a bordo de GOES mide el flujo de electrones energéticos en la órbita geoestacionaria. Los datos de flujo de electrones con energía ≥2 MeV son particularmente importantes para evaluar el riesgo de carga electrostática en satélites.
         </p>
         <p>
-          Niveles elevados de electrones energéticos (conocidos como «electrones asesinos») pueden penetrar el blindaje de los satélites y causar acumulación de carga interna, lo que potencialmente provoca descargas electrostáticas y daños a los componentes electrónicos. El umbral de alerta se establece en 1000 pfu (unidades de flujo de partículas).
+          Niveles elevados de electrones energéticos (conocidos como «electrones asesinos») pueden penetrar el blindaje de los satélites y causar acumulación de carga interna, lo que potencialmente provoca descargas electrostáticas y daños a los componentes electrónicos. El umbral de alerta se establece en un nivel de 1000.
         </p>
         <p>
           Las tormentas de electrones relativistas suelen producirse 1–3 días después de la llegada de corrientes de viento solar de alta velocidad provenientes de agujeros coronales. Estas tormentas pueden persistir durante varios días y representan un riesgo acumulativo para la electrónica de los satélites.
