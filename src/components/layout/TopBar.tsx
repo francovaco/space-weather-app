@@ -9,6 +9,7 @@ import { Menu, Satellite } from 'lucide-react'
 import { formatInTimeZone } from 'date-fns-tz'
 import { SpaceWeatherPills } from '@/components/layout/SpaceWeatherBar'
 import { WeatherPill } from '@/components/layout/WeatherPill'
+import { NotificationToggle } from '@/components/layout/NotificationToggle'
 import Link from 'next/link'
 
 export function TopBar() {
@@ -47,9 +48,10 @@ export function TopBar() {
       {/* Center: space weather conditions pills */}
       <SpaceWeatherPills />
 
-      {/* Right: dual clocks — suppressHydrationWarning prevents React complaining
-          about the ── placeholder vs real time on first paint */}
+      {/* Right: notifications + dual clocks */}
       <div className="flex items-center gap-6" suppressHydrationWarning>
+        <NotificationToggle />
+        <div className="h-8 w-px bg-border" />
         <Clock label="UTC"   time={utcStr}   date={utcDate}   tz="UTC"   accent="text-accent-cyan" />
         <div className="h-6 w-px bg-border" />
         <Clock label="LOCAL" time={localStr} date={localDate} tz={localTz} accent="text-accent-amber" />

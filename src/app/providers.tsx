@@ -4,6 +4,12 @@
 // ============================================================
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useState } from 'react'
+import { useNotificationManager } from '@/hooks/useNotificationManager'
+
+function NotificationService() {
+  useNotificationManager()
+  return null
+}
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -24,6 +30,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <NotificationService />
       {children}
     </QueryClientProvider>
   )
