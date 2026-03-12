@@ -48,7 +48,7 @@ export async function GET(req: NextRequest) {
       .map((m) => {
         const parts = m.match(/href=["']?([^"'>]+\.png)["']?/i)
         if (!parts) return null
-        let url = parts[1]
+        const url = parts[1]
         // Extract just the filename if it's a path
         if (url.includes('/')) {
           const segments = url.split('/')

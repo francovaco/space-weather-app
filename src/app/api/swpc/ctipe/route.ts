@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 
 const SWPC_BASE = 'https://services.swpc.noaa.gov'
 const CTIPE_PATH = '/images/animations/ctipe/tec/'
@@ -13,7 +13,7 @@ function parseTimestamp(filename: string): string | null {
   return `${Y}-${M}-${D}T${h}:${m}:${s}Z`
 }
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     const res = await fetch(`${SWPC_BASE}${CTIPE_PATH}`, {
       next: { revalidate: 60 },
@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
       .map((m) => {
         const parts = m.match(/href=["']?([^"'>]+\.png)["']?/i)
         if (!parts) return null
-        let url = parts[1]
+        const url = parts[1]
         if (url.includes('/')) {
           const segments = url.split('/')
           return segments[segments.length - 1]

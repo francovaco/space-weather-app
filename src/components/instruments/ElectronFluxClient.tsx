@@ -171,8 +171,6 @@ export function ElectronFluxClient() {
             className="min-h-[420px]"
           />
         )}
-          />
-        )}
         {/* Last update indicator */}
         {rawData && rawData.length > 0 && (
           <div className="absolute right-2 top-1 text-[9px] text-text-dim">

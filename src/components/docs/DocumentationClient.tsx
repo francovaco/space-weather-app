@@ -5,9 +5,9 @@
 import { useState } from 'react'
 import { PDFThumbnail } from './PDFThumbnail'
 import {
-  BookOpen, ExternalLink, FileText, ChevronDown, ChevronUp,
-  Satellite, Zap, Cloud, Flame, Radio, Wifi, Globe,
-  Snowflake, Mountain, Activity,
+  ExternalLink, FileText, ChevronDown, ChevronUp,
+  Satellite, Zap, Cloud, Radio, Wifi,
+  Activity,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -245,16 +245,6 @@ export function DocumentationClient() {
           Guías de referencia rápida para cada banda del Generador de Imágenes de Línea de Base Avanzado (ABI).
           Hacé clic en una banda para ver su vista previa y descargar la guía completa.
         </p>
-
-        {/* Band link */}
-        <a
-          href="https://www.goes-r.gov/mission/ABI-bands-quick-info.html"
-          target="_blank" rel="noopener noreferrer"
-          className="flex items-center gap-2 rounded border border-border bg-background-card px-3 py-2 text-xs text-text-secondary hover:border-border-accent hover:text-text-primary transition-colors"
-        >
-          <ExternalLink size={11} className="text-accent-cyan" />
-          <span>Ver resumen completo en goes-r.gov</span>
-        </a>
 
         {bandView === 'grid' ? (
           <ABIBandGrid bands={ABI_BANDS} expandedBand={expandedBand} onExpand={setExpandedBand} />

@@ -176,7 +176,7 @@ export function MagnetosphereClient() {
       {/* Details */}
       <SectionDetails>
         <p>
-          Las "Geospace Magnetosphere Movies" son el resultado del modelo Geospace v2.0, una implementación operativa del modelo Space Weather Modeling Framework (SWMF) que simula la respuesta de la magnetósfera terrestre al forzamiento del viento solar.
+          Las &quot;Geospace Magnetosphere Movies&quot; son el resultado del modelo Geospace v2.0, una implementación operativa del modelo Space Weather Modeling Framework (SWMF) que simula la respuesta de la magnetósfera terrestre al forzamiento del viento solar.
         </p>
         <p>
           <strong>Densidad:</strong> Muestra la distribución del número de partículas por unidad de volumen. Es útil para identificar el arco de choque (bow shock), la magnetopausa y la acumulación de plasma en la cola magnética.

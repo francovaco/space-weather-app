@@ -32,6 +32,8 @@ const nextConfig = {
           { key: 'Access-Control-Allow-Origin', value: '*' },
           { key: 'Access-Control-Allow-Methods', value: 'GET,OPTIONS' },
           { key: 'Access-Control-Allow-Headers', value: 'Content-Type' },
+          // Cache control for satellite images (10 min)
+          { key: 'Cache-Control', value: 's-maxage=600, stale-while-revalidate=59' },
         ],
       },
     ]

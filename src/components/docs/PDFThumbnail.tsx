@@ -125,9 +125,8 @@ export function PDFThumbnail({ pdfUrl, width = 280, className }: PDFThumbnailPro
 
       {/* Loading overlay */}
       {state === 'loading' && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-background-secondary">
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-background-secondary">
           <Loader2 size={20} className="animate-spin text-primary" />
-          <span className="text-2xs text-text-muted">Cargando vista previa…</span>
         </div>
       )}
 

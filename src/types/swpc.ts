@@ -25,7 +25,7 @@ export interface XRayReading {
   observed_flux: number
   electron_correction: number
   electron_contaminaton: boolean
-  energy: 'short' | 'long' // 0.05–0.4 nm (short) | 0.1–0.8 nm (long)
+  energy: '0.05-0.4nm' | '0.1-0.8nm' // short (0.05–0.4 nm) | long (0.1–0.8 nm)
 }
 
 export type XRayData = XRayReading[]
@@ -190,6 +190,8 @@ export interface KpReading {
   a_running: number
   station_count: number
 }
+
+export type KpIndexData = KpReading[]
 
 // --- GOES Status ---
 

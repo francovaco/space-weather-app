@@ -5,7 +5,6 @@
 // animation player with 3 map types per view + Mouse Hover
 // ============================================================
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { LoadingMessage, ErrorMessage, EmptyMessage, PreloadProgress } from '@/components/ui/StatusMessages'
 import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
 import { getGLOTECFrames } from '@/lib/swpc-api'
 import { UsageImpacts } from '@/components/ui/UsageImpacts'

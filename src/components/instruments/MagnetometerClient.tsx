@@ -12,7 +12,6 @@ import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
 import { getMagnetometerData, timeRangeToParam } from '@/lib/swpc-api'
 import { LoadingMessage, ErrorMessage, EmptyMessage } from '@/components/ui/StatusMessages'
 import type { TimeRange } from '@/types/swpc'
-import { cn } from '@/lib/utils'
 
 interface MagSample {
   time_tag: string

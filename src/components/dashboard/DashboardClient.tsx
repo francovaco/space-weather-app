@@ -1,16 +1,16 @@
 'use client'
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { 
   AlertTriangle, ChevronRight, Snowflake, CheckCircle2, Eye, Gauge, 
   Wind, Droplets, MapPin, Sun, Cloud, CloudRain, CloudLightning, 
-  Zap, Activity, Globe, Satellite, Info, Thermometer,
-  Sunrise, Sunset, Navigation, CloudSun, ExternalLink
+  Zap, Activity, Globe, Satellite, Thermometer,
+  Sunrise, Sunset, Navigation, CloudSun
 } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
-import { LoadingMessage, ErrorMessage, EmptyMessage } from '@/components/ui/StatusMessages'
+import { LoadingMessage, EmptyMessage } from '@/components/ui/StatusMessages'
 import { 
-  XRayFluxData, 
+  XRayData, 
   ProtonFluxData, 
   KpIndexData, 
   GOESStatusData 
@@ -106,9 +106,9 @@ async function fetchEarthquakes(): Promise<Earthquake[]> {
         return (place.includes('argentina') || place.includes('chile')) && time >= threeDaysAgo
       })
       .map((f: any) => {
-        let placeParts = f.properties.place.split(', ')
+        const placeParts = f.properties.place.split(', ')
         let city = placeParts[0]
-        let country = placeParts[1] || 'Región'
+        const country = placeParts[1] || 'Región'
         
         if (city.includes(' of ')) {
           city = city.split(' of ')[1]
@@ -142,9 +142,9 @@ export function DashboardClient() {
   const [earthquakeData, setEarthquakeData] = useState<Earthquake[]>([])
 
   // Space weather data states
-  const [xrayData, setXrayData] = useState<XRayFluxData[] | null>(null)
-  const [protonData, setProtonData] = useState<ProtonFluxData[] | null>(null)
-  const [kpData, setKpData] = useState<KpIndexData[] | null>(null)
+  const [xrayData, setXrayData] = useState<XRayData | null>(null)
+  const [protonData, setProtonData] = useState<ProtonFluxData | null>(null)
+  const [kpData, setKpData] = useState<KpIndexData | null>(null)
   const [goesData, setGoesData] = useState<GOESStatusData | null>(null)
   const [lightningData, setLightningData] = useState<{ count: number, closest: number | null, status: string } | null>(null)
   const [nasaPrecipData, setNasaPrecipData] = useState<{ last24h: number, last7d: number, monthTotal: number, latestDate: string, source: string } | null>(null)
