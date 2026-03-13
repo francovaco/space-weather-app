@@ -30,6 +30,51 @@ interface FluxSample {
   energy: string
 }
 
+// ── Translation Helpers ────────────────────────────────
+
+const TYPE_TRANSLATIONS: Record<string, string> = {
+  'CME': 'Eyección de Masa Coronal',
+  'FLR': 'Fulguración Solar',
+  'SEP': 'Tormenta de Partículas (SEP)',
+  'MPC': 'Cruce de Magnetopausa',
+  'RBE': 'Aumento Cinturón Radiación',
+  'IPS': 'Choque Interplanetario',
+  'GST': 'Tormenta Geomagnética',
+  'HSS': 'Corriente de Alta Velocidad',
+  'REPORT': 'Reporte de Estado',
+}
+
+const translateBody = (text: string) => {
+  if (!text) return ''
+  let t = text.replace(/<\/?[^>]+(>|$)/g, "") // Remove HTML
+  
+  // Basic technical replacements
+  const dict: Record<string, string> = {
+    'spacecraft': 'naves espaciales',
+    'satellite': 'satélite',
+    'impact': 'impacto',
+    'expected': 'esperado',
+    'high probability': 'alta probabilidad',
+    'anomaly': 'anomalía',
+    'operational': 'operacional',
+    'upset': 'fallo/reinicio',
+    'charging': 'carga electrostática',
+    'proton flux': 'flujo de protones',
+    'radiation storm': 'tormenta de radiación',
+    'solar flare': 'fulguración solar',
+    'velocity': 'velocidad',
+    'directed': 'dirigida',
+    'Earth': 'Tierra',
+    'arrival': 'llegada',
+  }
+
+  Object.entries(dict).forEach(([en, es]) => {
+    const reg = new RegExp(`\\b${en}\\b`, 'gi')
+    t = t.replace(reg, es)
+  })
+  return t
+}
+
 // ── Main component ────────────────────────────────────
 
 export function AnomalyMonitorClient() {
@@ -212,61 +257,63 @@ export function AnomalyMonitorClient() {
         )}
       </div>
 
-      {/* Event Feed */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-4">
+      {/* Event Feed and Risk Analysis */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+        <div className="lg:col-span-2 flex flex-col space-y-4">
           <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-text-secondary">
             <Satellite size={16} />
             Eventos y Reportes de Impacto
           </h2>
           
-          <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
-            {donki.isLoading && <LoadingMessage message="Consultando NASA DONKI..." />}
-            {!donki.isLoading && relevantEvents.length === 0 && (
-              <EmptyMessage message="No se han reportado impactos satelitales en este periodo." />
-            )}
-            {relevantEvents.map((event) => (
-              <div 
-                key={event.messageID} 
-                className={`card p-4 border-l-4 transition-colors hover:bg-white/5 ${
-                  event.isHighPriority ? 'border-amber-500 bg-amber-500/5' : 'border-slate-700 bg-slate-900/50'
-                }`}
-              >
-                <div className="flex items-start justify-between gap-4 mb-2">
-                  <span className="text-2xs font-mono text-text-dim uppercase">
-                    {new Date(event.messageIssueTime).toLocaleString()} · {event.messageType}
-                  </span>
-                  <a 
-                    href={event.messageURL} 
-                    target="_blank" 
-                    rel="noreferrer"
-                    className="text-primary hover:text-accent-cyan"
-                  >
-                    <Info size={14} />
-                  </a>
-                </div>
-                <p className="text-xs text-text-secondary leading-relaxed line-clamp-3">
-                  {event.messageBody.replace(/<\/?[^>]+(>|$)/g, "")}
-                </p>
-                <div className="mt-3 flex items-center gap-2">
-                  {event.isHighPriority && (
-                    <span className="inline-flex items-center gap-1 rounded bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-bold text-amber-500">
-                      <Zap size={10} /> ALTA PRIORIDAD
+          <div className="card flex-1 overflow-hidden bg-background-secondary/30">
+            <div className="h-[450px] overflow-y-auto p-4 space-y-3 custom-scrollbar">
+              {donki.isLoading && <LoadingMessage message="Consultando NASA DONKI..." />}
+              {!donki.isLoading && relevantEvents.length === 0 && (
+                <EmptyMessage message="No se han reportado impactos satelitales en este periodo." />
+              )}
+              {relevantEvents.map((event) => (
+                <div 
+                  key={event.messageID} 
+                  className={`card p-4 border-l-4 transition-colors hover:bg-white/5 ${
+                    event.isHighPriority ? 'border-amber-500 bg-amber-500/5' : 'border-slate-700 bg-slate-900/50'
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-4 mb-2">
+                    <span className="text-2xs font-mono text-text-dim uppercase">
+                      {new Date(event.messageIssueTime).toLocaleString()} · {TYPE_TRANSLATIONS[event.messageType] || event.messageType}
                     </span>
-                  )}
-                  <span className="text-[10px] text-text-muted">ID: {event.messageID}</span>
+                    <a 
+                      href={event.messageURL} 
+                      target="_blank" 
+                      rel="noreferrer"
+                      className="text-primary hover:text-accent-cyan"
+                    >
+                      <Info size={14} />
+                    </a>
+                  </div>
+                  <p className="text-xs text-text-secondary leading-relaxed line-clamp-3">
+                    {translateBody(event.messageBody)}
+                  </p>
+                  <div className="mt-3 flex items-center gap-2">
+                    {event.isHighPriority && (
+                      <span className="inline-flex items-center gap-1 rounded bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-bold text-amber-500">
+                        <Zap size={10} /> ALTA PRIORIDAD
+                      </span>
+                    )}
+                    <span className="text-[10px] text-text-muted">ID: {event.messageID}</span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
 
-        <div className="space-y-4">
+        <div className="flex flex-col space-y-4">
           <h2 className="text-sm font-bold uppercase tracking-wider text-text-secondary">
             Análisis de Riesgo
           </h2>
-          <div className="card p-5 bg-background-secondary/50 border-primary/10">
-            <div className="space-y-6">
+          <div className="card flex-1 p-5 bg-background-secondary/50 border-primary/10">
+            <div className="flex flex-col h-full justify-between gap-6">
               <div>
                 <p className="text-2xs text-text-muted uppercase mb-3 tracking-widest">Flujo Actual (pfu)</p>
                 <div className="space-y-3">
@@ -309,7 +356,7 @@ export function AnomalyMonitorClient() {
                 </ul>
               </div>
 
-              <div className="rounded-md bg-primary/5 p-3 text-[11px] text-text-secondary border border-primary/10 italic">
+              <div className="rounded-md bg-primary/5 p-3 text-[11px] text-text-secondary border border-primary/10 italic mt-auto">
                 Nota: Este monitor utiliza datos de la red DONKI para identificar eventos que la NASA clasifica como riesgosos para la flota satelital operativa.
               </div>
             </div>
