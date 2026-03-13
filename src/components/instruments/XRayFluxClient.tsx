@@ -151,7 +151,7 @@ export function XRayFluxClient() {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">Flujo de Rayos X</h1>
-            <DataAge timestamp={samples?.[samples.length - 1]?.time_tag} />
+            <DataAge timestamp={rawData?.[rawData.length - 1]?.time_tag} />
           </div>
           <p className="mt-1 text-xs text-text-muted">GOES-19 · Clasificación de Fulguraciones Solares · Actualización cada 1 min</p>
         </div>
