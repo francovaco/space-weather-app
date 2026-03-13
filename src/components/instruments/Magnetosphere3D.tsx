@@ -64,7 +64,7 @@ function Shield({ pressure }: { pressure: number }) {
 }
 
 function SolarWind({ speed, pressure }: { speed: number, pressure: number }) {
-  const count = 400
+  const count = 600 // Aumentamos el conteo para llenar el espacio
   const shieldScale = Math.max(2.5 - (pressure / 15), 1.5)
   const particles = useRef<any[]>([])
   const pointsRef = useRef<THREE.Points>(null!)
@@ -73,26 +73,26 @@ function SolarWind({ speed, pressure }: { speed: number, pressure: number }) {
     const p = new Float32Array(count * 3)
     const c = new Float32Array(count * 3)
     for (let i = 0; i < count; i++) {
-      p[i * 3] = Math.random() * 50 - 10
-      p[i * 3 + 1] = (Math.random() - 0.5) * 25
-      p[i * 3 + 2] = (Math.random() - 0.5) * 25
+      // Distribución mucho más amplia en Y y Z
+      p[i * 3] = Math.random() * 60 - 10
+      p[i * 3 + 1] = (Math.random() - 0.5) * 40
+      p[i * 3 + 2] = (Math.random() - 0.5) * 40
       
       c[i * 3] = 1; c[i * 3 + 1] = 1; c[i * 3 + 2] = 1;
 
       particles.current.push({
-        vx: -(speed / 400) * 0.3,
-        vy: (Math.random() - 0.5) * 0.02,
-        vz: (Math.random() - 0.5) * 0.02,
-        baseColor: new THREE.Color(0x60a5fa)
+        vx: -(speed / 400) * 0.35,
+        vy: (Math.random() - 0.5) * 0.05,
+        vz: (Math.random() - 0.5) * 0.05,
       })
     }
     return [p, c]
-  }, [])
+  }, [speed])
 
   useFrame((state, delta) => {
     const pos = pointsRef.current.geometry.attributes.position.array as Float32Array
     const col = pointsRef.current.geometry.attributes.color.array as Float32Array
-    const boundary = shieldScale * 1.5
+    const boundary = shieldScale * 1.6
 
     for (let i = 0; i < count; i++) {
       const idx = i * 3
@@ -102,33 +102,31 @@ function SolarWind({ speed, pressure }: { speed: number, pressure: number }) {
       pos[idx+1] += p.vy * delta * 60
       pos[idx+2] += p.vz * delta * 60
 
-      // Lógica de Impacto y Deflexión
       const distFront = pos[idx]
       const distY = pos[idx+1]
       const distZ = pos[idx+2]
 
-      if (distFront > 0 && distFront < boundary && Math.abs(distY) < shieldScale * 1.2 && Math.abs(distZ) < shieldScale * 1.2) {
-        // EFECTO EXPLOSIÓN: Flash blanco y desvío violento
+      // Si están en la trayectoria frontal del escudo
+      if (distFront > 0 && distFront < boundary && Math.abs(distY) < shieldScale * 1.3 && Math.abs(distZ) < shieldScale * 1.3) {
+        // EXPLOSIÓN VISIBLE: Color blanco puro y desvío
         col[idx] = 1; col[idx+1] = 1; col[idx+2] = 1;
-        p.vy += distY > 0 ? 0.05 : -0.05
-        p.vz += distZ > 0 ? 0.05 : -0.05
-        p.vx = -0.02 
+        p.vy += distY > 0 ? 0.08 : -0.08
+        p.vz += distZ > 0 ? 0.08 : -0.08
+        p.vx = -0.03
       } else {
-        // Color normal
-        col[idx] = 0.37; col[idx+1] = 0.64; col[idx+2] = 0.98;
-        // Si ya pasaron el escudo, vuelven a ganar velocidad hacia atrás
-        if (distFront < 0) {
-          p.vx = -(speed / 400) * 0.4
-        }
+        // Color Cian brillante para visibilidad frontal
+        col[idx] = 0.2; col[idx+1] = 0.8; col[idx+2] = 1.0;
+        if (distFront < 0) p.vx = -(speed / 400) * 0.5 // Acelerar tras pasar
       }
 
-      if (pos[idx] < -20) {
-        pos[idx] = 30
-        pos[idx+1] = (Math.random() - 0.5) * 25
-        pos[idx+2] = (Math.random() - 0.5) * 25
-        p.vx = -(speed / 400) * 0.3
-        p.vy = (Math.random() - 0.5) * 0.02
-        p.vz = (Math.random() - 0.5) * 0.02
+      // Reiniciar con margen amplio
+      if (pos[idx] < -25) {
+        pos[idx] = 35
+        pos[idx+1] = (Math.random() - 0.5) * 40
+        pos[idx+2] = (Math.random() - 0.5) * 40
+        p.vx = -(speed / 400) * 0.35
+        p.vy = (Math.random() - 0.5) * 0.05
+        p.vz = (Math.random() - 0.5) * 0.05
       }
     }
     pointsRef.current.geometry.attributes.position.needsUpdate = true
@@ -141,7 +139,14 @@ function SolarWind({ speed, pressure }: { speed: number, pressure: number }) {
         <bufferAttribute attach="attributes-position" count={count} array={coords} itemSize={3} />
         <bufferAttribute attach="attributes-color" count={count} array={colors} itemSize={3} />
       </bufferGeometry>
-      <pointsMaterial size={0.12} vertexColors transparent opacity={0.8} blending={THREE.AdditiveBlending} sizeAttenuation />
+      <pointsMaterial 
+        size={0.2} 
+        vertexColors 
+        transparent 
+        opacity={0.9} 
+        blending={THREE.AdditiveBlending} 
+        sizeAttenuation 
+      />
     </points>
   )
 }
