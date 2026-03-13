@@ -235,7 +235,7 @@ function MagnetospherePanel3D() {
   const { data: plasma, isLoading, isError } = useAutoRefresh<any[]>({
     queryKey: ['solar-wind-plasma'],
     fetcher: () => getSolarWindPlasma() as Promise<any[]>,
-    intervalMs: REFRESH_INTERVALS.FIVE_MIN,
+    intervalMs: REFRESH_INTERVALS.ONE_MIN,
   })
 
   const latest = useMemo(() => {
