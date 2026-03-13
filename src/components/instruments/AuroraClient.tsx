@@ -9,8 +9,7 @@ import { getAuroraFrames } from '@/lib/swpc-api'
 import { UsageImpacts } from '@/components/ui/UsageImpacts'
 import { SectionDetails } from '@/components/ui/SectionDetails'
 import { LoadingMessage, ErrorMessage, EmptyMessage, PreloadProgress } from '@/components/ui/StatusMessages'
-import { Play, Pause, SkipBack, SkipForward, Download, Map as MapIcon, PlayCircle } from 'lucide-react'
-import { AuroraMap } from './AuroraMap'
+import { Play, Pause, SkipBack, SkipForward, Download } from 'lucide-react'
 import { DataAge } from '@/components/ui/DataAge'
 import { cn } from '@/lib/utils'
 
@@ -110,64 +109,32 @@ const IMPACTS = [
 ]
 
 export function AuroraClient() {
-  const [view, setView] = useState<'map' | 'animation'>('map')
-  
-  const { data: latestData } = useAutoRefresh<any>({
-    queryKey: ['aurora-latest-data'], // Consolidated key
-    fetcher: () => getLatestAuroraData(),
+  const { data: northFrames } = useAutoRefresh<AuroraFrame[]>({
+    queryKey: ['aurora', 'north'],
+    fetcher: () => getAuroraFrames('north') as Promise<AuroraFrame[]>,
     intervalMs: REFRESH_INTERVALS.FIVE_MIN,
   })
 
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">
-              Monitoreo de Aurora Interactivo
-            </h1>
-            <DataAge timestamp={latestData?.['Observation Time']} />
-          </div>
-          <p className="mt-1 text-xs text-text-muted">
-            Modelo OVATION · Probabilidad proyectada sobre geografía real · Actualización cada 5 min
-          </p>
+      <div>
+        <div className="flex items-center gap-2">
+          <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">
+            Pronóstico de Aurora — 30 Minutos
+          </h1>
+          <DataAge timestamp={northFrames?.[northFrames.length - 1]?.time_tag} />
         </div>
-
-        <div className="flex bg-background-tertiary p-1 rounded-md border border-border">
-          <button 
-            onClick={() => setView('map')}
-            className={cn(
-              "flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded transition-all",
-              view === 'map' ? "bg-primary text-white shadow-lg" : "text-text-muted hover:text-text-primary"
-            )}
-          >
-            <MapIcon size={14} />
-            Mapa Interactivo
-          </button>
-          <button 
-            onClick={() => setView('animation')}
-            className={cn(
-              "flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded transition-all",
-              view === 'animation' ? "bg-primary text-white shadow-lg" : "text-text-muted hover:text-text-primary"
-            )}
-          >
-            <PlayCircle size={14} />
-            Animación 24h
-          </button>
-        </div>
+        <p className="mt-1 text-xs text-text-muted">
+          Modelo OVATION · Probabilidad de aurora boreal y austral · Actualización cada 5 min
+        </p>
       </div>
 
-      {view === 'map' ? (
-        <div className="animate-in fade-in zoom-in-95 duration-500">
-          <AuroraMap />
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <AuroraPanel pole="north" label="Polo Norte (Boreal)" />
-          <AuroraPanel pole="south" label="Polo Sur (Austral)" />
-        </div>
-      )}
+      {/* Dual players */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <AuroraPanel pole="north" label="Polo Norte (Boreal)" />
+        <AuroraPanel pole="south" label="Polo Sur (Austral)" />
+      </div>
 
       {/* Shared Usage & Impacts */}
       <UsageImpacts usage={USAGE} impacts={IMPACTS} />
@@ -187,10 +154,6 @@ export function AuroraClient() {
     </div>
   )
 }
-
-// ───────────────────────────────────────────────
-// Single aurora animation panel
-// ───────────────────────────────────────────────
 
 function AuroraPanel({ pole, label }: { pole: 'north' | 'south'; label: string }) {
   const { data: frames, isLoading, isError } = useAutoRefresh<AuroraFrame[]>({
@@ -221,10 +184,6 @@ function AuroraPanel({ pole, label }: { pole: 'north' | 'south'; label: string }
   )
 }
 
-// ───────────────────────────────────────────────
-// Internal animation player (self-contained)
-// ───────────────────────────────────────────────
-
 function AuroraPlayer({ frames }: { frames: AuroraFrame[] }) {
   const [idx, setIdx] = useState(0)
   const [playing, setPlaying] = useState(false)
@@ -246,7 +205,6 @@ function AuroraPlayer({ frames }: { frames: AuroraFrame[] }) {
   const total = activeFrames.length
   const current = activeFrames[Math.min(idx, Math.max(0, total - 1))]
 
-  // Reset when frames change
   useEffect(() => {
     setIdx(0)
     setPlaying(false)
@@ -255,7 +213,6 @@ function AuroraPlayer({ frames }: { frames: AuroraFrame[] }) {
     setActiveFrames([])
   }, [frames])
 
-  // Preload frames in batches, filter failures, then auto-play
   useEffect(() => {
     let cancelled = false
     const BATCH = 8
@@ -276,7 +233,6 @@ function AuroraPlayer({ frames }: { frames: AuroraFrame[] }) {
               resolve()
             }
             img.onerror = () => {
-              // Mark as null so it gets filtered out
               ok[i + bi] = null
               doneCount++
               if (!cancelled) setLoadProgress(Math.round((doneCount / frames.length) * 100))
@@ -294,7 +250,6 @@ function AuroraPlayer({ frames }: { frames: AuroraFrame[] }) {
           setLoaded(true)
           setPlaying(true)
         } else {
-          // If all failed, show something at least to avoid infinite loading
           setActiveFrames(frames)
           setLoaded(true)
         }
@@ -305,7 +260,6 @@ function AuroraPlayer({ frames }: { frames: AuroraFrame[] }) {
     return () => { cancelled = true }
   }, [frames])
 
-  // Play/pause loop
   useEffect(() => {
     if (intervalRef.current) clearInterval(intervalRef.current)
     if (playing && total > 1) {
@@ -318,7 +272,6 @@ function AuroraPlayer({ frames }: { frames: AuroraFrame[] }) {
     }
   }, [playing, speedMs, total])
 
-  // Draw current frame to hidden canvas for pixel sampling when paused
   useEffect(() => {
     canvasReady.current = false
     if (playing || !current) return
@@ -376,7 +329,6 @@ function AuroraPlayer({ frames }: { frames: AuroraFrame[] }) {
 
   return (
     <div className="flex flex-col gap-3">
-      {/* Loading progress */}
       {!loaded && (
         <PreloadProgress progress={loadProgress} />
       )}
@@ -387,13 +339,11 @@ function AuroraPlayer({ frames }: { frames: AuroraFrame[] }) {
 
       {loaded && current && (
         <>
-          {/* Image */}
           <div
             ref={imgContRef}
-            className="relative mx-auto w-full bg-black"
+            className="relative mx-auto w-full bg-black flex items-center justify-center select-none cursor-crosshair"
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
-            style={{ cursor: !playing ? 'crosshair' : undefined }}
           >
             <canvas ref={canvasRef} className="hidden" />
             <img
@@ -403,11 +353,9 @@ function AuroraPlayer({ frames }: { frames: AuroraFrame[] }) {
               className="h-auto w-full"
               draggable={false}
             />
-            {/* Timestamp overlay */}
             <div className="absolute bottom-2 right-2 rounded bg-black/60 px-2 py-0.5 font-data text-2xs text-text-secondary">
               {fmtTime(current.time_tag)}
             </div>
-            {/* Hover tooltip */}
             {hoverInfo && !playing && (
               <div
                 className="pointer-events-none absolute z-20 rounded border border-white/20 bg-black/85 px-2.5 py-1.5 shadow-lg backdrop-blur-sm"
@@ -429,7 +377,6 @@ function AuroraPlayer({ frames }: { frames: AuroraFrame[] }) {
             )}
           </div>
 
-          {/* Timeline slider */}
           <input
             type="range"
             min={0}
@@ -439,7 +386,6 @@ function AuroraPlayer({ frames }: { frames: AuroraFrame[] }) {
             className="w-full accent-primary"
           />
 
-          {/* Controls */}
           <div className="player-controls flex-wrap">
             <button className="ctrl-btn" onClick={prev} title="Cuadro anterior">
               <SkipBack size={13} />
@@ -453,7 +399,6 @@ function AuroraPlayer({ frames }: { frames: AuroraFrame[] }) {
 
             <div className="h-4 w-px bg-border" />
 
-            {/* Speed */}
             <button
               className="ctrl-btn"
               onClick={() => setFpsIdx((i) => Math.max(0, i - 1))}
@@ -472,14 +417,12 @@ function AuroraPlayer({ frames }: { frames: AuroraFrame[] }) {
               <span className="text-2xs font-bold">+</span>
             </button>
 
-            {/* Frame counter */}
             <span className="ml-auto data-value text-text-muted">
               {idx + 1}/{total}
             </span>
 
             <div className="h-4 w-px bg-border" />
 
-            {/* Download current frame */}
             <button
               className="ctrl-btn"
               onClick={() => {

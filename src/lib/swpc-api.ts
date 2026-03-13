@@ -39,9 +39,6 @@ export const getProtonFluxData = (range: string = '1-hour') =>
   apiFetch(`${BASE}/proton-flux?range=${range}`)
 
 // --- Aurora ---
-export const getLatestAuroraData = () =>
-  apiFetch(`${BASE}/aurora/latest`)
-
 export const getAuroraForecast = () =>
   apiFetch(`${BASE}/aurora`)
 
