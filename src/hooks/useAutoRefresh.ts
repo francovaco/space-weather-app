@@ -32,12 +32,14 @@ export function useAutoRefresh<T>({
  * Common refresh intervals matching SWPC/NOAA update schedules
  */
 export const REFRESH_INTERVALS = {
-  /** 1 minute — magnetometer, x-ray flux, solar wind */
+  /** 1 minute — magnetometer, x-ray flux, solar wind, particles, aurora */
   ONE_MIN: 60_000,
-  /** 5 minutes — electron/proton flux, aurora, SUVI */
+  /** 5 minutes — generic fallback */
   FIVE_MIN: 5 * 60_000,
-  /** 10 minutes — ABI imagery, coronagraph */
+  /** 10 minutes — model outputs */
   TEN_MIN: 10 * 60_000,
+  /** 30 minutes — Kp index (published every 3h) */
+  THIRTY_MIN: 30 * 60_000,
   /** Satellite status — every 5 min */
   STATUS: 5 * 60_000,
 } as const

@@ -52,7 +52,7 @@ export function ElectronFluxClient() {
   const { data: rawData, isLoading, isError } = useAutoRefresh<ElectronSample[]>({
     queryKey: ['electron-flux', range],
     fetcher: () => getElectronFluxData(timeRangeToParam(range)) as Promise<ElectronSample[]>,
-    intervalMs: REFRESH_INTERVALS.FIVE_MIN,
+    intervalMs: REFRESH_INTERVALS.ONE_MIN,
   })
 
   const ge2 = useMemo(() => rawData?.filter((d) => d.energy === '>=2 MeV') ?? [], [rawData])

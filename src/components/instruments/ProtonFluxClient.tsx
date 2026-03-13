@@ -57,7 +57,7 @@ export function ProtonFluxClient() {
   const { data: rawData, isLoading, isError } = useAutoRefresh<ProtonSample[]>({
     queryKey: ['proton-flux', range],
     fetcher: () => getProtonFluxData(timeRangeToParam(range)) as Promise<ProtonSample[]>,
-    intervalMs: REFRESH_INTERVALS.FIVE_MIN,
+    intervalMs: REFRESH_INTERVALS.ONE_MIN,
   })
 
   // Normalize visuals while keeping data precision for tooltips

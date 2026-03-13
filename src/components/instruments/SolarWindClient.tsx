@@ -39,7 +39,7 @@ export function SolarWindClient() {
   const { data: frames, isLoading, isError } = useAutoRefresh<EnlilFrame[]>({
     queryKey: ['solar-wind-enlil'],
     fetcher: () => getSolarWindFrames() as Promise<EnlilFrame[]>,
-    intervalMs: REFRESH_INTERVALS.TEN_MIN,
+    intervalMs: REFRESH_INTERVALS.ONE_MIN,
   })
 
   return (

@@ -54,7 +54,7 @@ export function SUVIClient() {
   const { data: frames, isLoading, isError } = useAutoRefresh<SuviFrame[]>({
     queryKey: ['suvi', wavelength],
     fetcher: () => getSuviFrames(wavelength) as Promise<SuviFrame[]>,
-    intervalMs: REFRESH_INTERVALS.FIVE_MIN,
+    intervalMs: REFRESH_INTERVALS.ONE_MIN,
   })
 
   return (

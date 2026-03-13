@@ -112,7 +112,7 @@ export function AuroraClient() {
   const { data: northFrames } = useAutoRefresh<AuroraFrame[]>({
     queryKey: ['aurora', 'north'],
     fetcher: () => getAuroraFrames('north') as Promise<AuroraFrame[]>,
-    intervalMs: REFRESH_INTERVALS.FIVE_MIN,
+    intervalMs: REFRESH_INTERVALS.ONE_MIN,
   })
 
   return (
@@ -159,7 +159,7 @@ function AuroraPanel({ pole, label }: { pole: 'north' | 'south'; label: string }
   const { data: frames, isLoading, isError } = useAutoRefresh<AuroraFrame[]>({
     queryKey: ['aurora', pole],
     fetcher: () => getAuroraFrames(pole) as Promise<AuroraFrame[]>,
-    intervalMs: REFRESH_INTERVALS.FIVE_MIN,
+    intervalMs: REFRESH_INTERVALS.ONE_MIN,
   })
 
   return (

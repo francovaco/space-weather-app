@@ -40,7 +40,7 @@ export function KpIndexClient() {
   const { data: samples, isLoading, isError } = useAutoRefresh<KpReading[]>({
     queryKey: ['kp-index', range, selectedDate],
     fetcher: () => getKpIndexData(range === 'historical' ? selectedDate : undefined) as Promise<KpReading[]>,
-    intervalMs: REFRESH_INTERVALS.TEN_MIN,
+    intervalMs: REFRESH_INTERVALS.THIRTY_MIN,
   })
 
   // Prepare plot data with memoization
