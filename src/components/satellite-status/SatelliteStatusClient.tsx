@@ -5,6 +5,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { formatInTimeZone } from 'date-fns-tz'
 import { LoadingMessage, ErrorMessage, EmptyMessage } from '@/components/ui/StatusMessages'
+import { DataAge } from '@/components/ui/DataAge'
 import {
   Satellite, RefreshCw, ExternalLink, AlertTriangle,
   CheckCircle2, AlertCircle, XCircle, Clock, Info,
@@ -349,9 +350,12 @@ export function SatelliteStatusClient() {
       {/* Encabezado */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">
-            Estado del Satélite e Instrumentos
-          </h1>
+          <div className="flex items-center gap-2">
+            <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">
+              Estado del Satélite e Instrumentos
+            </h1>
+            <DataAge timestamp={data?.fetchedAt} />
+          </div>
           <p className="mt-1 text-xs text-text-muted">
             GOES-19 (GOES Este) · Fuente: NOAA OSPO · Actualización automática cada 1 minuto
           </p>

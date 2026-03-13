@@ -9,6 +9,8 @@ import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
 import { getGLOTECFrames } from '@/lib/swpc-api'
 import { UsageImpacts } from '@/components/ui/UsageImpacts'
 import { SectionDetails } from '@/components/ui/SectionDetails'
+import { LoadingMessage, ErrorMessage, EmptyMessage, PreloadProgress } from '@/components/ui/StatusMessages'
+import { DataAge } from '@/components/ui/DataAge'
 import { Play, Pause, SkipBack, SkipForward, Download } from 'lucide-react'
 import { cn, proxyImg } from '@/lib/utils'
 
@@ -163,13 +165,22 @@ export function GLOTECClient() {
   const [type, setType] = useState<GLOTECType>('tec')
   const activeType = TYPE_TABS.find((t) => t.key === type)!
 
+  const { data: headerFrames } = useAutoRefresh<GLOTECFrame[]>({
+    queryKey: ['glotec', 'header', 'atlantic', 'tec'],
+    fetcher: () => getGLOTECFrames('atlantic', 'tec') as Promise<GLOTECFrame[]>,
+    intervalMs: REFRESH_INTERVALS.TEN_MIN,
+  })
+
   return (
     <div className="space-y-4">
       {/* Header */}
       <div>
-        <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">
-          GloTEC — Contenido Total de Electrones
-        </h1>
+        <div className="flex items-center gap-2">
+          <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">
+            GloTEC — Contenido Total de Electrones
+          </h1>
+          <DataAge timestamp={headerFrames?.[0]?.time_tag} />
+        </div>
         <p className="mt-1 text-xs text-text-muted">
           Global Total Electron Content · Modelo asimilativo de la ionósfera en tiempo real · Actualización cada 10 min
         </p>

@@ -8,6 +8,7 @@ import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
 import { getCTIPEFrames } from '@/lib/swpc-api'
 import { UsageImpacts } from '@/components/ui/UsageImpacts'
 import { SectionDetails } from '@/components/ui/SectionDetails'
+import { DataAge } from '@/components/ui/DataAge'
 import { LoadingMessage, ErrorMessage, EmptyMessage, PreloadProgress } from '@/components/ui/StatusMessages'
 import { Play, Pause, SkipBack, SkipForward, Download } from 'lucide-react'
 
@@ -107,9 +108,12 @@ export function CTIPEClient() {
     <div className="space-y-4">
       {/* Header */}
       <div>
-        <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">
-          Modelo CTIPe
-        </h1>
+        <div className="flex items-center gap-2">
+          <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">
+            Modelo CTIPe
+          </h1>
+          <DataAge timestamp={frames?.[frames.length - 1]?.time_tag} />
+        </div>
         <p className="mt-1 text-xs text-text-muted">
           Coupled Thermosphere Ionosphere Plasmasphere Electrodynamics · Pronóstico de Contenido Total de Electrones
         </p>

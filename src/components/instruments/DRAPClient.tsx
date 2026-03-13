@@ -8,8 +8,10 @@ import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
 import { getDRAPFrames } from '@/lib/swpc-api'
 import { UsageImpacts } from '@/components/ui/UsageImpacts'
 import { SectionDetails } from '@/components/ui/SectionDetails'
+import { DataAge } from '@/components/ui/DataAge'
+import { LoadingMessage, ErrorMessage, EmptyMessage, PreloadProgress } from '@/components/ui/StatusMessages'
 import { Play, Pause, SkipBack, SkipForward, Download } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn, proxyImg } from '@/lib/utils'
 
 interface DRAPFrame {
   url: string
@@ -48,13 +50,22 @@ export function DRAPClient() {
   const [view, setView] = useState<DRAPView>('global')
   const activeTab = VIEW_TABS.find((t) => t.key === view)!
 
+  const { data: globalFrames } = useAutoRefresh<DRAPFrame[]>({
+    queryKey: ['d-rap', 'global', 'header'],
+    fetcher: () => getDRAPFrames('global') as Promise<DRAPFrame[]>,
+    intervalMs: REFRESH_INTERVALS.ONE_MIN,
+  })
+
   return (
     <div className="space-y-4">
       {/* Header */}
       <div>
-        <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">
-          D-RAP — Predicción de Absorción Región D
-        </h1>
+        <div className="flex items-center gap-2">
+          <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">
+            D-RAP — Predicción de Absorción Región D
+          </h1>
+          <DataAge timestamp={globalFrames?.[globalFrames.length - 1]?.time_tag} />
+        </div>
         <p className="mt-1 text-xs text-text-muted">
           D-Region Absorption Predictions · Absorción de radio HF en la ionósfera inferior · Actualización cada minuto
         </p>

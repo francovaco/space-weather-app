@@ -6,6 +6,7 @@ import {
   RefreshCw, Minus, Plus, AlertTriangle,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { DataAge } from '@/components/ui/DataAge'
 
 // ── Types ──────────────────────────────────────────────────────
 type BandType = 'visible' | 'near-ir' | 'ir' | 'rgb'
@@ -379,9 +380,12 @@ function ChannelGrid({ onSelect }:{ onSelect:(c:Channel)=>void }) {
   return (
     <div className="space-y-6 pb-8">
       <div>
-        <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">
-          Imágenes Satelitales ABI
-        </h1>
+        <div className="flex items-center gap-2">
+          <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">
+            Imágenes Satelitales ABI
+          </h1>
+          <DataAge timestamp={latestTs} />
+        </div>
         <p className="mt-1 text-sm text-text-muted">
           GOES-19 · Sector Sudamérica Sur (SSA) · Actualización cada 10 minutos
         </p>

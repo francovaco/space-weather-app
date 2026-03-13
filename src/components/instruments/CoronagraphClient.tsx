@@ -9,6 +9,7 @@ import { getCoronagraphFrames } from '@/lib/swpc-api'
 import { UsageImpacts } from '@/components/ui/UsageImpacts'
 import { SectionDetails } from '@/components/ui/SectionDetails'
 import { LoadingMessage, ErrorMessage, EmptyMessage, PreloadProgress } from '@/components/ui/StatusMessages'
+import { DataAge } from '@/components/ui/DataAge'
 import { cn, proxyImg } from '@/lib/utils'
 import type { CoronagraphSource } from '@/types/swpc'
 import { CORONAGRAPH_SOURCES } from '@/types/swpc'
@@ -53,9 +54,12 @@ export function CoronagraphClient() {
     <div className="space-y-4">
       {/* Header */}
       <div>
-        <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">
-          Coronógrafo
-        </h1>
+        <div className="flex items-center gap-2">
+          <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">
+            Coronógrafo
+          </h1>
+          <DataAge timestamp={frames?.[frames.length - 1]?.time_tag} />
+        </div>
         <p className="mt-1 text-xs text-text-muted">
           Detección de CMEs · GOES CCOR-1 · LASCO C2 y C3 · Actualización cada 10 min
         </p>

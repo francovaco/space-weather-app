@@ -141,14 +141,23 @@ export function MagnetosphereClient() {
   const [viewMode, setViewMode] = useState<ViewMode>('2d')
   const activeTab = TYPE_TABS.find((t) => t.key === type)!
 
+  const { data: headerFrames } = useAutoRefresh<MagnetosphereFrame[]>({
+    queryKey: ['magnetosphere', 'header', 'density'],
+    fetcher: () => getMagnetosphereFrames('density') as Promise<MagnetosphereFrame[]>,
+    intervalMs: REFRESH_INTERVALS.ONE_MIN,
+  })
+
   return (
     <div className="space-y-4">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">
-            Geospace — Modelado de la Magnetósfera
-          </h1>
+          <div className="flex items-center gap-2">
+            <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">
+              Geospace — Modelado de la Magnetósfera
+            </h1>
+            <DataAge timestamp={headerFrames?.[headerFrames.length - 1]?.time_tag} />
+          </div>
           <p className="mt-1 text-xs text-text-muted">
             Magnetosphere Movies · Densidad, Presión y Velocidad del plasma · Modelo Geospace v2.0 · Actualización cada minuto
           </p>

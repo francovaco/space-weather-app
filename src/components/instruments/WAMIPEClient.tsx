@@ -10,6 +10,7 @@ import { getWAMIPEFrames } from '@/lib/swpc-api'
 import { UsageImpacts } from '@/components/ui/UsageImpacts'
 import { SectionDetails } from '@/components/ui/SectionDetails'
 import { LoadingMessage, ErrorMessage, EmptyMessage, PreloadProgress } from '@/components/ui/StatusMessages'
+import { DataAge } from '@/components/ui/DataAge'
 import { Play, Pause, SkipBack, SkipForward, Download } from 'lucide-react'
 import { cn, proxyImg } from '@/lib/utils'
 
@@ -185,13 +186,22 @@ export function WAMIPEClient() {
   const [view, setView] = useState<WAMIPEView>('neutral-nowcast')
   const activeTab = VIEW_TABS.find((t) => t.key === view)!
 
+  const { data: headerFrames } = useAutoRefresh<WAMIPEFrame[]>({
+    queryKey: ['wam-ipe', 'header', 'neutral-nowcast'],
+    fetcher: () => getWAMIPEFrames('neutral-nowcast') as Promise<WAMIPEFrame[]>,
+    intervalMs: REFRESH_INTERVALS.TEN_MIN,
+  })
+
   return (
     <div className="space-y-4">
       {/* Header */}
       <div>
-        <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">
-          WAM-IPE — Modelo Atmosférico e Ionosférico
-        </h1>
+        <div className="flex items-center gap-2">
+          <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">
+            WAM-IPE — Modelo Atmosférico e Ionosférico
+          </h1>
+          <DataAge timestamp={headerFrames?.[headerFrames.length - 1]?.time_tag} />
+        </div>
         <p className="mt-1 text-xs text-text-muted">
           Whole Atmosphere Model – Ionosphere Plasmasphere Electrodynamics · Nowcast y pronóstico a 2 días · Actualización cada 10 min
         </p>
