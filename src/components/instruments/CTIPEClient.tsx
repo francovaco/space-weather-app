@@ -15,27 +15,20 @@ import { Play, Pause, SkipBack, SkipForward, Download } from 'lucide-react'
 // Color Scales & Helpers
 // ───────────────────────────────────────────────
 const TEC_SCALE: [number, number, number, number][] = [
-  [ 42,  41, 142,  0],
-  [ 58,  82, 175,  5],
-  [ 63, 114, 183, 10],
-  [ 67, 146, 191, 15],
-  [ 83, 171, 183, 20],
-  [110, 191, 163, 25],
-  [145, 208, 143, 30],
-  [182, 222, 128, 35],
-  [215, 233, 126, 40],
-  [241, 237, 140, 45],
-  [253, 224, 137, 50],
-  [253, 195, 116, 55],
-  [252, 161,  96, 60],
-  [248, 124,  79, 65],
-  [236,  86,  64, 70],
-  [214,  52,  48, 75],
-  [184,  25,  34, 80],
-  [150,   8,  21, 85],
-  [114,   1,  15, 90],
-  [ 80,   0,  15, 95],
-  [ 48,   0,  15, 100],
+  [ 15,  15, 120,   0], // Azul muy oscuro (Base)
+  [ 30,  30, 180,  10], // Azul medio
+  [ 40,  80, 220,  20], // Azul claro
+  [ 50, 150, 255,  30], // Celeste / Cyan (Importante)
+  [ 60, 200, 255,  40], // Celeste claro
+  [ 80, 240, 220,  50], // Cyan verdoso
+  [100, 255, 180,  60], // Verde claro / Lima (Importante)
+  [150, 255, 120,  70], // Verde amarillento
+  [200, 255,  80,  80], // Amarillo verdoso
+  [255, 255,   0,  90], // Amarillo puro
+  [255, 200,   0, 100], // Naranja claro
+  [255, 150,   0, 110], // Naranja
+  [255,  80,   0, 120], // Rojo naranja
+  [255,   0,   0, 130], // Rojo puro (Máximo)
 ]
 
 function proxyUrl(url: string) {
@@ -47,10 +40,16 @@ function colorDist(r1: number, g1: number, b1: number, r2: number, g2: number, b
 }
 
 function matchTECValue(r: number, g: number, b: number): number | null {
-  // White/bright gray labels
-  if (r > 200 && g > 200 && b > 200) return null
-  // Gray lines (continents/grid)
-  if (Math.abs(r-g) < 15 && Math.abs(g-b) < 15 && r < 180) return null
+  // Etiquetas blancas y fondo muy claro
+  if (r > 235 && g > 235 && b > 235) return null
+  
+  // Filtro de grises relajado: Solo descartamos si es gris casi puro y oscuro (continentes)
+  // Los celestes y verdes claros tienen canales R, G, B muy cercanos entre sí pero con brillo alto
+  const maxChannel = Math.max(r, g, b)
+  const minChannel = Math.min(r, g, b)
+  const diff = maxChannel - minChannel
+  
+  if (diff < 8 && maxChannel < 160) return null
 
   let minDist = Infinity
   let bestValue: number | null = null
@@ -58,7 +57,9 @@ function matchTECValue(r: number, g: number, b: number): number | null {
     const d = colorDist(r, g, b, sr, sg, sb)
     if (d < minDist) { minDist = d; bestValue = val }
   }
-  if (minDist > 70) return null
+  
+  // Umbral de 110 para cubrir los gradientes más suaves entre los nuevos puntos
+  if (minDist > 110) return null
   return bestValue
 }
 
@@ -312,7 +313,7 @@ function CTIPEPlayer({ frames }: { frames: CTIPEFrame[] }) {
           {/* Image */}
           <div
             ref={imgContRef}
-            className="relative mx-auto w-full bg-black"
+            className="relative mx-auto w-full max-w-4xl bg-black rounded-lg overflow-hidden border border-white/5"
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
             style={{ cursor: !playing ? 'crosshair' : undefined }}
@@ -322,7 +323,7 @@ function CTIPEPlayer({ frames }: { frames: CTIPEFrame[] }) {
               ref={imgRef}
               src={proxyUrl(current.url)}
               alt="CTIPe TEC forecast"
-              className="h-auto w-full"
+              className="max-h-[60vh] w-full object-contain mx-auto"
               draggable={false}
             />
             {/* Timestamp overlay */}
