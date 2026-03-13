@@ -25,7 +25,7 @@ export async function GET() {
     const frames = raw.map((f) => {
       const fullUrl = f.url.startsWith('http') ? f.url : `${SWPC_BASE}${f.url}`
       return {
-        url: `/api/goes/img-proxy?url=${encodeURIComponent(fullUrl)}`,
+        url: fullUrl,
         time_tag: f.time_tag ?? parseTimestampFromUrl(f.url),
       }
     })
