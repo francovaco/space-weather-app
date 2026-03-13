@@ -19,28 +19,32 @@ interface Magnetosphere3DProps {
   speed: number    // Velocidad (km/s)
 }
 
+import { useLoader } from '@react-three/fiber'
+
 function Earth() {
   const earthRef = useRef<THREE.Group>(null!)
   
+  // Cargamos una textura simple de la Tierra para ver la rotación
+  // Usamos una URL confiable de assets de Three.js o similar
+  const colorMap = useLoader(THREE.TextureLoader, 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_atmos_2048.jpg')
+  
   useFrame((state, delta) => {
-    // Rotación de la Tierra (1 día = 24h, aquí lo hacemos visiblemente lento)
     earthRef.current.rotation.y += delta * 0.1
   })
 
   return (
     <group ref={earthRef}>
-      {/* Planeta Tierra (Simplificado) */}
-      <Sphere args={[1, 32, 32]}>
+      {/* Planeta Tierra con textura */}
+      <Sphere args={[1, 64, 64]}>
         <meshStandardMaterial 
-          color="#1e40af" 
-          emissive="#1e3a8a" 
-          emissiveIntensity={0.2} 
-          roughness={0.5} 
+          map={colorMap}
+          roughness={0.7}
+          metalness={0.2}
         />
       </Sphere>
       {/* Brillo Atmosférico */}
       <Sphere args={[1.05, 32, 32]}>
-        <meshBasicMaterial color="#60a5fa" transparent opacity={0.1} />
+        <meshBasicMaterial color="#60a5fa" transparent opacity={0.15} />
       </Sphere>
     </group>
   )
