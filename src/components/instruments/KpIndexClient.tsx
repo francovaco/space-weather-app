@@ -41,11 +41,16 @@ export function KpIndexClient() {
   const plotData: Plotly.Data[] = useMemo(() => {
     if (!samples || samples.length === 0) return []
     
-    const kpValues = samples.map(s => s.kp)
+    // Filter to last 3 days (72 hours)
+    const threeDaysAgo = new Date()
+    threeDaysAgo.setHours(threeDaysAgo.getHours() - 72)
+    
+    const filteredSamples = samples.filter(s => new Date(s.time_tag) >= threeDaysAgo)
+    const kpValues = filteredSamples.map(s => s.kp)
 
     return [
       {
-        x: samples.map((s) => s.time_tag),
+        x: filteredSamples.map((s) => s.time_tag),
         y: kpValues,
         customdata: kpValues,
         type: 'bar',
