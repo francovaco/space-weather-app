@@ -185,13 +185,13 @@ export function MagnetometerClient() {
         </div>
         <div className="flex items-center gap-4">
           <DataExporter 
-            data={samples.map(s => ({
+            data={samples?.map(s => ({
               time: s.time_tag,
               Hp: s.Hp,
               He: s.He,
               Hn: s.Hn,
               Total: s.total
-            }))} 
+            })) || []} 
             filename={`magnetometer-${range}`} 
           />
           <div className="flex items-center gap-3">
