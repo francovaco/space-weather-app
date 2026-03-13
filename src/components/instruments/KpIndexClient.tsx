@@ -3,11 +3,9 @@
 // src/components/instruments/KpIndexClient.tsx
 // Interactive Kp Index chart with auto-refresh
 // ============================================================
-import { useState } from 'react'
+import { useMemo } from 'react'
 import { LoadingMessage, ErrorMessage, EmptyMessage } from '@/components/ui/StatusMessages'
-import { PlotlyChart, PLOTLY_DARK_LAYOUT, PLOTLY_DEFAULT_CONFIG } from '@/components/charts/PlotlyChart'
-import { TimeRangeSelector } from '@/components/ui/TimeRangeSelector'
-import { NormalizeToggle, normalizeSeries } from '@/components/ui/NormalizeToggle'
+import { PlotlyChart, PLOTLY_DARK_LAYOUT } from '@/components/charts/PlotlyChart'
 import { UsageImpacts } from '@/components/ui/UsageImpacts'
 import { SectionDetails } from '@/components/ui/SectionDetails'
 import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
@@ -33,41 +31,47 @@ const IMPACTS = [
 ]
 
 export function KpIndexClient() {
-  const [normalize, setNormalize] = useState(false)
-
   const { data: samples, isLoading, isError } = useAutoRefresh<KpReading[]>({
     queryKey: ['kp-index'],
     fetcher: () => getKpIndexData() as Promise<KpReading[]>,
     intervalMs: REFRESH_INTERVALS.TEN_MIN,
   })
 
-  const plotData: Plotly.Data[] = [
-    {
-      x: samples?.map((s) => s.time_tag),
-      y: normalize ? normalizeSeries(samples?.map(s => s.kp) || []) : samples?.map((s) => s.kp),
-      type: 'bar',
-      name: 'Índice Kp',
-      marker: {
-        color: samples?.map((s) => {
-          const v = s.kp
-          if (v >= 7) return '#ef4444' // G3+
-          if (v >= 5) return '#f59e0b' // G1-G2
-          return '#10b981' // Quiet
-        }),
+  // Prepare plot data with memoization
+  const plotData: Plotly.Data[] = useMemo(() => {
+    if (!samples || samples.length === 0) return []
+    
+    const kpValues = samples.map(s => s.kp)
+
+    return [
+      {
+        x: samples.map((s) => s.time_tag),
+        y: kpValues,
+        customdata: kpValues,
+        type: 'bar',
+        name: 'Índice Kp',
+        marker: {
+          color: kpValues.map((v) => {
+            if (v >= 7) return '#ef4444' // G3+
+            if (v >= 5) return '#f59e0b' // G1-G2
+            return '#10b981' // Quiet
+          }),
+        },
+        hovertemplate: 'Kp %{customdata}<extra></extra>',
       },
-      hovertemplate: normalize ? '%{y:.1f}% del máximo<extra>Kp</extra>' : 'Kp %{y}<extra></extra>',
-    },
-  ]
+    ]
+  }, [samples])
 
   const layout: Partial<Plotly.Layout> = {
     ...PLOTLY_DARK_LAYOUT,
-    uirevision: `kp-${normalize}`,
+    uirevision: 'kp-static',
     xaxis: { ...PLOTLY_DARK_LAYOUT.xaxis, type: 'date', automargin: true },
     yaxis: {
       ...PLOTLY_DARK_LAYOUT.yaxis,
-      title: { text: normalize ? 'Kp Relativo (%)' : 'Índice Kp', font: { size: 11, color: '#64748b' } },
-      range: normalize ? [0, 105] : [0, 9],
-      dtick: normalize ? 20 : 1,
+      title: { text: 'Índice Planetario Kp', font: { size: 11, color: '#64748b' } },
+      range: [0, 9],
+      dtick: 1,
+      type: 'linear',
       automargin: true,
     },
     margin: { l: 60, r: 20, t: 40, b: 65 },
@@ -76,22 +80,39 @@ export function KpIndexClient() {
 
   return (
     <div className="space-y-4">
+      {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">Índice Planetario Kp</h1>
           <p className="mt-1 text-xs text-text-muted">SWPC · Actividad geomagnética global · Actualización cada 3 horas</p>
         </div>
-        <NormalizeToggle normalize={normalize} onToggle={setNormalize} />
       </div>
 
+      {/* Chart */}
       <div className="card relative overflow-hidden flex flex-col" style={{ height: 450, minHeight: 450 }}>
-        {isLoading && <LoadingMessage message="Cargando índice Kp..." />}
+        {isLoading && !samples && <LoadingMessage message="Cargando índice Kp..." />}
         {isError && <ErrorMessage message="Error al cargar datos" />}
         {samples && samples.length === 0 && <EmptyMessage message="No hay datos disponibles." />}
         {samples && samples.length > 0 && (
           <PlotlyChart data={plotData} layout={layout} className="flex-1 w-full" />
         )}
+        
+        {/* Legend Overlay */}
+        {samples && samples.length > 0 && (
+          <div className="absolute left-20 top-12 flex gap-4 text-[10px] font-bold uppercase tracking-wider hidden sm:flex">
+            <div className="flex items-center gap-1.5 text-green-500">
+              <div className="h-2 w-2 rounded-full bg-current" /> Calma (0-4)
+            </div>
+            <div className="flex items-center gap-1.5 text-amber-500">
+              <div className="h-2 w-2 rounded-full bg-current" /> Tormenta G1-G2 (5-6)
+            </div>
+            <div className="flex items-center gap-1.5 text-red-500">
+              <div className="h-2 w-2 rounded-full bg-current" /> Tormenta G3+ (7-9)
+            </div>
+          </div>
+        )}
       </div>
+
       <UsageImpacts usage={USAGE} impacts={IMPACTS} />
 
       <SectionDetails>
