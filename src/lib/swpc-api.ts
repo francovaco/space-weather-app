@@ -74,8 +74,8 @@ export const getCTIPEFrames = () =>
   apiFetch(`${BASE}/ctipe`)
 
 // --- Kp Index ---
-export const getKpIndexData = () =>
-  apiFetch(`${BASE}/kp-index`)
+export const getKpIndexData = (date?: string) =>
+  apiFetch(`${BASE}/kp-index${date ? `?date=${date}` : ''}`)
 
 /** 
  * Map UI time range to SWPC API range string

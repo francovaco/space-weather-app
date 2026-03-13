@@ -3,14 +3,15 @@
 // src/components/instruments/KpIndexClient.tsx
 // Interactive Kp Index chart with auto-refresh
 // ============================================================
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { LoadingMessage, ErrorMessage, EmptyMessage } from '@/components/ui/StatusMessages'
 import { PlotlyChart, PLOTLY_DARK_LAYOUT } from '@/components/charts/PlotlyChart'
+import { TimeRangeSelector } from '@/components/ui/TimeRangeSelector'
 import { UsageImpacts } from '@/components/ui/UsageImpacts'
 import { SectionDetails } from '@/components/ui/SectionDetails'
 import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
 import { getKpIndexData } from '@/lib/swpc-api'
-import type { KpReading } from '@/types/swpc'
+import type { KpReading, TimeRange } from '@/types/swpc'
 
 const USAGE = [
   'Indicador global de la actividad geomagnética y tormentas solares',
@@ -31,9 +32,12 @@ const IMPACTS = [
 ]
 
 export function KpIndexClient() {
+  const [range, setRange] = useState<TimeRange>('3d')
+  const [selectedDate, setSelectedDate] = useState<string>('')
+
   const { data: samples, isLoading, isError } = useAutoRefresh<KpReading[]>({
-    queryKey: ['kp-index'],
-    fetcher: () => getKpIndexData() as Promise<KpReading[]>,
+    queryKey: ['kp-index', range, selectedDate],
+    fetcher: () => getKpIndexData(range === 'historical' ? selectedDate : undefined) as Promise<KpReading[]>,
     intervalMs: REFRESH_INTERVALS.TEN_MIN,
   })
 
@@ -41,11 +45,18 @@ export function KpIndexClient() {
   const plotData: Plotly.Data[] = useMemo(() => {
     if (!samples || samples.length === 0) return []
     
-    // Filter to last 3 days (72 hours)
-    const threeDaysAgo = new Date()
-    threeDaysAgo.setHours(threeDaysAgo.getHours() - 72)
+    let filteredSamples = []
     
-    const filteredSamples = samples.filter(s => new Date(s.time_tag) >= threeDaysAgo)
+    if (range === 'historical' && selectedDate) {
+      // Historical data from API is already range-scoped
+      filteredSamples = samples
+    } else {
+      // Default: Filter to last 3 days (72 hours)
+      const threeDaysAgo = new Date()
+      threeDaysAgo.setHours(threeDaysAgo.getHours() - 72)
+      filteredSamples = samples.filter(s => new Date(s.time_tag) >= threeDaysAgo)
+    }
+
     const kpValues = filteredSamples.map(s => s.kp)
 
     return [
@@ -109,6 +120,12 @@ export function KpIndexClient() {
           <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">Índice Planetario Kp</h1>
           <p className="mt-1 text-xs text-text-muted">SWPC · Actividad geomagnética global · Actualización cada 3 horas</p>
         </div>
+        <TimeRangeSelector 
+          value={range} 
+          onChange={setRange} 
+          selectedDate={selectedDate}
+          onDateChange={setSelectedDate}
+        />
       </div>
 
       {/* Chart */}

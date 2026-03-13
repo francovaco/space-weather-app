@@ -210,7 +210,7 @@ export interface GOESStatusData {
 
 // --- Common ---
 
-export type TimeRange = '6h' | '1d' | '3d' | '7d'
+export type TimeRange = '6h' | '1d' | '3d' | '7d' | 'historical'
 
 export interface TimeRangeOption {
   value: TimeRange

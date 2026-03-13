@@ -1,6 +1,43 @@
 import { NextResponse } from 'next/server'
 
-export async function GET() {
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url)
+  const dateParam = searchParams.get('date') // YYYY-MM-DD
+  
+  if (dateParam) {
+    try {
+      // GFZ Potsdam provides excellent historical Kp data in JSON format
+      // Format: https://kp.gfz-potsdam.de/app/json/?start=YYYY-MM-DDT00%3A00%3A00Z&end=YYYY-MM-DDT23%3A59%3A59Z&index=Kp
+      const startDate = `${dateParam}T00:00:00Z`
+      const endDate = `${dateParam}T23:59:59Z`
+      
+      // Get 3 days around the target date for context
+      const target = new Date(dateParam)
+      const s = new Date(target.getTime() - 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+      const e = new Date(target.getTime() + 48 * 60 * 60 * 1000).toISOString().split('T')[0]
+      
+      const GFZ_URL = `https://kp.gfz-potsdam.de/app/json/?start=${s}T00%3A00%3A00Z&end=${e}T23%3A59%3A59Z&index=Kp`
+      
+      const res = await fetch(GFZ_URL, { next: { revalidate: 3600 } })
+      if (!res.ok) throw new Error('GFZ API error')
+      
+      const raw = await res.json()
+      
+      // GFZ returns { "datetime": [...], "Kp": [...] }
+      const data = raw.datetime.map((dt: string, i: number) => ({
+        time_tag: dt,
+        kp: raw.Kp[i],
+        a_running: 0,
+        station_count: 13, // GFZ is a network of 13 stations
+      }))
+
+      return NextResponse.json(data)
+    } catch (err) {
+      console.error('[Kp API] Historical fetch failed', err)
+      // Fall through to standard NOAA for "recent" historical if GFZ fails
+    }
+  }
+
   const PRIMARY_URL = 'https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json'
   
   try {
