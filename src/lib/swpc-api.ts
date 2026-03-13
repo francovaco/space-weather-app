@@ -15,8 +15,8 @@ async function apiFetch<T>(endpoint: string): Promise<T> {
 }
 
 // --- Magnetometer ---
-export const getMagnetometerData = (range: string = '1-hour') =>
-  apiFetch(`${BASE}/magnetometer?range=${range}`)
+export const getMagnetometerData = (range: string = '1-hour', date?: string) =>
+  apiFetch(`${BASE}/magnetometer?range=${range}${date ? `&date=${date}` : ''}`)
 
 // --- X-Ray Flux ---
 export const getXRayFluxData = (range: string = '1-hour') =>

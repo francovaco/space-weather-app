@@ -14,8 +14,28 @@ const RANGE_MAP: Record<string, string> = {
 }
 
 export async function GET(req: NextRequest) {
-  const range = req.nextUrl.searchParams.get('range') ?? '1-day'
-  const url = RANGE_MAP[range] ?? SWPC_ENDPOINTS.magnetometer1d
+  const { searchParams } = req.nextUrl
+  const range = searchParams.get('range') ?? '1-day'
+  const dateParam = searchParams.get('date') // YYYY-MM-DD
+  
+  let url = RANGE_MAP[range] ?? SWPC_ENDPOINTS.magnetometer1d
+  
+  if (dateParam) {
+    const targetDate = new Date(dateParam)
+    const now = new Date()
+    const diffDays = (now.getTime() - targetDate.getTime()) / (1000 * 3600 * 24)
+    
+    if (diffDays <= 7) {
+      // Within 7 days, we can use the 7-day JSON and filter on the client
+      url = SWPC_ENDPOINTS.magnetometer7d
+    } else {
+      // Beyond 7 days, NOAA doesn't provide JSON archives for magnetometers
+      return NextResponse.json({ 
+        error: 'Datos históricos limitados', 
+        message: 'Los datos JSON del magnetómetro solo están disponibles para los últimos 7 días en los servidores de la NOAA.' 
+      }, { status: 404 })
+    }
+  }
 
   try {
     const res = await fetch(url, {

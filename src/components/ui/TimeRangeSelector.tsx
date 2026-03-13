@@ -17,6 +17,7 @@ interface TimeRangeSelectorProps {
   selectedDate?: string
   className?: string
   queryParamName?: string
+  hideHistorical?: boolean
 }
 
 export function TimeRangeSelector({ 
@@ -25,7 +26,8 @@ export function TimeRangeSelector({
   onDateChange,
   selectedDate,
   className,
-  queryParamName = 'range'
+  queryParamName = 'range',
+  hideHistorical = false
 }: TimeRangeSelectorProps) {
   const { searchParams, createQueryString } = useQueryString()
   const [showDatePicker, setShowDatePicker] = useState(value === 'historical')
@@ -90,22 +92,24 @@ export function TimeRangeSelector({
           </button>
         ))}
         
-        <button
-          onClick={() => handleSelect('historical')}
-          className={cn(
-            'rounded px-2.5 py-1 text-2xs font-medium transition-colors flex items-center gap-1.5',
-            value === 'historical'
-              ? 'bg-accent-amber text-white'
-              : 'text-text-muted hover:text-text-primary'
-          )}
-          title="Consultar Histórico"
-        >
-          <Calendar size={12} />
-          <span>Histórico</span>
-        </button>
+        {!hideHistorical && (
+          <button
+            onClick={() => handleSelect('historical')}
+            className={cn(
+              'rounded px-2.5 py-1 text-2xs font-medium transition-colors flex items-center gap-1.5',
+              value === 'historical'
+                ? 'bg-accent-amber text-white'
+                : 'text-text-muted hover:text-text-primary'
+            )}
+            title="Consultar Histórico"
+          >
+            <Calendar size={12} />
+            <span>Histórico</span>
+          </button>
+        )}
       </div>
 
-      {showDatePicker && (
+      {!hideHistorical && showDatePicker && (
         <input 
           type="date"
           value={selectedDate || ''}

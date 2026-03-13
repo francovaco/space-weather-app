@@ -184,15 +184,17 @@ export function MagnetometerClient() {
         </div>
         <div className="flex items-center gap-3">
           <NormalizeToggle normalize={normalize} onToggle={setNormalize} />
-          <TimeRangeSelector value={range} onChange={setRange} />
+          <TimeRangeSelector value={range} onChange={setRange} hideHistorical />
         </div>
       </div>
 
       <div className="card relative overflow-hidden flex flex-col" style={{ height: 450, minHeight: 450 }}>
         {isLoading && <LoadingMessage message="Cargando datos..." />}
-        {isError && <ErrorMessage message="Error al cargar datos" />}
-        {samples && samples.length === 0 && <EmptyMessage message="No hay datos disponibles." />}
-        {samples && samples.length > 0 && (
+        {isError && !isLoading && <ErrorMessage message="Error al cargar datos" />}
+        {!isError && !isLoading && samples && samples.length === 0 && (
+          <EmptyMessage message="No hay datos disponibles." />
+        )}
+        {!isError && !isLoading && samples && samples.length > 0 && (
           <PlotlyChart data={plotData} layout={layout} className="flex-1 w-full" />
         )}
       </div>
