@@ -6,6 +6,7 @@
 import { useState, useMemo } from 'react'
 import { PlotlyChart, PLOTLY_DARK_LAYOUT, PLOTLY_DEFAULT_CONFIG } from '@/components/charts/PlotlyChart'
 import { TimeRangeSelector } from '@/components/ui/TimeRangeSelector'
+import { NormalizeToggle, normalizeSeries } from '@/components/ui/NormalizeToggle'
 import { SectionDetails } from '@/components/ui/SectionDetails'
 import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
 import { getProtonFluxData, getElectronFluxData, getDONKINotifications, timeRangeToParam } from '@/lib/swpc-api'
@@ -33,6 +34,7 @@ interface FluxSample {
 
 export function AnomalyMonitorClient() {
   const [range, setRange] = useState<TimeRange>('7d')
+  const [normalize, setNormalize] = useState(false)
   const param = timeRangeToParam(range)
 
   // Calculate startDate based on range for NASA API
@@ -90,16 +92,18 @@ export function AnomalyMonitorClient() {
       energyBands.forEach(band => {
         const pts = protons.data!.filter(d => d.energy === band.energy)
         if (pts.length > 0) {
+          const yValues = pts.map(d => d.flux)
           traces.push({
             x: pts.map(d => d.time_tag),
-            y: pts.map(d => d.flux),
+            y: normalize ? normalizeSeries(yValues) : yValues,
+            customdata: yValues,
             type: 'scattergl',
             mode: 'lines',
             name: `Protones ${band.label}`,
             line: { color: band.color, width: band.width },
             fill: band.energy === '>=10 MeV' ? 'tozeroy' : undefined,
             fillcolor: band.energy === '>=10 MeV' ? 'rgba(239, 68, 68, 0.03)' : undefined,
-            hovertemplate: `%{y:.2f} pfu<extra>${band.label}</extra>`,
+            hovertemplate: `%{customdata:.2f} pfu<extra>${band.label}</extra>`,
           })
         }
       })
@@ -155,9 +159,12 @@ export function AnomalyMonitorClient() {
     },
     yaxis: {
       ...PLOTLY_DARK_LAYOUT.yaxis,
-      title: { text: 'Flujo de Protones (pfu)', font: { size: 11, color: '#64748b' } },
-      type: 'log',
-      range: [-1, 5],
+      title: { 
+        text: normalize ? 'Flujo Relativo (0-1)' : 'Flujo de Protones (pfu)', 
+        font: { size: 11, color: '#64748b' } 
+      },
+      type: normalize ? 'linear' : 'log',
+      range: normalize ? [0, 1.1] : [-1, 5],
     },
     margin: { l: 60, r: 30, t: 40, b: 60 },
     hovermode: 'x unified',
@@ -190,7 +197,10 @@ export function AnomalyMonitorClient() {
             Correlación de reportes NASA DONKI con picos de radiación de GOES-19 (L1/GEO)
           </p>
         </div>
-        <TimeRangeSelector value={range} onChange={setRange} hideHistorical />
+        <div className="flex items-center gap-3">
+          <NormalizeToggle normalize={normalize} onToggle={setNormalize} />
+          <TimeRangeSelector value={range} onChange={setRange} hideHistorical />
+        </div>
       </div>
 
       {/* Main Chart */}
