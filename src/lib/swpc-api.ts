@@ -14,6 +14,10 @@ async function apiFetch<T>(endpoint: string): Promise<T> {
   return res.json()
 }
 
+// --- Solar Wind ---
+export const getSolarWindPlasma = () =>
+  apiFetch(`${BASE}/solar-wind-plasma`)
+
 // --- Magnetometer ---
 export const getMagnetometerData = (range: string = '1-hour', date?: string) =>
   apiFetch(`${BASE}/magnetometer?range=${range}${date ? `&date=${date}` : ''}`)

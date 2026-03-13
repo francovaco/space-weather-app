@@ -3,13 +3,14 @@
 // src/components/instruments/MagnetosphereClient.tsx
 // Geospace Magnetosphere Movies — Density, Pressure, Velocity
 // ============================================================
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { LoadingMessage, ErrorMessage, PreloadProgress } from '@/components/ui/StatusMessages'
 import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
-import { getMagnetosphereFrames } from '@/lib/swpc-api'
+import { getMagnetosphereFrames, getSolarWindPlasma } from '@/lib/swpc-api'
 import { UsageImpacts } from '@/components/ui/UsageImpacts'
 import { SectionDetails } from '@/components/ui/SectionDetails'
-import { Play, Pause, SkipBack, SkipForward, Download } from 'lucide-react'
+import { Magnetosphere3D } from './Magnetosphere3D'
+import { Play, Pause, SkipBack, SkipForward, Download, Box, Layers } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface MagnetosphereFrame {
@@ -133,42 +134,77 @@ function proxyUrl(url: string) {
 // Main Component
 // ───────────────────────────────────────────────
 
+type ViewMode = '2d' | '3d'
+
 export function MagnetosphereClient() {
   const [type, setType] = useState<MagnetosphereType>('density')
+  const [viewMode, setViewMode] = useState<ViewMode>('2d')
   const activeTab = TYPE_TABS.find((t) => t.key === type)!
 
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div>
-        <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">
-          Geospace — Modelado de la Magnetósfera
-        </h1>
-        <p className="mt-1 text-xs text-text-muted">
-          Magnetosphere Movies · Densidad, Presión y Velocidad del plasma · Modelo Geospace v2.0 · Actualización cada minuto
-        </p>
-      </div>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">
+            Geospace — Modelado de la Magnetósfera
+          </h1>
+          <p className="mt-1 text-xs text-text-muted">
+            Magnetosphere Movies · Densidad, Presión y Velocidad del plasma · Modelo Geospace v2.0 · Actualización cada minuto
+          </p>
+        </div>
 
-      {/* Type tabs */}
-      <div className="flex items-center gap-1 rounded-md bg-background-secondary p-1">
-        {TYPE_TABS.map((tab) => (
+        {/* View Mode Toggle */}
+        <div className="flex items-center gap-1 rounded-lg border border-border bg-background-secondary p-1">
           <button
-            key={tab.key}
-            onClick={() => setType(tab.key)}
+            onClick={() => setViewMode('2d')}
             className={cn(
-              'flex-1 rounded px-3 py-1.5 text-xs font-medium transition-colors',
-              type === tab.key
-                ? 'bg-primary text-white'
-                : 'text-text-muted hover:text-text-primary hover:bg-border/40'
+              'flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-all',
+              viewMode === '2d' ? 'bg-primary text-white shadow-glow-blue' : 'text-text-muted hover:text-text-primary'
             )}
           >
-            {tab.label}
+            <Layers size={14} />
+            <span>2D</span>
           </button>
-        ))}
+          <button
+            onClick={() => setViewMode('3d')}
+            className={cn(
+              'flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-all',
+              viewMode === '3d' ? 'bg-accent-cyan text-white shadow-glow-blue' : 'text-text-muted hover:text-text-primary'
+            )}
+          >
+            <Box size={14} />
+            <span>3D Interactiva</span>
+          </button>
+        </div>
       </div>
 
-      {/* Player */}
-      <MagnetospherePanel key={type} type={type} desc={activeTab.desc} />
+      {viewMode === '2d' ? (
+        <>
+          {/* Type tabs */}
+          <div className="flex items-center gap-1 rounded-md bg-background-secondary p-1">
+            {TYPE_TABS.map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setType(tab.key)}
+                className={cn(
+                  'flex-1 rounded px-3 py-1.5 text-xs font-medium transition-colors',
+                  type === tab.key
+                    ? 'bg-primary text-white'
+                    : 'text-text-muted hover:text-text-primary hover:bg-border/40'
+                )}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Player */}
+          <MagnetospherePanel key={type} type={type} desc={activeTab.desc} />
+        </>
+      ) : (
+        <MagnetospherePanel3D />
+      )}
 
       {/* Usage & Impacts */}
       <UsageImpacts usage={USAGE} impacts={IMPACTS} />
@@ -191,6 +227,34 @@ export function MagnetosphereClient() {
           Estas animaciones se generan a partir de datos medidos por los satélites en el punto lagrangiano L1 (como DSCOVR o ACE) que sirven como condiciones de contorno para el modelo. La vista presentada es el plano X-Z (vista lateral), con el Sol hacia la izquierda.
         </p>
       </SectionDetails>
+    </div>
+  )
+}
+
+function MagnetospherePanel3D() {
+  const { data: plasma, isLoading, isError } = useAutoRefresh<any[]>({
+    queryKey: ['solar-wind-plasma'],
+    fetcher: () => getSolarWindPlasma() as Promise<any[]>,
+    intervalMs: REFRESH_INTERVALS.FIVE_MIN,
+  })
+
+  const latest = useMemo(() => {
+    if (!plasma || plasma.length === 0) return null
+    return plasma[plasma.length - 1]
+  }, [plasma])
+
+  // Calculate dynamic pressure: P = 1.6726e-6 * n * v^2
+  const pressure = useMemo(() => {
+    if (!latest) return 2.0 // Baseline
+    return 1.6726e-6 * latest.density * Math.pow(latest.speed, 2)
+  }, [latest])
+
+  if (isLoading && !plasma) return <LoadingMessage message="Iniciando entorno 3D..." />
+  if (isError) return <ErrorMessage message="Error al cargar entorno 3D" />
+
+  return (
+    <div className="card p-0 overflow-hidden" style={{ height: 600 }}>
+      <Magnetosphere3D pressure={pressure} speed={latest?.speed || 400} />
     </div>
   )
 }
