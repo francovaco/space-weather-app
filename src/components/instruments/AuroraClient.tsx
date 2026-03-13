@@ -9,7 +9,10 @@ import { getAuroraFrames } from '@/lib/swpc-api'
 import { UsageImpacts } from '@/components/ui/UsageImpacts'
 import { SectionDetails } from '@/components/ui/SectionDetails'
 import { LoadingMessage, ErrorMessage, EmptyMessage, PreloadProgress } from '@/components/ui/StatusMessages'
-import { Play, Pause, SkipBack, SkipForward, Download } from 'lucide-react'
+import { Play, Pause, SkipBack, SkipForward, Download, Map as MapIcon, PlayCircle } from 'lucide-react'
+import { AuroraMap } from './AuroraMap'
+import { DataAge } from '@/components/ui/DataAge'
+import { cn } from '@/lib/utils'
 
 interface AuroraFrame {
   url: string
@@ -107,23 +110,64 @@ const IMPACTS = [
 ]
 
 export function AuroraClient() {
+  const [view, setView] = useState<'map' | 'animation'>('map')
+  
+  const { data: latestData } = useAutoRefresh<any>({
+    queryKey: ['aurora-latest-data'], // Consolidated key
+    fetcher: () => getLatestAuroraData(),
+    intervalMs: REFRESH_INTERVALS.FIVE_MIN,
+  })
+
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div>
-        <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">
-          Pronóstico de Aurora — 30 Minutos
-        </h1>
-        <p className="mt-1 text-xs text-text-muted">
-          Modelo OVATION · Probabilidad de aurora boreal y austral · Actualización cada 5 min
-        </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <div className="flex items-center gap-2">
+            <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">
+              Monitoreo de Aurora Interactivo
+            </h1>
+            <DataAge timestamp={latestData?.['Observation Time']} />
+          </div>
+          <p className="mt-1 text-xs text-text-muted">
+            Modelo OVATION · Probabilidad proyectada sobre geografía real · Actualización cada 5 min
+          </p>
+        </div>
+
+        <div className="flex bg-background-tertiary p-1 rounded-md border border-border">
+          <button 
+            onClick={() => setView('map')}
+            className={cn(
+              "flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded transition-all",
+              view === 'map' ? "bg-primary text-white shadow-lg" : "text-text-muted hover:text-text-primary"
+            )}
+          >
+            <MapIcon size={14} />
+            Mapa Interactivo
+          </button>
+          <button 
+            onClick={() => setView('animation')}
+            className={cn(
+              "flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded transition-all",
+              view === 'animation' ? "bg-primary text-white shadow-lg" : "text-text-muted hover:text-text-primary"
+            )}
+          >
+            <PlayCircle size={14} />
+            Animación 24h
+          </button>
+        </div>
       </div>
 
-      {/* Dual players */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <AuroraPanel pole="north" label="Polo Norte (Boreal)" />
-        <AuroraPanel pole="south" label="Polo Sur (Austral)" />
-      </div>
+      {view === 'map' ? (
+        <div className="animate-in fade-in zoom-in-95 duration-500">
+          <AuroraMap />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <AuroraPanel pole="north" label="Polo Norte (Boreal)" />
+          <AuroraPanel pole="south" label="Polo Sur (Austral)" />
+        </div>
+      )}
 
       {/* Shared Usage & Impacts */}
       <UsageImpacts usage={USAGE} impacts={IMPACTS} />
