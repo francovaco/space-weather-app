@@ -57,13 +57,14 @@ export function KpIndexClient() {
         name: 'Índice Kp',
         marker: {
           color: kpValues.map((v) => {
-            if (v >= 9) return '#7f1d1d' // G5
-            if (v >= 8) return '#b91c1c' // G4
-            if (v >= 7) return '#ef4444' // G3
-            if (v >= 6) return '#f97316' // G2
-            if (v >= 5) return '#f59e0b' // G1
-            return '#10b981' // Quiet
+            if (v >= 9) return '#960000' // G5 - Granate
+            if (v >= 8) return '#c80000' // G4 - Rojo Oscuro
+            if (v >= 7) return '#ff0000' // G3 - Rojo
+            if (v >= 6) return '#ff9600' // G2 - Naranja
+            if (v >= 5) return '#ffff00' // G1 - Amarillo
+            return '#10b981' // Quiet - Verde Suave
           }),
+          line: { width: 0.5, color: 'rgba(0,0,0,0.3)' }
         },
         hovertemplate: 'Kp %{customdata}<extra></extra>',
       },
@@ -77,7 +78,7 @@ export function KpIndexClient() {
     yaxis: {
       ...PLOTLY_DARK_LAYOUT.yaxis,
       title: { text: 'Índice Planetario Kp', font: { size: 11, color: '#64748b' } },
-      range: [0, 9.8],
+      range: [0, 9.5],
       dtick: 1,
       type: 'linear',
       automargin: true,
@@ -85,18 +86,18 @@ export function KpIndexClient() {
     margin: { l: 60, r: 100, t: 40, b: 65 },
     hovermode: 'x unified',
     shapes: [
-      { type: 'line', xref: 'paper', yref: 'y', x0: 0, x1: 1, y0: 5, y1: 5, line: { color: '#f59e0b', width: 1, dash: 'dot' } },
-      { type: 'line', xref: 'paper', yref: 'y', x0: 0, x1: 1, y0: 6, y1: 6, line: { color: '#f97316', width: 1, dash: 'dot' } },
-      { type: 'line', xref: 'paper', yref: 'y', x0: 0, x1: 1, y0: 7, y1: 7, line: { color: '#ef4444', width: 1, dash: 'dot' } },
-      { type: 'line', xref: 'paper', yref: 'y', x0: 0, x1: 1, y0: 8, y1: 8, line: { color: '#b91c1c', width: 1, dash: 'dot' } },
-      { type: 'line', xref: 'paper', yref: 'y', x0: 0, x1: 1, y0: 9, y1: 9, line: { color: '#7f1d1d', width: 1, dash: 'dot' } },
+      { type: 'line', xref: 'paper', yref: 'y', x0: 0, x1: 1, y0: 5, y1: 5, line: { color: '#ffff00', width: 1, dash: 'dot' } },
+      { type: 'line', xref: 'paper', yref: 'y', x0: 0, x1: 1, y0: 6, y1: 6, line: { color: '#ff9600', width: 1, dash: 'dot' } },
+      { type: 'line', xref: 'paper', yref: 'y', x0: 0, x1: 1, y0: 7, y1: 7, line: { color: '#ff0000', width: 1, dash: 'dot' } },
+      { type: 'line', xref: 'paper', yref: 'y', x0: 0, x1: 1, y0: 8, y1: 8, line: { color: '#c80000', width: 1, dash: 'dot' } },
+      { type: 'line', xref: 'paper', yref: 'y', x0: 0, x1: 1, y0: 9, y1: 9, line: { color: '#960000', width: 1, dash: 'dot' } },
     ],
     annotations: [
-      { xref: 'paper', yref: 'y', x: 1.02, y: 5, text: 'G1 (Menor)', showarrow: false, font: { size: 9, color: '#f59e0b' }, xanchor: 'left' },
-      { xref: 'paper', yref: 'y', x: 1.02, y: 6, text: 'G2 (Mod)', showarrow: false, font: { size: 9, color: '#f97316' }, xanchor: 'left' },
-      { xref: 'paper', yref: 'y', x: 1.02, y: 7, text: 'G3 (Fuerte)', showarrow: false, font: { size: 9, color: '#ef4444' }, xanchor: 'left' },
-      { xref: 'paper', yref: 'y', x: 1.02, y: 8, text: 'G4 (Sev)', showarrow: false, font: { size: 9, color: '#b91c1c' }, xanchor: 'left' },
-      { xref: 'paper', yref: 'y', x: 1.02, y: 9, text: 'G5 (Ext)', showarrow: false, font: { size: 9, color: '#7f1d1d' }, xanchor: 'left' },
+      { xref: 'paper', yref: 'y', x: 1.02, y: 5, text: 'G1', showarrow: false, font: { size: 10, color: '#ffff00', fontWeight: 'bold' }, xanchor: 'left' },
+      { xref: 'paper', yref: 'y', x: 1.02, y: 6, text: 'G2', showarrow: false, font: { size: 10, color: '#ff9600', fontWeight: 'bold' }, xanchor: 'left' },
+      { xref: 'paper', yref: 'y', x: 1.02, y: 7, text: 'G3', showarrow: false, font: { size: 10, color: '#ff0000', fontWeight: 'bold' }, xanchor: 'left' },
+      { xref: 'paper', yref: 'y', x: 1.02, y: 8, text: 'G4', showarrow: false, font: { size: 10, color: '#c80000', fontWeight: 'bold' }, xanchor: 'left' },
+      { xref: 'paper', yref: 'y', x: 1.02, y: 9, text: 'G5', showarrow: false, font: { size: 10, color: '#960000', fontWeight: 'bold' }, xanchor: 'left' },
     ],
   }
 
