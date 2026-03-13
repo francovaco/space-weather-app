@@ -72,12 +72,9 @@ export function NotificationToggle() {
                 Alertas Espaciales
               </h3>
             </div>
-            <button 
-              onClick={() => setOpen(false)} 
-              className="rounded-full p-1 text-text-dim hover:bg-white/5 hover:text-text-primary transition-colors shrink-0"
-            >
+            <div className="text-text-dim/50 shrink-0 p-1">
               <Settings2 size={14} />
-            </button>
+            </div>
           </div>
 
           <div className="space-y-5">
@@ -153,8 +150,8 @@ export function NotificationToggle() {
 
             <div className="flex items-center gap-2 border-t border-border pt-3.5">
               <div className={cn('h-1.5 w-1.5 rounded-full shrink-0', enabled ? 'bg-green-500 animate-pulse' : 'bg-slate-600')} />
-              <p className="text-[10px] text-text-dim italic leading-tight truncate">
-                Activo mientras la pestaña esté abierta.
+              <p className="text-[10px] text-text-dim italic leading-tight">
+                Activo mientras la aplicación está abierta.
               </p>
             </div>
           </div>
