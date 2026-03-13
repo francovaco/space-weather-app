@@ -11,7 +11,7 @@ import {
   Satellite, BookOpen, Activity, Image as ImageIcon, Zap, Radio,
   Sun, Wind, Eye, Globe, ChevronDown, ChevronRight,
   Gauge, Layers, SunDim, BarChart3, CloudSun, BrainCircuit,
-  Info, Shield, Orbit, Repeat2, GitCompare,
+  Info, Shield, Orbit, Repeat2, GitCompare, AlertTriangle,
 } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 
@@ -57,6 +57,7 @@ const NAV_ITEMS: NavItem[] = [
       { label: 'SUVI Ultravioleta', href: '/instruments/suvi', icon: <Sun size={13} /> },
       { label: 'Coronógrafo', href: '/instruments/coronagraph', icon: <Eye size={13} /> },
       { label: 'Entorno Satélite', href: '/instruments/satellite-environment', icon: <Layers size={13} /> },
+      { label: 'Monitor de Anomalías', href: '/instruments/anomaly-monitor', icon: <AlertTriangle size={13} /> },
     ],
   },
   {

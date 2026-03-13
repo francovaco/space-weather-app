@@ -85,6 +85,10 @@ export const getCTIPEFrames = () =>
 export const getKpIndexData = (date?: string) =>
   apiFetch(`${BASE}/kp-index${date ? `?date=${date}` : ''}`)
 
+// --- NASA DONKI ---
+export const getDONKINotifications = (startDate?: string, endDate?: string, type: string = 'all') =>
+  apiFetch(`/api/nasa/donki?type=${type}${startDate ? `&startDate=${startDate}` : ''}${endDate ? `&endDate=${endDate}` : ''}`)
+
 /** 
  * Map UI time range to SWPC API range string
  * SWPC endpoints use: 1-hour, 6-hour, 1-day, 3-day, 7-day
