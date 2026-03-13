@@ -7,6 +7,7 @@ import { useState, useMemo } from 'react'
 import { LoadingMessage, ErrorMessage, EmptyMessage } from '@/components/ui/StatusMessages'
 import { PlotlyChart, PLOTLY_DARK_LAYOUT, PLOTLY_DEFAULT_CONFIG } from '@/components/charts/PlotlyChart'
 import { TimeRangeSelector } from '@/components/ui/TimeRangeSelector'
+import { DataExporter } from '@/components/ui/DataExporter'
 import { NormalizeToggle, normalizeSeries } from '@/components/ui/NormalizeToggle'
 import { UsageImpacts } from '@/components/ui/UsageImpacts'
 import { SectionDetails } from '@/components/ui/SectionDetails'
@@ -182,9 +183,21 @@ export function MagnetometerClient() {
           <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">Magnetómetro</h1>
           <p className="mt-1 text-xs text-text-muted">GOES-19 · Componentes Hp, He, Hn y Campo Total · Actualización cada 1 min</p>
         </div>
-        <div className="flex items-center gap-3">
-          <NormalizeToggle normalize={normalize} onToggle={setNormalize} />
-          <TimeRangeSelector value={range} onChange={setRange} hideHistorical />
+        <div className="flex items-center gap-4">
+          <DataExporter 
+            data={samples.map(s => ({
+              time: s.time_tag,
+              Hp: s.Hp,
+              He: s.He,
+              Hn: s.Hn,
+              Total: s.total
+            }))} 
+            filename={`magnetometer-${range}`} 
+          />
+          <div className="flex items-center gap-3">
+            <NormalizeToggle normalize={normalize} onToggle={setNormalize} />
+            <TimeRangeSelector value={range} onChange={setRange} hideHistorical />
+          </div>
         </div>
       </div>
 

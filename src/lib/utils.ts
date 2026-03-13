@@ -72,25 +72,33 @@ export function msToTime(ms: number): string {
   return `${zeroPad(m)}:${zeroPad(s % 60)}`
 }
 
-/** Get color class for X-ray flare class */
-export function getFlareClassColor(cls: string): string {
-  const map: Record<string, string> = {
-    X: 'text-red-400',
-    M: 'text-orange-400',
-    C: 'text-yellow-400',
-    B: 'text-green-400',
-    A: 'text-blue-400',
-  }
-  return map[cls[0]] ?? 'text-slate-400'
+/** Export an array of objects to a JSON file */
+export function downloadJSON(data: any[], filename: string) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `${filename}.json`
+  a.click()
+  URL.revokeObjectURL(url)
 }
 
-/** Get NOAA Kp color */
-export function getKpColor(kp: number): string {
-  if (kp >= 9) return '#800000'
-  if (kp >= 8) return '#ff0000'
-  if (kp >= 7) return '#ff4500'
-  if (kp >= 6) return '#ffa500'
-  if (kp >= 5) return '#ffff00'
-  if (kp >= 4) return '#00ff00'
-  return '#22c55e'
+/** Export an array of objects to a CSV file */
+export function downloadCSV(data: any[], filename: string) {
+  if (data.length === 0) return
+  const headers = Object.keys(data[0]).join(',')
+  const rows = data.map(obj => {
+    return Object.values(obj).map(val => {
+      if (typeof val === 'string') return `"${val}"`
+      return val
+    }).join(',')
+  })
+  const csv = [headers, ...rows].join('\n')
+  const blob = new Blob([csv], { type: 'text/csv' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `${filename}.csv`
+  a.click()
+  URL.revokeObjectURL(url)
 }

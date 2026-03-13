@@ -7,6 +7,7 @@ import { useState, useMemo } from 'react'
 import { LoadingMessage, ErrorMessage, EmptyMessage } from '@/components/ui/StatusMessages'
 import { PlotlyChart, PLOTLY_DARK_LAYOUT, PLOTLY_DEFAULT_CONFIG } from '@/components/charts/PlotlyChart'
 import { TimeRangeSelector } from '@/components/ui/TimeRangeSelector'
+import { DataExporter } from '@/components/ui/DataExporter'
 import { NormalizeToggle, normalizeSeries } from '@/components/ui/NormalizeToggle'
 import { UsageImpacts } from '@/components/ui/UsageImpacts'
 import { SectionDetails } from '@/components/ui/SectionDetails'
@@ -150,9 +151,20 @@ export function XRayFluxClient() {
           <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">Flujo de Rayos X</h1>
           <p className="mt-1 text-xs text-text-muted">GOES-19 · Banda corta y larga · Actualización cada 1 min</p>
         </div>
-        <div className="flex items-center gap-3">
-          <NormalizeToggle normalize={normalize} onToggle={setNormalize} />
-          <TimeRangeSelector value={range} onChange={setRange} hideHistorical />
+        <div className="flex items-center gap-4">
+          <DataExporter 
+            data={rawData ? rawData.map(d => ({
+              time: d.time_tag,
+              flux: d.flux,
+              energy: d.energy,
+              satellite: d.satellite
+            })) : []} 
+            filename={`xray-flux-${range}`} 
+          />
+          <div className="flex items-center gap-3">
+            <NormalizeToggle normalize={normalize} onToggle={setNormalize} />
+            <TimeRangeSelector value={range} onChange={setRange} hideHistorical />
+          </div>
         </div>
       </div>
 

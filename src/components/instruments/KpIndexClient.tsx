@@ -7,6 +7,7 @@ import { useMemo, useState } from 'react'
 import { LoadingMessage, ErrorMessage, EmptyMessage } from '@/components/ui/StatusMessages'
 import { PlotlyChart, PLOTLY_DARK_LAYOUT } from '@/components/charts/PlotlyChart'
 import { TimeRangeSelector } from '@/components/ui/TimeRangeSelector'
+import { DataExporter } from '@/components/ui/DataExporter'
 import { UsageImpacts } from '@/components/ui/UsageImpacts'
 import { SectionDetails } from '@/components/ui/SectionDetails'
 import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
@@ -120,12 +121,21 @@ export function KpIndexClient() {
           <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">Índice Planetario Kp</h1>
           <p className="mt-1 text-xs text-text-muted">SWPC · Actividad geomagnética global · Actualización cada 3 horas</p>
         </div>
-        <TimeRangeSelector 
-          value={range} 
-          onChange={setRange} 
-          selectedDate={selectedDate}
-          onDateChange={setSelectedDate}
-        />
+        <div className="flex items-center gap-4">
+          <DataExporter 
+            data={plotData[0]?.x ? (plotData[0].x as any[]).map((x, i) => ({ 
+              time: x, 
+              kp: (plotData[0].customdata as any[])[i] 
+            })) : []} 
+            filename={`kp-index-${range === 'historical' ? selectedDate : range}`} 
+          />
+          <TimeRangeSelector 
+            value={range} 
+            onChange={setRange} 
+            selectedDate={selectedDate}
+            onDateChange={setSelectedDate}
+          />
+        </div>
       </div>
 
       {/* Chart */}
