@@ -216,7 +216,7 @@ export function ComparisonClient() {
               )} />
             </button>
           </div>
-          <TimeRangeSelector value={range} onChange={setRange} />
+          <TimeRangeSelector value={range} onChange={setRange} hideHistorical />
         </div>
       </div>
 

@@ -158,7 +158,7 @@ export function ProtonFluxClient() {
         </div>
         <div className="flex items-center gap-3">
           <NormalizeToggle normalize={normalize} onToggle={setNormalize} />
-          <TimeRangeSelector value={range} onChange={setRange} />
+          <TimeRangeSelector value={range} onChange={setRange} hideHistorical />
         </div>
       </div>
 
