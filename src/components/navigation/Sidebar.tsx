@@ -48,7 +48,8 @@ const NAV_ITEMS: NavItem[] = [
     label: 'Instrumentos',
     icon: <Activity size={15} />,
     children: [
-      { label: 'Magnetómetro', href: '/instruments/magnetometer', icon: <Gauge size={13} /> },
+      { label: 'Magnetómetro GOES', href: '/instruments/magnetometer', icon: <Gauge size={13} /> },
+      { label: 'Magnetómetro DSCOVR', href: '/instruments/dscovr', icon: <Globe size={13} /> },
       { label: 'Flujo de Rayos X', href: '/instruments/xray-flux', icon: <Zap size={13} /> },
       { label: 'Flujo de Electrones', href: '/instruments/electron-flux', icon: <Radio size={13} /> },
       { label: 'Flujo de Protones', href: '/instruments/proton-flux', icon: <Activity size={13} /> },

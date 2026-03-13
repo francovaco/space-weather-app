@@ -2,6 +2,20 @@
 // src/types/swpc.ts — SWPC space weather data types
 // ============================================================
 
+// --- DSCOVR (Deep Space Climate Observatory) — IMF ---
+
+export interface DSCOVRMagReading {
+  time_tag: string
+  bx: number
+  by: number
+  bz: number
+  bt: number // Total Magnitude
+  lat: number
+  lon: number
+}
+
+export type DSCOVRMagData = DSCOVRMagReading[]
+
 // --- Magnetometer ---
 
 export interface MagnetometerReading {

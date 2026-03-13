@@ -18,6 +18,10 @@ async function apiFetch<T>(endpoint: string): Promise<T> {
 export const getSolarWindPlasma = () =>
   apiFetch(`${BASE}/solar-wind-plasma`)
 
+// --- DSCOVR (IMF) ---
+export const getDSCOVRMagData = (range: string = '1-hour') =>
+  apiFetch(`${BASE}/dscovr-mag?range=${range}`)
+
 // --- Magnetometer ---
 export const getMagnetometerData = (range: string = '1-hour', date?: string) =>
   apiFetch(`${BASE}/magnetometer?range=${range}${date ? `&date=${date}` : ''}`)
@@ -129,6 +133,13 @@ export const SWPC_ENDPOINTS = {
   protons1d: `${SWPC_BASE}/json/goes/primary/integral-protons-1-day.json`,
   protons3d: `${SWPC_BASE}/json/goes/primary/integral-protons-3-day.json`,
   protons7d: `${SWPC_BASE}/json/goes/primary/integral-protons-7-day.json`,
+
+  // DSCOVR IMF (Magnetometer at L1) — updates every 1 min
+  dscovrMag1h: `${SWPC_BASE}/products/solar-wind/mag-1-hour.json`,
+  dscovrMag6h: `${SWPC_BASE}/products/solar-wind/mag-6-hour.json`,
+  dscovrMag1d: `${SWPC_BASE}/products/solar-wind/mag-1-day.json`,
+  dscovrMag3d: `${SWPC_BASE}/products/solar-wind/mag-3-day.json`,
+  dscovrMag7d: `${SWPC_BASE}/products/solar-wind/mag-7-day.json`,
 
   // Aurora ovation — updates every 5 min
   aurora: `${SWPC_BASE}/json/ovation_aurora_latest.json`,
