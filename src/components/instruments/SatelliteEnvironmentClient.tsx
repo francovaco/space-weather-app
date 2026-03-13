@@ -280,7 +280,7 @@ export function SatelliteEnvironmentClient() {
             GOES · Vista combinada de partículas y rayos X · Tiempo real
           </p>
         </div>
-        <TimeRangeSelector value={range} onChange={setRange} />
+        <TimeRangeSelector value={range} onChange={setRange} hideHistorical />
       </div>
 
       {/* Proton Flux */}
