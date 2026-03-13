@@ -20,8 +20,15 @@ interface Magnetosphere3DProps {
 }
 
 function Earth() {
+  const earthRef = useRef<THREE.Group>(null!)
+  
+  useFrame((state, delta) => {
+    // Rotación de la Tierra (1 día = 24h, aquí lo hacemos visiblemente lento)
+    earthRef.current.rotation.y += delta * 0.1
+  })
+
   return (
-    <group>
+    <group ref={earthRef}>
       {/* Planeta Tierra (Simplificado) */}
       <Sphere args={[1, 32, 32]}>
         <meshStandardMaterial 
@@ -40,8 +47,6 @@ function Earth() {
 }
 
 function Shield({ pressure }: { pressure: number }) {
-  const meshRef = useRef<THREE.Mesh>(null!)
-  
   // Mapeamos la presión a la distorsión y escala
   // Presión normal: ~1-3 nPa. Tormenta: >10 nPa.
   const distortion = useMemo(() => {
@@ -53,26 +58,18 @@ function Shield({ pressure }: { pressure: number }) {
     return Math.max(2.5 - (pressure / 15), 1.5)
   }, [pressure])
 
-  useFrame((state) => {
-    const time = state.clock.getElapsedTime()
-    // Animación suave de "respiración"
-    meshRef.current.rotation.y = time * 0.1
-  })
-
   return (
-    <Float speed={2} rotationIntensity={0.5} floatIntensity={0.5}>
-      <mesh ref={meshRef} scale={[scale * 1.5, scale, scale]}>
-        <sphereGeometry args={[1, 64, 64]} />
-        <MeshDistortMaterial
-          color="#22d3ee"
-          speed={distortion * 5}
-          distort={distortion}
-          transparent
-          opacity={0.3}
-          wireframe
-        />
-      </mesh>
-    </Float>
+    <mesh scale={[scale * 1.5, scale, scale]}>
+      <sphereGeometry args={[1, 64, 64]} />
+      <MeshDistortMaterial
+        color="#22d3ee"
+        speed={distortion * 5}
+        distort={distortion}
+        transparent
+        opacity={0.3}
+        wireframe
+      />
+    </mesh>
   )
 }
 
