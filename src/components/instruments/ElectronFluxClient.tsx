@@ -9,6 +9,7 @@ import { TimeRangeSelector } from '@/components/ui/TimeRangeSelector'
 import { NormalizeToggle, normalizeSeries } from '@/components/ui/NormalizeToggle'
 import { UsageImpacts } from '@/components/ui/UsageImpacts'
 import { SectionDetails } from '@/components/ui/SectionDetails'
+import { DataAge } from '@/components/ui/DataAge'
 import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
 import { getElectronFluxData, timeRangeToParam } from '@/lib/swpc-api'
 import { LoadingMessage, ErrorMessage, EmptyMessage } from '@/components/ui/StatusMessages'
@@ -139,9 +140,13 @@ export function ElectronFluxClient() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">Flujo de Electrones</h1>
-          <p className="mt-1 text-xs text-text-muted">GOES-19 · Flujo integral ≥2 MeV · Actualización cada 5 min</p>
+          <div className="flex items-center gap-2">
+            <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">Flujo de Electrones</h1>
+            <DataAge timestamp={samples?.[samples.length - 1]?.time_tag} />
+          </div>
+          <p className="mt-1 text-xs text-text-muted">GOES-19 · Radiación de Electrones Energéticos · Actualización cada 5 min</p>
         </div>
+
         <div className="flex items-center gap-3">
           <NormalizeToggle normalize={normalize} onToggle={setNormalize} />
           <TimeRangeSelector value={range} onChange={setRange} hideHistorical />

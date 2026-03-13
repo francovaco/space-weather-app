@@ -8,6 +8,7 @@ import { PlotlyChart, PLOTLY_DARK_LAYOUT, PLOTLY_DEFAULT_CONFIG } from '@/compon
 import { TimeRangeSelector } from '@/components/ui/TimeRangeSelector'
 import { NormalizeToggle, normalizeSeries } from '@/components/ui/NormalizeToggle'
 import { SectionDetails } from '@/components/ui/SectionDetails'
+import { DataAge } from '@/components/ui/DataAge'
 import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
 import { getProtonFluxData, getElectronFluxData, getDONKINotifications, timeRangeToParam } from '@/lib/swpc-api'
 import { LoadingMessage, ErrorMessage, EmptyMessage } from '@/components/ui/StatusMessages'
@@ -237,6 +238,7 @@ export function AnomalyMonitorClient() {
             <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">
               Monitor de Anomalías Satelitales
             </h1>
+            <DataAge timestamp={protons.data?.[protons.data.length - 1]?.time_tag} className="ml-2" />
           </div>
           <p className="mt-1 text-xs text-text-muted">
             Correlación de reportes NASA DONKI con picos de radiación de GOES-19 (L1/GEO)

@@ -8,6 +8,7 @@ import { useState } from 'react'
 import { PlotlyChart, PLOTLY_DARK_LAYOUT, PLOTLY_DEFAULT_CONFIG } from '@/components/charts/PlotlyChart'
 import { TimeRangeSelector } from '@/components/ui/TimeRangeSelector'
 import { SectionDetails } from '@/components/ui/SectionDetails'
+import { DataAge } from '@/components/ui/DataAge'
 import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
 import { getProtonFluxData, getElectronFluxData, getXRayFluxData, timeRangeToParam } from '@/lib/swpc-api'
 import { LoadingMessage, ErrorMessage } from '@/components/ui/StatusMessages'
@@ -273,9 +274,12 @@ export function SatelliteEnvironmentClient() {
       {/* Header + range */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">
-            Entorno del Satélite
-          </h1>
+          <div className="flex items-center gap-2">
+            <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">
+              Entorno del Satélite
+            </h1>
+            <DataAge timestamp={protons.data?.[protons.data.length - 1]?.time_tag} />
+          </div>
           <p className="mt-1 text-xs text-text-muted">
             GOES · Vista combinada de partículas y rayos X · Tiempo real
           </p>

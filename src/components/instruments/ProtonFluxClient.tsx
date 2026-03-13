@@ -10,6 +10,7 @@ import { TimeRangeSelector } from '@/components/ui/TimeRangeSelector'
 import { NormalizeToggle, normalizeSeries } from '@/components/ui/NormalizeToggle'
 import { UsageImpacts } from '@/components/ui/UsageImpacts'
 import { SectionDetails } from '@/components/ui/SectionDetails'
+import { DataAge } from '@/components/ui/DataAge'
 import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
 import { getProtonFluxData, timeRangeToParam } from '@/lib/swpc-api'
 import type { TimeRange } from '@/types/swpc'
@@ -153,7 +154,10 @@ export function ProtonFluxClient() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">Flujo de Protones</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">Flujo de Protones</h1>
+            <DataAge timestamp={rawData?.[rawData.length - 1]?.time_tag} />
+          </div>
           <p className="mt-1 text-xs text-text-muted">GOES · Flujo integral en múltiples niveles de energía · Actualización cada 5 min</p>
         </div>
         <div className="flex items-center gap-3">

@@ -10,6 +10,7 @@ import { TimeRangeSelector } from '@/components/ui/TimeRangeSelector'
 import { DataExporter } from '@/components/ui/DataExporter'
 import { UsageImpacts } from '@/components/ui/UsageImpacts'
 import { SectionDetails } from '@/components/ui/SectionDetails'
+import { DataAge } from '@/components/ui/DataAge'
 import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
 import { getDSCOVRMagData, timeRangeToParam } from '@/lib/swpc-api'
 import type { TimeRange, DSCOVRMagReading } from '@/types/swpc'
@@ -107,7 +108,10 @@ export function DSCOVRClient() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">DSCOVR / IMF</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">DSCOVR / IMF</h1>
+            <DataAge timestamp={samples?.[samples.length - 1]?.time_tag} />
+          </div>
           <p className="mt-1 text-xs text-text-muted">Punto de Lagrange L1 · Campo Magnético Interplanetario · Actualización cada 1 min</p>
         </div>
         <div className="flex items-center gap-4">

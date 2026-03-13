@@ -9,6 +9,7 @@ import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
 import { getSuviFrames } from '@/lib/swpc-api'
 import { UsageImpacts } from '@/components/ui/UsageImpacts'
 import { SectionDetails } from '@/components/ui/SectionDetails'
+import { DataAge } from '@/components/ui/DataAge'
 import { cn, proxyImg } from '@/lib/utils'
 import { Play, Pause, SkipBack, SkipForward, Download } from 'lucide-react'
 
@@ -60,9 +61,12 @@ export function SUVIClient() {
     <div className="space-y-4">
       {/* Header */}
       <div>
-        <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">
-          SUVI — Ultravioleta Solar
-        </h1>
+        <div className="flex items-center gap-2">
+          <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">
+            SUVI — Ultravioleta Solar
+          </h1>
+          <DataAge timestamp={frames?.[frames.length - 1]?.time_tag} />
+        </div>
         <p className="mt-1 text-xs text-text-muted">
           Imágenes de la corona solar · GOES-19 · 5 longitudes de onda EUV · Actualización cada 5 min
         </p>
