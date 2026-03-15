@@ -69,6 +69,16 @@ function formatLabel(filename: string): string {
   return `${d.getUTCDate().toString().padStart(2,'0')} ${months[d.getUTCMonth()]} ${year} — ${hh}:${mm} UTC`
 }
 
+function getFrameIsoTimestamp(filename: string): string {
+  const ts = filename.slice(0, 11)
+  const year = parseInt(ts.slice(0, 4))
+  const doy  = parseInt(ts.slice(4, 7))
+  const hh   = ts.slice(7, 9)
+  const mm   = ts.slice(9, 11)
+  const d = new Date(Date.UTC(year, 0, doy, parseInt(hh), parseInt(mm)))
+  return d.toISOString()
+}
+
 // ── Channel catalogue ──────────────────────────────────────────
 const CHANNELS: Channel[] = [
   // ─── RGBs ─────────────────────────────────────────────────
@@ -357,7 +367,7 @@ export function ImageryClient() {
 
 // ── Channel grid ───────────────────────────────────────────────
 function ChannelGrid({ onSelect }:{ onSelect:(c:Channel)=>void }) {
-  const [latestTs, setLatestTs] = useState<string | null>(null)
+  const [latestFn, setLatestFn] = useState<string | null>(null)
 
   // Fetch the timestamp of the latest image ONCE for the whole grid
   // Using GEOCOLOR as the reference channel (updated every 10 min)
@@ -369,7 +379,7 @@ function ChannelGrid({ onSelect }:{ onSelect:(c:Channel)=>void }) {
         const data = await res.json()
         if (cancelled) return
         const fn: string = data.frames?.[0]
-        if (fn) setLatestTs(formatLabel(fn))
+        if (fn) setLatestFn(fn)
       } catch { /* silent */ }
     }
     fetchLatest()
@@ -384,7 +394,7 @@ function ChannelGrid({ onSelect }:{ onSelect:(c:Channel)=>void }) {
           <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">
             Imágenes Satelitales ABI
           </h1>
-          <DataAge timestamp={latestTs} />
+          <DataAge timestamp={latestFn ? getFrameIsoTimestamp(latestFn) : null} />
         </div>
         <p className="mt-1 text-sm text-text-muted">
           GOES-19 · Sector Sudamérica Sur (SSA) · Actualización cada 10 minutos
@@ -394,7 +404,7 @@ function ChannelGrid({ onSelect }:{ onSelect:(c:Channel)=>void }) {
         <p className="section-label mb-3">Productos RGB y Compuestos</p>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
           {CHANNELS.filter(c=>c.tipo==='rgb').map(ch=>(
-            <ChannelCard key={ch.id} channel={ch} onSelect={onSelect} latestTs={latestTs} />
+            <ChannelCard key={ch.id} channel={ch} onSelect={onSelect} latestFn={latestFn} />
           ))}
         </div>
       </section>
@@ -402,7 +412,7 @@ function ChannelGrid({ onSelect }:{ onSelect:(c:Channel)=>void }) {
         <p className="section-label mb-3">Bandas ABI Individuales — Canales 1 al 16</p>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-8">
           {CHANNELS.filter(c=>c.tipo!=='rgb').map(ch=>(
-            <ChannelCard key={ch.id} channel={ch} onSelect={onSelect} latestTs={latestTs} />
+            <ChannelCard key={ch.id} channel={ch} onSelect={onSelect} latestFn={latestFn} />
           ))}
         </div>
       </section>
@@ -431,7 +441,7 @@ async function processThumbQueue() {
   }
 }
 
-function ChannelCard({ channel:ch, onSelect, latestTs }:{ channel:Channel; onSelect:(c:Channel)=>void; latestTs: string | null }) {
+function ChannelCard({ channel:ch, onSelect, latestFn }:{ channel:Channel; onSelect:(c:Channel)=>void; latestFn: string | null }) {
   const [thumbUrl, setThumbUrl] = useState<string | null>(null)
   const [ok,setOk] = useState(true)
   const [loading, setLoading] = useState(true)
@@ -480,7 +490,7 @@ function ChannelCard({ channel:ch, onSelect, latestTs }:{ channel:Channel; onSel
       const idx = thumbQueue.indexOf(loadTask)
       if (idx > -1) thumbQueue.splice(idx, 1)
     }
-  }, [ch.id, isGlm, inView])
+  }, [ch.id, isGlm, inView, latestFn])
 
   useEffect(() => {
     return () => {
@@ -512,10 +522,10 @@ function ChannelCard({ channel:ch, onSelect, latestTs }:{ channel:Channel; onSel
           {TIPO_LABELS[ch.tipo]}
         </span>
         {/* Last image timestamp overlay */}
-        {latestTs && (
+        {latestFn && (
           <div className="absolute bottom-0 left-0 right-0 bg-black/70 px-1.5 py-0.5">
             <span className="font-data text-2xs text-accent-cyan tabular-nums leading-none">
-              {latestTs}
+              {formatLabel(latestFn)}
             </span>
           </div>
         )}
