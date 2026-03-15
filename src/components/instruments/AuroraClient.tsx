@@ -190,6 +190,7 @@ function AuroraPlayer({ frames }: { frames: AuroraFrame[] }) {
   const [loaded, setLoaded] = useState(false)
   const [loadProgress, setLoadProgress] = useState(0)
   const [activeFrames, setActiveFrames] = useState<AuroraFrame[]>([])
+  const [loadError, setLoadError] = useState<string | null>(null)
   const FPS_STEPS = [1, 2, 3, 4, 5, 8, 10, 15, 20]
   const [fpsIdx, setFpsIdx] = useState(3) // default 4 fps
   const speedMs = Math.round(1000 / FPS_STEPS[fpsIdx])
@@ -211,6 +212,7 @@ function AuroraPlayer({ frames }: { frames: AuroraFrame[] }) {
     setLoaded(false)
     setLoadProgress(0)
     setActiveFrames([])
+    setLoadError(null)
   }, [frames])
 
   useEffect(() => {
@@ -250,8 +252,9 @@ function AuroraPlayer({ frames }: { frames: AuroraFrame[] }) {
           setLoaded(true)
           setPlaying(true)
         } else {
-          setActiveFrames(frames)
+          setActiveFrames([])
           setLoaded(true)
+          setLoadError('Error al cargar las imágenes de pronóstico de aurora')
         }
       }
     }
@@ -333,11 +336,15 @@ function AuroraPlayer({ frames }: { frames: AuroraFrame[] }) {
         <PreloadProgress progress={loadProgress} />
       )}
 
-      {loaded && activeFrames.length === 0 && (
+      {loaded && loadError && (
+        <ErrorMessage message={loadError} className="py-20" />
+      )}
+
+      {loaded && !loadError && activeFrames.length === 0 && (
         <EmptyMessage message="No se pudieron cargar las imágenes" className="py-20" />
       )}
 
-      {loaded && current && (
+      {loaded && current && !loadError && (
         <>
           <div
             ref={imgContRef}
