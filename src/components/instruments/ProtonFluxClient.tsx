@@ -56,7 +56,11 @@ export function ProtonFluxClient() {
 
   const { data: rawData, isLoading, isError } = useAutoRefresh<ProtonSample[]>({
     queryKey: ['proton-flux', range],
-    fetcher: () => getProtonFluxData(timeRangeToParam(range)) as Promise<ProtonSample[]>,
+    fetcher: async () => {
+      const data = await getProtonFluxData(timeRangeToParam(range)) as ProtonSample[]
+      // Ordenar por fecha ascendente
+      return data.slice().sort((a, b) => new Date(a.time_tag).getTime() - new Date(b.time_tag).getTime())
+    },
     intervalMs: REFRESH_INTERVALS.ONE_MIN,
   })
 

@@ -59,7 +59,11 @@ export function XRayFluxClient() {
 
   const { data: rawData, isLoading, isError } = useAutoRefresh<XRaySample[]>({
     queryKey: ['xray-flux', range],
-    fetcher: () => getXRayFluxData(timeRangeToParam(range)) as Promise<XRaySample[]>,
+    fetcher: async () => {
+      const data = await getXRayFluxData(timeRangeToParam(range)) as XRaySample[]
+      // Ordenar por fecha ascendente
+      return data.slice().sort((a, b) => new Date(a.time_tag).getTime() - new Date(b.time_tag).getTime())
+    },
     intervalMs: REFRESH_INTERVALS.ONE_MIN,
   })
 

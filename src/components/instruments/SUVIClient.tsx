@@ -53,7 +53,11 @@ export function SUVIClient() {
 
   const { data: frames, isLoading, isError } = useAutoRefresh<SuviFrame[]>({
     queryKey: ['suvi', wavelength],
-    fetcher: () => getSuviFrames(wavelength) as Promise<SuviFrame[]>,
+    fetcher: async () => {
+      const data = await getSuviFrames(wavelength) as SuviFrame[]
+      // Ordenar por fecha ascendente
+      return data.slice().sort((a, b) => new Date(a.time_tag).getTime() - new Date(b.time_tag).getTime())
+    },
     intervalMs: REFRESH_INTERVALS.ONE_MIN,
   })
 

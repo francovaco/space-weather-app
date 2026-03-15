@@ -41,7 +41,11 @@ export function MagnetometerClient() {
 
   const { data: samples, isLoading, isError } = useAutoRefresh<MagnetometerReading[]>({
     queryKey: ['magnetometer', range],
-    fetcher: () => getMagnetometerData(timeRangeToParam(range)) as Promise<MagnetometerReading[]>,
+    fetcher: async () => {
+      const data = await getMagnetometerData(timeRangeToParam(range)) as MagnetometerReading[]
+      // Ordenar por fecha ascendente
+      return data.slice().sort((a, b) => new Date(a.time_tag).getTime() - new Date(b.time_tag).getTime())
+    },
     intervalMs: REFRESH_INTERVALS.ONE_MIN,
   })
 
