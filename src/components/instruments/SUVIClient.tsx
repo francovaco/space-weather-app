@@ -58,8 +58,10 @@ export function SUVIClient() {
       // Ordenar por fecha ascendente
       return data.slice().sort((a, b) => new Date(a.time_tag).getTime() - new Date(b.time_tag).getTime())
     },
-    intervalMs: REFRESH_INTERVALS.ONE_MIN,
+    intervalMs: REFRESH_INTERVALS.FIVE_MIN,
   })
+
+  // Revisar configuración de caché en el backend para asegurar actualización cada 5 minutos
 
   return (
     <div className="space-y-4">
@@ -200,14 +202,10 @@ function SuviPlayer({ frames }: { frames: SuviFrame[] }) {
 
       if (!cancelled) {
         const valid = ok.filter((f): f is SuviFrame => f !== null)
-        if (valid.length > 0) {
-          setActiveFrames(valid)
-          setLoaded(true)
-          setPlaying(true)
-        } else {
-          setLoadError(true)
-          setLoaded(true)
-        }
+        setActiveFrames(valid)
+        setLoaded(true)
+        setPlaying(valid.length > 0)
+        setLoadError(valid.length === 0)
       }
     }
 
