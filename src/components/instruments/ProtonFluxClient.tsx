@@ -92,7 +92,7 @@ export function ProtonFluxClient() {
       const min = Math.min(...refBand)
       const max = Math.max(...refBand)
       
-      let calcY = ((PROTON_ALERT_THRESHOLD - min) / (max - min)) * 100
+      const calcY = ((PROTON_ALERT_THRESHOLD - min) / (max - min)) * 100
       const isPinned = calcY > 120
       const displayThresholdY = isPinned ? 115 : calcY
       

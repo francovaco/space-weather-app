@@ -82,7 +82,7 @@ export function ElectronFluxClient() {
       const vals = ge2.map(d => d.flux).filter(v => v !== null && !isNaN(v))
       const min = Math.min(...vals), max = Math.max(...vals)
       
-      let calcY = (max === min) ? 50 : ((ALERT_THRESHOLD - min) / (max - min)) * 100
+      const calcY = (max === min) ? 50 : ((ALERT_THRESHOLD - min) / (max - min)) * 100
       const isPinned = calcY > 120
       const displayThresholdY = isPinned ? 115 : calcY
       

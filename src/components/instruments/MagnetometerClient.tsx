@@ -75,7 +75,7 @@ export function MagnetometerClient() {
     const start = new Date(samples[0].time_tag)
     const end = new Date(samples[samples.length - 1].time_tag)
     
-    let curr = new Date(start)
+    const curr = new Date(start)
     curr.setUTCHours(5, 0, 0, 0) // First Midnight
     if (curr < start) curr.setUTCDate(curr.getUTCDate() + 1)
 
