@@ -100,7 +100,14 @@ export function XRayFluxClient() {
       const vals = longWave.map(d => d.flux).filter(v => v !== null && !isNaN(v))
       const min = Math.min(...vals), max = Math.max(...vals)
       const tickVals = [0, 25, 50, 75, 100]
-      const tickTexts = tickVals.map(pct => (min + (pct / 100) * (max - min)).toExponential(1))
+        const tickTexts = tickVals.map(pct => {
+          const val = min + (pct / 100) * (max - min)
+          if (Math.abs(val) < 0.0001) {
+            return val.toFixed(10)
+          } else {
+            return val.toFixed(6)
+          }
+        })
       const normalizedClasses = FLARE_CLASSES.map(fc => ({
         y: ((fc.value - min) / (max - min)) * 100,
         label: fc.label
