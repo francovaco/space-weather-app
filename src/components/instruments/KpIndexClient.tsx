@@ -35,10 +35,16 @@ const IMPACTS = [
 
 export function KpIndexClient() {
   const [range, setRange] = useState<TimeRange>('3d')
+  const [selectedDate, setSelectedDate] = useState<string | undefined>()
 
   const { data: samples, isLoading, isError } = useAutoRefresh<KpReading[]>({
-    queryKey: ['kp-index'],
-    fetcher: () => getKpIndexData() as Promise<KpReading[]>,
+    queryKey: ['kp-index', range, selectedDate],
+    fetcher: () => {
+      if (range === 'historical' && selectedDate) {
+        return getKpIndexData(selectedDate) as Promise<KpReading[]>;
+      }
+      return getKpIndexData() as Promise<KpReading[]>;
+    },
     intervalMs: REFRESH_INTERVALS.THIRTY_MIN,
   })
 
@@ -57,8 +63,19 @@ export function KpIndexClient() {
       default: hours = 72
     }
     
-    const cutoff = new Date(now.getTime() - hours * 60 * 60 * 1000)
-    const filteredSamples = samples.filter(s => new Date(s.time_tag) >= cutoff)
+    let filteredSamples = samples;
+    if (range === 'historical' && selectedDate) {
+      filteredSamples = samples.filter(s => {
+        const dt = new Date(s.time_tag);
+        const sel = new Date(selectedDate);
+        return dt.getUTCFullYear() === sel.getUTCFullYear() &&
+               dt.getUTCMonth() === sel.getUTCMonth() &&
+               dt.getUTCDate() === sel.getUTCDate();
+      });
+    } else {
+      const cutoff = new Date(now.getTime() - hours * 60 * 60 * 1000)
+      filteredSamples = samples.filter(s => new Date(s.time_tag) >= cutoff)
+    }
 
     const kpValues = filteredSamples.map(s => s.kp)
 
@@ -132,12 +149,14 @@ export function KpIndexClient() {
               time: x, 
               kp: (plotData[0].customdata as any[])[i] 
             })) : []} 
-            filename={`kp-index-${range}`} 
+            filename={`kp-index-${range}${selectedDate ? `-${selectedDate}` : ''}`} 
           />
           <TimeRangeSelector 
             value={range} 
             onChange={setRange} 
-            hideHistorical
+            selectedDate={selectedDate}
+            onDateChange={setSelectedDate}
+            hideHistorical={false}
           />
         </div>
       </div>
