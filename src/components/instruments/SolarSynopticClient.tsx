@@ -7,7 +7,6 @@ import { UsageImpacts } from '@/components/ui/UsageImpacts'
 import { SectionDetails } from '@/components/ui/SectionDetails'
 import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
 import { getSolarSynopticMap } from '@/lib/swpc-api'
-import { DataAge } from '@/components/ui/DataAge'
 import { LoadingMessage, ErrorMessage } from '@/components/ui/StatusMessages'
 
 interface SynopticData {
@@ -50,7 +49,6 @@ export function SolarSynopticClient() {
           <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">
             Mapa Solar Sinóptico
           </h1>
-          <DataAge timestamp={data?.updated} />
         </div>
         <p className="mt-1 text-xs text-text-muted">
           SWPC · Mapa diario de la superficie solar con regiones activas, agujeros coronales y filamentos
