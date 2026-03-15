@@ -5,7 +5,7 @@
 // ============================================================
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
-import { getSolarWindFrames } from '@/lib/swpc-api'
+import { getSolarWindFrames, getSolarWindPlasma } from '@/lib/swpc-api'
 import { UsageImpacts } from '@/components/ui/UsageImpacts'
 import { SectionDetails } from '@/components/ui/SectionDetails'
 import { LoadingMessage, ErrorMessage, EmptyMessage, PreloadProgress } from '@/components/ui/StatusMessages'
@@ -42,6 +42,15 @@ export function SolarWindClient() {
     intervalMs: REFRESH_INTERVALS.ONE_MIN,
   })
 
+  const { data: plasma } = useAutoRefresh<any[]>({
+    queryKey: ['solar-wind-plasma'],
+    fetcher: () => getSolarWindPlasma() as Promise<any[]>,
+    intervalMs: REFRESH_INTERVALS.ONE_MIN,
+  })
+
+  const currentSpeed = plasma?.[plasma.length - 1]?.speed
+  const currentDensity = plasma?.[plasma.length - 1]?.density
+
   return (
     <div className="space-y-4">
       {/* Header */}
@@ -56,6 +65,23 @@ export function SolarWindClient() {
           <p className="mt-1 text-xs text-text-muted">
             Modelo de Predicción Heliosférica · Evolución de Densidad y Velocidad · Actualización cada 2 horas
           </p>
+        </div>
+
+        {/* Current Conditions Badge */}
+        <div className="flex items-center gap-3 rounded-lg border border-white/10 bg-background-secondary p-2">
+          <div className="flex flex-col px-2 text-right">
+            <span className="text-[10px] uppercase tracking-wider text-text-muted">Velocidad Actual</span>
+            <span className="font-data text-lg leading-none text-accent-cyan">
+              {currentSpeed ? Math.round(currentSpeed) : '---'} <span className="text-xs text-text-dim">km/s</span>
+            </span>
+          </div>
+          <div className="h-8 w-px bg-white/10" />
+          <div className="flex flex-col px-2">
+            <span className="text-[10px] uppercase tracking-wider text-text-muted">Densidad Actual</span>
+            <span className="font-data text-lg leading-none text-accent-amber">
+              {currentDensity ? currentDensity.toFixed(1) : '---'} <span className="text-xs text-text-dim">cm⁻³</span>
+            </span>
+          </div>
         </div>
       </div>
 
