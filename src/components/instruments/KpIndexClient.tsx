@@ -35,11 +35,10 @@ const IMPACTS = [
 
 export function KpIndexClient() {
   const [range, setRange] = useState<TimeRange>('3d')
-  const [selectedDate, setSelectedDate] = useState<string>('')
 
   const { data: samples, isLoading, isError } = useAutoRefresh<KpReading[]>({
-    queryKey: ['kp-index', range, selectedDate],
-    fetcher: () => getKpIndexData(range === 'historical' ? selectedDate : undefined) as Promise<KpReading[]>,
+    queryKey: ['kp-index'],
+    fetcher: () => getKpIndexData() as Promise<KpReading[]>,
     intervalMs: REFRESH_INTERVALS.THIRTY_MIN,
   })
 
@@ -47,17 +46,19 @@ export function KpIndexClient() {
   const plotData: Plotly.Data[] = useMemo(() => {
     if (!samples || samples.length === 0) return []
     
-    let filteredSamples = []
-    
-    if (range === 'historical' && selectedDate) {
-      // Historical data from API is already range-scoped
-      filteredSamples = samples
-    } else {
-      // Default: Filter to last 3 days (72 hours)
-      const threeDaysAgo = new Date()
-      threeDaysAgo.setHours(threeDaysAgo.getHours() - 72)
-      filteredSamples = samples.filter(s => new Date(s.time_tag) >= threeDaysAgo)
+    // Calculate cutoff time based on selected range
+    const now = new Date()
+    let hours = 72 // Default 3d
+    switch (range) {
+      case '6h': hours = 6; break
+      case '1d': hours = 24; break
+      case '3d': hours = 72; break
+      case '7d': hours = 168; break
+      default: hours = 72
     }
+    
+    const cutoff = new Date(now.getTime() - hours * 60 * 60 * 1000)
+    const filteredSamples = samples.filter(s => new Date(s.time_tag) >= cutoff)
 
     const kpValues = filteredSamples.map(s => s.kp)
 
@@ -82,7 +83,7 @@ export function KpIndexClient() {
         hovertemplate: 'Kp %{customdata}<extra></extra>',
       },
     ]
-  }, [samples])
+  }, [samples, range])
 
   const layout: Partial<Plotly.Layout> = {
     ...PLOTLY_DARK_LAYOUT,
@@ -131,13 +132,12 @@ export function KpIndexClient() {
               time: x, 
               kp: (plotData[0].customdata as any[])[i] 
             })) : []} 
-            filename={`kp-index-${range === 'historical' ? selectedDate : range}`} 
+            filename={`kp-index-${range}`} 
           />
           <TimeRangeSelector 
             value={range} 
             onChange={setRange} 
-            selectedDate={selectedDate}
-            onDateChange={setSelectedDate}
+            hideHistorical
           />
         </div>
       </div>
