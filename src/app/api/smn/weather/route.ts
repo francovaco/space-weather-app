@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
       if (code === 0) return 'Despejado'
       if (code === 1 || code === 2) return 'Parcialmente Nublado'
       if (code === 3 || code === 45 || code === 48) return 'Nublado'
-      if (code >= 71 && code <= 77) return 'Nieve / Aguanieve'
+      if ((code >= 71 && code <= 77) || code === 85 || code === 86) return 'Nieve / Aguanieve'
       if (code >= 51 && code <= 82) return 'Lluvia'
       if (code >= 95) return 'Tormenta Eléctrica'
       return 'Nublado'

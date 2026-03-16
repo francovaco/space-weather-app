@@ -1,100 +1,27 @@
 'use client'
-import { useState, useEffect } from 'react'
+// ============================================================
+// src/components/layout/WeatherPill.tsx
+// Pastilla de clima en el TopBar — usa useWeatherQuery para
+// compartir cache con DashboardClient y mostrar siempre el mismo dato.
+// ============================================================
 import { Cloud, CloudRain, Sun, MapPin, CloudLightning, Snowflake, AlertTriangle, CloudSun } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useWeatherQuery } from '@/hooks/useWeatherQuery'
 
-interface WeatherData {
-  current: {
-    name: string
-    temp: number
-    description: string
-    st: number | null
-    weather_id: number
-  } | null
-  hasAlerts: boolean
-}
-
-function getWeatherIcon(code: number, size = 12, className = "") {
-  if (code === 0) return <Sun size={size} className={cn("text-amber-400", className)} />
-  if (code === 1 || code === 2) return <CloudSun size={size} className={cn("text-sky-300", className)} />
-  if (code === 3 || (code >= 45 && code <= 48)) return <Cloud size={size} className={cn("text-slate-400", className)} />
-  if (code >= 71 && code <= 77) return <Snowflake size={size} className={cn("text-white", className)} />
-  if (code >= 51 && code <= 82) return <CloudRain size={size} className={cn("text-blue-400", className)} />
-  return <CloudLightning size={size} className={cn("text-orange-500", className)} />
+function getWeatherIcon(code: number, size = 12, className = '') {
+  if (code === 0) return <Sun size={size} className={cn('text-amber-400', className)} />
+  if (code === 1 || code === 2) return <CloudSun size={size} className={cn('text-sky-300', className)} />
+  if (code === 3 || (code >= 45 && code <= 48)) return <Cloud size={size} className={cn('text-slate-400', className)} />
+  if ((code >= 71 && code <= 77) || code === 85 || code === 86)
+    return <Snowflake size={size} className={cn('text-white', className)} />
+  if (code >= 51 && code <= 82) return <CloudRain size={size} className={cn('text-blue-400', className)} />
+  return <CloudLightning size={size} className={cn('text-orange-500', className)} />
 }
 
 export function WeatherPill() {
-  const [weather, setWeather] = useState<WeatherData | null>(null)
-  const [loading, setLoading] = useState(true)
+  const { data: weather, isLoading } = useWeatherQuery()
 
-  useEffect(() => {
-    let currentLat: number | undefined
-    let currentLon: number | undefined
-    let intervalId: NodeJS.Timeout
-
-    const fetchWeather = async (lat?: number, lon?: number) => {
-      try {
-        const url = (lat !== undefined && lon !== undefined) 
-          ? `/api/smn/weather?lat=${lat}&lon=${lon}` 
-          : `/api/smn/weather`
-        
-        const res = await fetch(url)
-        if (res.ok) {
-          const data = await res.json()
-          setWeather(data)
-          if (lat !== undefined && lon !== undefined) {
-            localStorage.setItem('last_lat', lat.toString())
-            localStorage.setItem('last_lon', lon.toString())
-          }
-        }
-      } catch (err) {
-        console.error('WeatherPill fetch error:', err)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    const startPolling = (lat?: number, lon?: number) => {
-      if (intervalId) clearInterval(intervalId)
-      fetchWeather(lat, lon)
-      intervalId = setInterval(() => fetchWeather(lat, lon), 60000)
-    }
-
-    // 1. Proactive Load from localStorage
-    const savedLat = localStorage.getItem('last_lat')
-    const savedLon = localStorage.getItem('last_lon')
-
-    if (savedLat && savedLon) {
-      currentLat = parseFloat(savedLat)
-      currentLon = parseFloat(savedLon)
-      startPolling(currentLat, currentLon)
-    } else {
-      startPolling() // IP Fallback
-    }
-
-    // 2. Background Update from GPS
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const newLat = pos.coords.latitude
-          const newLon = pos.coords.longitude
-          if (!currentLat || Math.abs(currentLat - newLat) > 0.01) {
-            startPolling(newLat, newLon)
-          }
-        },
-        () => {
-          if (!weather) startPolling()
-        },
-        { timeout: 5000, enableHighAccuracy: false }
-      )
-    }
-
-    return () => {
-      if (intervalId) clearInterval(intervalId)
-    }
-  }, [])
-
-  if (loading) {
+  if (isLoading && !weather) {
     return (
       <div className="flex items-center gap-2 rounded-full border border-border bg-background-card px-3 py-1 animate-pulse">
         <div className="h-3 w-3 rounded-full bg-border" />
@@ -103,16 +30,19 @@ export function WeatherPill() {
     )
   }
 
-  if (!weather || !weather.current) return null
+  if (!weather?.current) return null
 
   return (
     <div className="flex items-center gap-3 rounded-full border border-border bg-background-card px-3 py-1 shadow-sm transition-all hover:border-border-accent group">
-      {/* Alert Icon - Centered and resized for better fit */}
-      <div className={cn(
-        "flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-black/40 border transition-all",
-        weather.hasAlerts ? "border-red-500/50 text-red-500 shadow-[0_0_10px_rgba(239,68,68,0.4)]" : "border-green-500/50 text-green-500 shadow-[0_0_10px_rgba(34,197,94,0.4)]"
-      )}>
-        <AlertTriangle size={14} className={cn("shrink-0", weather.hasAlerts && "animate-pulse")} />
+      <div
+        className={cn(
+          'flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-black/40 border transition-all',
+          weather.hasAlerts
+            ? 'border-red-500/50 text-red-500 shadow-[0_0_10px_rgba(239,68,68,0.4)]'
+            : 'border-green-500/50 text-green-500 shadow-[0_0_10px_rgba(34,197,94,0.4)]',
+        )}
+      >
+        <AlertTriangle size={14} className={cn('shrink-0', weather.hasAlerts && 'animate-pulse')} />
       </div>
 
       <div className="h-3 w-px bg-border" />
@@ -125,7 +55,7 @@ export function WeatherPill() {
           </span>
         </div>
       </div>
-      
+
       <div className="h-3 w-px bg-border" />
 
       <div className="flex items-center gap-2">

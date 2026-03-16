@@ -1,61 +1,24 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
-import { 
-  AlertTriangle, ChevronRight, Snowflake, CheckCircle2, Eye, Gauge, 
-  Wind, Droplets, MapPin, Sun, Cloud, CloudRain, CloudLightning, 
+import {
+  AlertTriangle, ChevronRight, Snowflake, CheckCircle2, Eye, Gauge,
+  Wind, Droplets, MapPin, Sun, Cloud, CloudRain, CloudLightning,
   Zap, Activity, Globe, Satellite, Thermometer,
   Sunrise, Sunset, Navigation, CloudSun
 } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { LoadingMessage, EmptyMessage, ErrorMessage } from '@/components/ui/StatusMessages'
-import { 
-  XRayData, 
-  ProtonFluxData, 
-  KpIndexData, 
-  GOESStatusData 
+import {
+  XRayData,
+  ProtonFluxData,
+  KpIndexData,
+  GOESStatusData
 } from '@/types/swpc'
+import { useWeatherQuery } from '@/hooks/useWeatherQuery'
+import type { WeatherApiData, DailyForecast } from '@/hooks/useWeatherQuery'
 
 // ── Types ──
-
-interface DailyForecast {
-  date: string
-  max: number
-  min: number
-  weather_id: number
-  description: string
-  sunrise: string
-  sunset: string
-  uv_index: number
-  wind_speed: number
-  precipitation: number
-  precipitation_prob: number
-  models: {
-    gfs: { temp: number | null, wind: number | null, rain: number | null, hum: number | null, pres: number | null }
-  }
-}
-
-interface WeatherData {
-  current: {
-    name: string
-    temp: number
-    description: string
-    humidity: number
-    st: number | null
-    wind_speed: number
-    wind_direction: number
-    pressure: number
-    visibility: number
-    weather_id: number
-    uv_index: number
-    precipitation: number
-    sunrise: string
-    sunset: string
-    is_day: boolean
-  } | null
-  forecast: DailyForecast[]
-  alerts: any[]
-}
 
 interface Earthquake {
   id: string
@@ -83,11 +46,10 @@ function formatTime(iso: string) {
 }
 
 function getWeatherIcon(code: number, size = 24, className = "") {
-  // Mapeo estricto a las 6 categorías permitidas
   if (code === 0) return <Sun size={size} className={cn("text-amber-400", className)} />
   if (code === 1 || code === 2) return <CloudSun size={size} className={cn("text-sky-300", className)} />
   if (code === 3 || (code >= 45 && code <= 48)) return <Cloud size={size} className={cn("text-slate-400", className)} />
-  if (code >= 71 && code <= 77) return <Snowflake size={size} className={cn("text-white", className)} />
+  if ((code >= 71 && code <= 77) || code === 85 || code === 86) return <Snowflake size={size} className={cn("text-white", className)} />
   if (code >= 51 && code <= 82) return <CloudRain size={size} className={cn("text-blue-400", className)} />
   return <CloudLightning size={size} className={cn("text-orange-500", className)} />
 }
@@ -137,9 +99,10 @@ async function fetchEarthquakes(): Promise<Earthquake[]> {
 // ── Component ──
 
 export function DashboardClient() {
-  const [weather, setWeather] = useState<WeatherData | null>(null)
-  const [weatherLoading, setWeatherLoading] = useState(true)
-  const [usingFallback, setUsingFallback] = useState(false)
+  // Weather — hook compartido con WeatherPill (mismo cache TanStack Query)
+  const { data: weather, isLoading: weatherLoading, loc: weatherLoc, refetch: refetchWeather } = useWeatherQuery()
+  const usingFallback = weatherLoc === null
+
   const [showIconRef, setShowIconRef] = useState(false)
   const [selectedDay, setSelectedDay] = useState<DailyForecast | null>(null)
   const [earthquakeData, setEarthquakeData] = useState<Earthquake[]>([])
@@ -151,87 +114,16 @@ export function DashboardClient() {
   const [goesData, setGoesData] = useState<GOESStatusData | null>(null)
   const [nasaPrecipData, setNasaPrecipData] = useState<{ last24h: number, last7d: number, monthTotal: number, latestDate: string, source: string } | null>(null)
 
-  // Persist current coordinates across renders to avoid stale closures
-  const currentCoordsRef = useRef<{ lat: number; lon: number } | null>(null)
-  // Exposed so the retry button can trigger a re-fetch without restarting the effect
-  const fetchWeatherRef = useRef<() => void>()
+  // Precipitaciones NASA: se actualiza cuando cambia la ubicación
+  useEffect(() => {
+    if (!weatherLoc) return
+    fetch(`/api/nasa/precipitation?lat=${weatherLoc.lat}&lon=${weatherLoc.lon}`)
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json() })
+      .then(setNasaPrecipData)
+      .catch(() => null)
+  }, [weatherLoc?.lat, weatherLoc?.lon]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    let intervalId: ReturnType<typeof setInterval> | undefined
-
-    const fetchWeather = async (lat?: number, lon?: number) => {
-      try {
-        const url = (lat !== undefined && lon !== undefined) 
-          ? `/api/smn/weather?lat=${lat}&lon=${lon}` 
-          : `/api/smn/weather`
-        
-        const res = await fetch(url)
-        if (res.ok) {
-          const data = await res.json()
-          setWeather(data)
-          if (lat !== undefined && lon !== undefined) {
-            currentCoordsRef.current = { lat, lon }
-            localStorage.setItem('last_lat', lat.toString())
-            localStorage.setItem('last_lon', lon.toString())
-
-            // Also fetch extra data
-            fetch(`/api/nasa/precipitation?lat=${lat}&lon=${lon}`).then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json() }).then(setNasaPrecipData).catch(() => null)
-          }
-        }
-      } catch (err) { 
-        console.error('Fetch error:', err)
-      } finally { 
-        setWeatherLoading(false) 
-      }
-    }
-
-    const startPolling = (lat?: number, lon?: number) => {
-      if (intervalId) clearInterval(intervalId)
-      fetchWeather(lat, lon)
-      intervalId = setInterval(() => fetchWeather(lat, lon), 60000)
-    }
-
-    // Expose for retry button: re-fetch with current coords
-    fetchWeatherRef.current = () => {
-      const coords = currentCoordsRef.current
-      fetchWeather(coords?.lat, coords?.lon)
-    }
-
-    const savedLat = localStorage.getItem('last_lat')
-    const savedLon = localStorage.getItem('last_lon')
-
-    if (savedLat && savedLon) {
-      const lat = parseFloat(savedLat)
-      const lon = parseFloat(savedLon)
-      currentCoordsRef.current = { lat, lon }
-      setUsingFallback(false)
-      startPolling(lat, lon)
-    } else {
-      setUsingFallback(true)
-      startPolling()
-    }
-
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (p) => {
-          const newLat = p.coords.latitude
-          const newLon = p.coords.longitude
-          const prev = currentCoordsRef.current
-          if (!prev || Math.abs(prev.lat - newLat) > 0.01) {
-            setUsingFallback(false)
-            startPolling(newLat, newLon)
-          }
-        },
-        () => {
-          if (weatherLoading && !weather) {
-            setUsingFallback(true)
-            startPolling()
-          }
-        },
-        { timeout: 5000, enableHighAccuracy: false }
-      )
-    }
-
     fetchEarthquakes().then(setEarthquakeData)
     const eqInterval = setInterval(() => fetchEarthquakes().then(setEarthquakeData), 300000)
 
@@ -264,19 +156,21 @@ export function DashboardClient() {
     fetchSpace()
     const spaceInterval = setInterval(fetchSpace, 60000)
 
-    // Extra data polling
+    // Precipitaciones periódicas (respaldo cada 5 min)
     const fetchExtraData = () => {
       const lat = localStorage.getItem('last_lat')
       const lon = localStorage.getItem('last_lon')
       if (lat && lon) {
-        fetch(`/api/nasa/precipitation?lat=${lat}&lon=${lon}`).then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json() }).then(setNasaPrecipData).catch(() => null)
+        fetch(`/api/nasa/precipitation?lat=${lat}&lon=${lon}`)
+          .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json() })
+          .then(setNasaPrecipData)
+          .catch(() => null)
       }
     }
     fetchExtraData()
     const extraInterval = setInterval(fetchExtraData, 300000)
 
     return () => {
-      if (intervalId) clearInterval(intervalId)
       clearInterval(eqInterval)
       clearInterval(spaceInterval)
       clearInterval(extraInterval)
@@ -353,10 +247,7 @@ export function DashboardClient() {
             <ErrorMessage
               message="Pronóstico no disponible"
               description="No se pudieron obtener los datos meteorológicos locales del SMN."
-              onRetry={() => {
-                setWeatherLoading(true)
-                fetchWeatherRef.current?.()
-              }}
+              onRetry={() => refetchWeather()}
             />
           </div>
         ) : (
@@ -435,7 +326,7 @@ export function DashboardClient() {
                         <span className={cn("text-[13px] font-black uppercase tracking-tighter font-display", i === 0 ? "text-accent-cyan" : "text-text-dim group-hover:text-text-primary")}>
                           {i === 0 ? 'Hoy' : dayStr}
                         </span>
-                        {getWeatherIcon(i === 0 ? weather!.current!.weather_id : f.weather_id, 40, "drop-shadow-glow-blue transition-transform group-hover:scale-110")}
+                        {getWeatherIcon(f.weather_id, 40, "drop-shadow-glow-blue transition-transform group-hover:scale-110")}
                         <div className="flex flex-col items-center">
                           <span className="font-display text-2xl font-black text-white leading-none tracking-tighter">{Math.round(f.max)}°</span>
                           <span className="text-[13px] font-bold text-text-muted mt-1 tracking-tighter font-display">{Math.round(f.min)}°</span>
