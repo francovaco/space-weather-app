@@ -9,10 +9,12 @@ export function NotificationToggle() {
   const { enabled, setEnabled, minKpThreshold, setSettings, notifyXClass } = useNotificationStore()
   const [permission, setPermission] = useState<NotificationPermission>('default')
   const [open, setOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && 'Notification' in window) {
+    setMounted(true)
+    if ('Notification' in window) {
       setPermission(Notification.permission)
     }
   }, [])
@@ -46,7 +48,7 @@ export function NotificationToggle() {
     }
   }
 
-  if (typeof window === 'undefined' || !('Notification' in window)) return null
+  if (!mounted || !('Notification' in window)) return null
 
   return (
     <div className="relative" ref={menuRef}>
