@@ -11,7 +11,7 @@ import {
   Satellite, BookOpen, Activity, Image as ImageIcon, Zap, Radio,
   Sun, Wind, Eye, Globe, ChevronDown, ChevronRight,
   Gauge, Layers, SunDim, BarChart3, CloudSun, BrainCircuit,
-  Info, Shield, Orbit, Repeat2, GitCompare, AlertTriangle, Magnet,
+  Info, Shield, Orbit, Repeat2, GitCompare, AlertTriangle, Magnet, LayoutDashboard,
 } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 
@@ -28,6 +28,11 @@ const NAV_ITEMS: NavItem[] = [
     label: 'Panel Principal',
     href: '/',
     icon: <Gauge size={15} />,
+  },
+  {
+    label: 'Panorama Espacial',
+    href: '/space-weather-overview',
+    icon: <LayoutDashboard size={15} />,
   },
   {
     label: 'Documentación',
