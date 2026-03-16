@@ -149,7 +149,6 @@ export function DashboardClient() {
   const [protonData, setProtonData] = useState<ProtonFluxData | null>(null)
   const [kpData, setKpData] = useState<KpIndexData | null>(null)
   const [goesData, setGoesData] = useState<GOESStatusData | null>(null)
-  const [lightningData, setLightningData] = useState<{ count: number, closest: number | null, status: string } | null>(null)
   const [nasaPrecipData, setNasaPrecipData] = useState<{ last24h: number, last7d: number, monthTotal: number, latestDate: string, source: string } | null>(null)
 
   // Persist current coordinates across renders to avoid stale closures
@@ -176,7 +175,6 @@ export function DashboardClient() {
             localStorage.setItem('last_lon', lon.toString())
 
             // Also fetch extra data
-            fetch(`/api/lightning/nearby?lat=${lat}&lon=${lon}`).then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json() }).then(setLightningData).catch(() => null)
             fetch(`/api/nasa/precipitation?lat=${lat}&lon=${lon}`).then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json() }).then(setNasaPrecipData).catch(() => null)
           }
         }
@@ -271,7 +269,6 @@ export function DashboardClient() {
       const lat = localStorage.getItem('last_lat')
       const lon = localStorage.getItem('last_lon')
       if (lat && lon) {
-        fetch(`/api/lightning/nearby?lat=${lat}&lon=${lon}`).then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json() }).then(setLightningData).catch(() => null)
         fetch(`/api/nasa/precipitation?lat=${lat}&lon=${lon}`).then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json() }).then(setNasaPrecipData).catch(() => null)
       }
     }
@@ -549,20 +546,19 @@ export function DashboardClient() {
       </div>
 
       {/* Quick status cards */}
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
         <StatusCard label="Clase Rayos X" value={xrayInfo?.label ?? '—'} sub="Onda corta 0.1–0.8 nm" color={xrayInfo?.color ?? 'text-text-muted'} icon={<Zap size={14} />} href="/instruments/xray-flux" loading={!xrayData} />
         <StatusCard label="Flujo de Protones" value={proton ? (proton.flux as number).toFixed(2) : '—'} sub="≥10 MeV pfu" color={proton && (proton.flux as number) >= 10 ? 'text-accent-orange' : 'text-blue-400'} icon={<Activity size={14} />} href="/instruments/proton-flux" loading={!protonData} />
         <StatusCard label="Índice Kp" value={kpData?.at(-1) ? kpData.at(-1)!.kp.toFixed(1) : '—'} sub={kpInfo?.sub ?? 'Cargando…'} color={kpInfo?.color ?? 'text-text-muted'} icon={<Globe size={14} />} href="/instruments/kp-index" loading={!kpData} />
-        <StatusCardLightning data={lightningData} />
         <StatusCardNasaPrecip data={nasaPrecipData} />
-        <StatusCard 
-          label="GOES-19" 
-          value={gStatus.label} 
-          sub={gStatus.sub} 
-          color={gStatus.statusColor} 
-          icon={<Satellite size={14} />} 
-          href="/satellite-status" 
-          loading={!goesData} 
+        <StatusCard
+          label="GOES-19"
+          value={gStatus.label}
+          sub={gStatus.sub}
+          color={gStatus.statusColor}
+          icon={<Satellite size={14} />}
+          href="/satellite-status"
+          loading={!goesData}
         />
       </div>
 
