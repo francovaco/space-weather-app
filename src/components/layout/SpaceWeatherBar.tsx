@@ -11,9 +11,10 @@ import { create } from 'zustand'
 import Link from 'next/link'
 
 // ── Shared open/close state ──
-const useConditionsStore = create<{ open: boolean; toggle: () => void }>((set) => ({
+const useConditionsStore = create<{ open: boolean; toggle: () => void; close: () => void }>((set) => ({
   open: false,
   toggle: () => set((s) => ({ open: !s.open })),
+  close: () => set({ open: false }),
 }))
 
 interface ScaleEntry {
@@ -224,11 +225,16 @@ function ScaleCard({
   const level = current?.[type].Scale ?? '0'
   const c = scaleColor(level)
   const desc = SCALE_DESCRIPTIONS[type][level] ?? ''
+  const { close } = useConditionsStore()
 
   const days = [day1, day2, day3]
 
   return (
-    <div className="rounded-md border border-border bg-background-card p-3">
+    <Link
+      href="/space-weather-overview"
+      onClick={close}
+      className="block rounded-md border border-border bg-background-card p-3 transition-colors hover:border-primary/40 hover:bg-primary/5"
+    >
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
         <span className="section-label">{TYPE_LABELS[type]} ({type})</span>
@@ -286,7 +292,7 @@ function ScaleCard({
           })}
         </div>
       </div>
-    </div>
+    </Link>
   )
 }
 
