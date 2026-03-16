@@ -94,10 +94,10 @@ export function XRayFluxClient() {
 
   const { yAxisConfig, classLines, classLabels } = useMemo(() => {
     if (!rawData || longWave.length === 0) {
-      return { 
+      return {
         yAxisConfig: { type: 'log' as const, range: [-9, -2] },
-        classLines: FLARE_CLASSES.map(fc => ({ y: Math.log10(fc.value), label: fc.label })),
-        classLabels: FLARE_CLASSES.map(fc => ({ y: Math.log10(fc.value), label: fc.label }))
+        classLines: FLARE_CLASSES.map(fc => ({ y: fc.value, label: fc.label })),
+        classLabels: FLARE_CLASSES.map(fc => ({ y: fc.value, label: fc.label }))
       }
     }
 
@@ -128,11 +128,11 @@ export function XRayFluxClient() {
     return {
       yAxisConfig: { type: 'log' as const, range: [-9, -2], dtick: 1 },
       classLines: FLARE_CLASSES.map(fc => ({ y: fc.value, label: fc.label })),
-      classLabels: FLARE_CLASSES.map(fc => ({ y: Math.log10(fc.value), label: fc.label }))
+      classLabels: FLARE_CLASSES.map(fc => ({ y: fc.value, label: fc.label }))
     }
   }, [longWave, normalize, rawData])
 
-  const layout: Partial<Plotly.Layout> = {
+  const layout: Partial<Plotly.Layout> = useMemo(() => ({
     ...PLOTLY_DARK_LAYOUT,
     uirevision: `${range}-${normalize}`,
     xaxis: { ...PLOTLY_DARK_LAYOUT.xaxis, type: 'date', automargin: true },
@@ -155,7 +155,7 @@ export function XRayFluxClient() {
       font: { size: 11, color: '#94a3b8', family: 'JetBrains Mono, monospace' },
       xanchor: 'left', yanchor: 'middle'
     })),
-  }
+  }), [range, normalize, yAxisConfig, classLines, classLabels])
 
   return (
     <div className="space-y-4">
