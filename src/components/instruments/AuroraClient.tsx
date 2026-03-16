@@ -181,6 +181,9 @@ export function AuroraClient() {
         <AuroraGlobe3D />
       )}
 
+      {/* Kp → Aurora guide */}
+      <KpAuroraGuide />
+
       {/* Shared Usage & Impacts */}
       <UsageImpacts usage={USAGE} impacts={IMPACTS} />
 
@@ -196,6 +199,45 @@ export function AuroraClient() {
           El modelo OVATION utiliza como entrada principal la componente Bz del campo magnético interplanetario (IMF) y la velocidad del viento solar para calcular el acoplamiento magnetosférico. Cuando Bz es negativo (orientación sur), la reconexión magnética en el lado diurno permite mayor entrada de energía, expandiendo e intensificando el óvalo auroral.
         </p>
       </SectionDetails>
+    </div>
+  )
+}
+
+const KP_MAPS = [
+  { kp: 3, label: 'Kp = 3', sublabel: 'Actividad débil', url: 'https://www.swpc.noaa.gov/sites/default/files/images/u2/aurora_map_N_Kp_3.jpg' },
+  { kp: 5, label: 'Kp = 5', sublabel: 'Tormenta menor (G1)', url: 'https://www.swpc.noaa.gov/sites/default/files/images/u2/aurora_map_N_Kp_5.jpg' },
+  { kp: 7, label: 'Kp = 7', sublabel: 'Tormenta fuerte (G3)', url: 'https://www.swpc.noaa.gov/sites/default/files/images/u2/aurora_map_N_Kp_7.jpg' },
+  { kp: 9, label: 'Kp = 9', sublabel: 'Tormenta extrema (G5)', url: 'https://www.swpc.noaa.gov/sites/default/files/images/u2/aurora_map_N_Kp_9.jpg' },
+]
+
+function KpAuroraGuide() {
+  return (
+    <div className="card space-y-3">
+      <h2 className="font-display text-xs font-bold uppercase tracking-wider text-text-secondary">
+        ¿Cómo afecta el Kp a la aurora?
+      </h2>
+      <p className="text-xs text-text-muted">
+        A mayor índice Kp, el óvalo auroral se expande hacia latitudes más bajas. Estos mapas muestran
+        la extensión típica del óvalo para distintos niveles de actividad geomagnética.
+      </p>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {KP_MAPS.map(({ kp, label, sublabel, url }) => (
+          <div key={kp} className="flex flex-col gap-1.5">
+            <div className="overflow-hidden rounded border border-border">
+              <img
+                src={proxyUrl(url)}
+                alt={`Aurora oval at ${label}`}
+                className="w-full object-cover"
+                loading="lazy"
+              />
+            </div>
+            <div className="text-center">
+              <span className="block font-display text-xs font-bold text-text-primary">{label}</span>
+              <span className="block font-data text-2xs text-text-muted">{sublabel}</span>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
