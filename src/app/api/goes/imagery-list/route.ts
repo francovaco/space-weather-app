@@ -20,8 +20,10 @@ export async function GET(req: NextRequest) {
   const RES = '7200x4320'
   const re  = new RegExp(`href="(\\d{11}_GOES19-[^"]*?-${RES}\\.jpg)"`, 'gi')
 
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 10000)
   try {
-    const res = await fetch(dirUrl, { headers: HEADERS, cache: 'no-store' })
+    const res = await fetch(dirUrl, { signal: controller.signal, headers: HEADERS, cache: 'no-store' })
     if (!res.ok) return NextResponse.json({ error: `CDN ${res.status}`, dirUrl }, { status: 502 })
 
     const html = await res.text()
@@ -35,6 +37,9 @@ export async function GET(req: NextRequest) {
       { headers: { 'Cache-Control': 'public, max-age=120' } }
     )
   } catch (err) {
+    console.error('[API/goes/imagery-list]', dirUrl, err)
     return NextResponse.json({ error: String(err), dirUrl }, { status: 502 })
+  } finally {
+    clearTimeout(timeoutId)
   }
 }

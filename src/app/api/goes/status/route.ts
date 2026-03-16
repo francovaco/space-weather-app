@@ -102,9 +102,12 @@ function parseHTML(html: string): Omit<GOESStatusResponse, 'fetchedAt' | 'source
 }
 
 export async function GET() {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 10000)
   try {
     const res = await fetch(STATUS_URL, {
-      next: { revalidate: 300 },
+      signal: controller.signal,
+      cache: 'no-store',
       headers: { 'User-Agent': 'space-weather-app/0.1', Accept: 'text/html' },
     })
 
@@ -124,11 +127,13 @@ export async function GET() {
       { headers: { 'Cache-Control': 'public, max-age=280, s-maxage=300' } }
     )
   } catch (err) {
-    console.error('[API/goes/status]', err)
+    console.error('[API/goes/status]', STATUS_URL, err)
     return NextResponse.json<GOESStatusResponse>({
       fetchedAt: new Date().toISOString(), sourceUrl: STATUS_URL,
       satellites: [], anomalies: [],
       parseError: 'Error al obtener el estado del satélite',
     }, { status: 500 })
+  } finally {
+    clearTimeout(timeoutId)
   }
 }

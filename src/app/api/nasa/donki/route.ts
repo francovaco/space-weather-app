@@ -25,9 +25,12 @@ export async function GET(req: NextRequest) {
 
   const url = `${DONKI_BASE}?startDate=${startDate || defaultStart}&endDate=${endDate || defaultEnd}&type=${type}&api_key=${NASA_API_KEY}`
 
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 10000)
   try {
     const res = await fetch(url, {
-      next: { revalidate: 300 }, // Cache for 5 mins
+      signal: controller.signal,
+      cache: 'no-store',
       headers: { 'User-Agent': 'Mozilla/5.0' },
     })
 
@@ -48,7 +51,9 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(data, { headers: responseHeaders })
   } catch (err) {
-    console.error('[API/nasa/donki]', err)
+    console.error('[API/nasa/donki]', url, err)
     return NextResponse.json({ error: 'Failed to fetch NASA DONKI data' }, { status: 500 })
+  } finally {
+    clearTimeout(timeoutId)
   }
 }

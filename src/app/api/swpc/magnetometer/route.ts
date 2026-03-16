@@ -37,9 +37,12 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 10000)
   try {
     const res = await fetch(url, {
-      next: { revalidate: 60 }, // 1-minute server-side cache
+      signal: controller.signal,
+      cache: 'no-store',
       headers: { 'User-Agent': 'space-weather-app/0.1' },
     })
 
@@ -57,7 +60,9 @@ export async function GET(req: NextRequest) {
       },
     })
   } catch (err) {
-    console.error('[API/magnetometer]', err)
+    console.error('[API/magnetometer]', url, err)
     return NextResponse.json({ error: 'Failed to fetch magnetometer data' }, { status: 500 })
+  } finally {
+    clearTimeout(timeoutId)
   }
 }

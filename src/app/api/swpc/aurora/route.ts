@@ -16,9 +16,12 @@ export async function GET(req: NextRequest) {
   const pole = req.nextUrl.searchParams.get('pole') ?? 'north'
   const url = ANIMATION_URLS[pole] ?? ANIMATION_URLS['north']
 
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 10000)
   try {
     const res = await fetch(url, {
-      next: { revalidate: 280 },
+      signal: controller.signal,
+      cache: 'no-store',
       headers: { 'User-Agent': 'space-weather-app/0.1' },
     })
     if (!res.ok) return NextResponse.json({ error: 'Upstream error' }, { status: 502 })
@@ -34,7 +37,9 @@ export async function GET(req: NextRequest) {
       headers: { 'Cache-Control': 'public, max-age=280, s-maxage=300' },
     })
   } catch (err) {
-    console.error('[API/aurora]', err)
+    console.error('[API/aurora]', url, err)
     return NextResponse.json({ error: 'Failed to fetch aurora frames' }, { status: 500 })
+  } finally {
+    clearTimeout(timeoutId)
   }
 }

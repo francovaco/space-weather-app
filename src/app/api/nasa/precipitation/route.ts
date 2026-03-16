@@ -20,7 +20,10 @@ export async function GET(req: NextRequest) {
     
     const url = `${NASA_BASE}/temporal/daily/point?parameters=PRECTOTCORR&community=RE&longitude=${lon}&latitude=${lat}&start=${formatDate(start)}&end=${formatDate(end)}&format=JSON`
 
-    const res = await fetch(url, { next: { revalidate: 3600 } })
+    const precipController = new AbortController()
+    const precipTimeoutId = setTimeout(() => precipController.abort(), 10000)
+    const res = await fetch(url, { signal: precipController.signal, cache: 'no-store' })
+    clearTimeout(precipTimeoutId)
     if (!res.ok) throw new Error('NASA POWER API failed')
     
     const data = await res.json()
@@ -62,7 +65,7 @@ export async function GET(req: NextRequest) {
     })
 
   } catch (err) {
-    console.error('NASA Precipitation API Error:', err)
+    console.error('[API/nasa/precipitation]', err)
     return NextResponse.json({ error: 'Failed to fetch NASA data' }, { status: 500 })
   }
 }

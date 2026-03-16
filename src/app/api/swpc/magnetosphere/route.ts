@@ -26,9 +26,13 @@ export async function GET(req: NextRequest) {
   const type = req.nextUrl.searchParams.get('type') ?? 'density'
   const dirPath = VIEW_PATHS[type] ?? VIEW_PATHS['density']
 
+  const fetchUrl = `${SWPC_BASE}${dirPath}`
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 10000)
   try {
-    const res = await fetch(`${SWPC_BASE}${dirPath}`, {
-      next: { revalidate: 60 },
+    const res = await fetch(fetchUrl, {
+      signal: controller.signal,
+      cache: 'no-store',
       headers: { 'User-Agent': 'space-weather-app/0.1' },
     })
     if (!res.ok) return NextResponse.json({ error: 'Upstream error' }, { status: 502 })
@@ -75,7 +79,9 @@ export async function GET(req: NextRequest) {
       headers: { 'Cache-Control': 'public, max-age=60, s-maxage=60' },
     })
   } catch (err) {
-    console.error('[API/magnetosphere]', err)
+    console.error('[API/magnetosphere]', fetchUrl, err)
     return NextResponse.json({ error: 'Failed to fetch magnetosphere frames' }, { status: 500 })
+  } finally {
+    clearTimeout(timeoutId)
   }
 }

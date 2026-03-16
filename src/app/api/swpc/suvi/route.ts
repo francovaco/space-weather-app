@@ -24,8 +24,10 @@ interface RawFrame { url: string }
 export async function GET(req: NextRequest) {
   const wavelength = req.nextUrl.searchParams.get('wavelength') ?? '171'
   const url = WAVELENGTH_URLS[wavelength] ?? WAVELENGTH_URLS['171']
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 10000)
   try {
-    const res = await fetch(url, { next: { revalidate: 280 }, headers: { 'User-Agent': 'space-weather-app/0.1' } })
+    const res = await fetch(url, { signal: controller.signal, cache: 'no-store',headers: { 'User-Agent': 'space-weather-app/0.1' } })
     if (!res.ok) return NextResponse.json({ error: 'Upstream error' }, { status: 502 })
     const raw: RawFrame[] = await res.json()
 
@@ -43,7 +45,9 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(frames, { headers: { 'Cache-Control': 'public, max-age=280, s-maxage=300', 'X-Data-Source': url } })
   } catch (err) {
-    console.error('[API/suvi]', err)
+    console.error('[API/suvi]', url, err)
     return NextResponse.json({ error: 'Failed to fetch SUVI frames' }, { status: 500 })
+  } finally {
+    clearTimeout(timeoutId)
   }
 }

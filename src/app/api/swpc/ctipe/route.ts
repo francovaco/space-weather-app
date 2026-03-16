@@ -14,9 +14,13 @@ function parseTimestamp(filename: string): string | null {
 }
 
 export async function GET() {
+  const fetchUrl = `${SWPC_BASE}${CTIPE_PATH}`
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 10000)
   try {
-    const res = await fetch(`${SWPC_BASE}${CTIPE_PATH}`, {
-      next: { revalidate: 60 },
+    const res = await fetch(fetchUrl, {
+      signal: controller.signal,
+      cache: 'no-store',
       headers: { 'User-Agent': 'space-weather-app/0.1' },
     })
     if (!res.ok) return NextResponse.json({ error: 'Upstream error' }, { status: 502 })
@@ -49,7 +53,9 @@ export async function GET() {
       headers: { 'Cache-Control': 'public, max-age=60, s-maxage=60' },
     })
   } catch (err) {
-    console.error('[API/ctipe]', err)
+    console.error('[API/ctipe]', fetchUrl, err)
     return NextResponse.json({ error: 'Failed to fetch CTIPE frames' }, { status: 500 })
+  } finally {
+    clearTimeout(timeoutId)
   }
 }

@@ -6,10 +6,12 @@ export async function GET(req: NextRequest) {
   const raw = req.nextUrl.searchParams.get('url')
   if (!raw) return new NextResponse('missing url', { status: 400 })
 
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 10000)
   try {
     const { hostname } = new URL(raw)
     const isNoaa = hostname.endsWith('.noaa.gov')
-    
+
     const headers: Record<string, string> = {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
       'Accept': 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
@@ -22,6 +24,7 @@ export async function GET(req: NextRequest) {
     }
 
     const upstream = await fetch(raw, {
+      signal: controller.signal,
       headers,
       cache: 'no-store',
     })
@@ -46,7 +49,9 @@ export async function GET(req: NextRequest) {
       },
     })
   } catch (err) {
-    console.error('[img-proxy] error:', raw, err)
+    console.error('[API/goes/img-proxy]', raw, err)
     return new NextResponse('proxy error', { status: 502 })
+  } finally {
+    clearTimeout(timeoutId)
   }
 }

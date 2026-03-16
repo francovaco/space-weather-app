@@ -26,8 +26,10 @@ interface RawFrame {
 export async function GET(req: NextRequest) {
   const source = req.nextUrl.searchParams.get('source') ?? 'GOES-CCOR-1'
   const url = SOURCES[source] ?? SOURCES['GOES-CCOR-1']
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 10000)
   try {
-    const res = await fetch(url, { next: { revalidate: 580 }, headers: { 'User-Agent': 'space-weather-app/0.1' } })
+    const res = await fetch(url, { signal: controller.signal, cache: 'no-store',headers: { 'User-Agent': 'space-weather-app/0.1' } })
     if (!res.ok) return NextResponse.json({ error: 'Upstream error' }, { status: 502 })
     const raw: RawFrame[] = await res.json()
 
@@ -43,7 +45,9 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(frames, { headers: { 'Cache-Control': 'public, max-age=580, s-maxage=600', 'X-Data-Source': url } })
   } catch (err) {
-    console.error('[API/coronagraph]', err)
+    console.error('[API/coronagraph]', url, err)
     return NextResponse.json({ error: 'Failed to fetch coronagraph frames' }, { status: 500 })
+  } finally {
+    clearTimeout(timeoutId)
   }
 }

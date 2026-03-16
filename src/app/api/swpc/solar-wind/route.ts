@@ -17,8 +17,10 @@ interface RawFrame {
 }
 
 export async function GET() {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 10000)
   try {
-    const res = await fetch(ENLIL_URL, { next: { revalidate: 55 }, headers: { 'User-Agent': 'space-weather-app/0.1' } })
+    const res = await fetch(ENLIL_URL, { signal: controller.signal, cache: 'no-store',headers: { 'User-Agent': 'space-weather-app/0.1' } })
     if (!res.ok) return NextResponse.json({ error: 'Upstream error' }, { status: 502 })
     const raw: RawFrame[] = await res.json()
 
@@ -32,7 +34,9 @@ export async function GET() {
 
     return NextResponse.json(frames, { headers: { 'Cache-Control': 'public, max-age=55, s-maxage=60' } })
   } catch (err) {
-    console.error('[API/solar-wind]', err)
+    console.error('[API/solar-wind]', ENLIL_URL, err)
     return NextResponse.json({ error: 'Failed to fetch WSA-ENLIL frames' }, { status: 500 })
+  } finally {
+    clearTimeout(timeoutId)
   }
 }

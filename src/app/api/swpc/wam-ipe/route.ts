@@ -26,9 +26,13 @@ export async function GET(req: NextRequest) {
   const view = req.nextUrl.searchParams.get('view') ?? 'neutral-nowcast'
   const dirPath = VIEW_PATHS[view] ?? VIEW_PATHS['neutral-nowcast']
 
+  const fetchUrl = `${SWPC_BASE}${dirPath}`
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 10000)
   try {
-    const res = await fetch(`${SWPC_BASE}${dirPath}`, {
-      next: { revalidate: 55 },
+    const res = await fetch(fetchUrl, {
+      signal: controller.signal,
+      cache: 'no-store',
       headers: { 'User-Agent': 'space-weather-app/0.1' },
     })
     if (!res.ok) return NextResponse.json({ error: 'Upstream error' }, { status: 502 })
@@ -52,7 +56,9 @@ export async function GET(req: NextRequest) {
       headers: { 'Cache-Control': 'public, max-age=55, s-maxage=60' },
     })
   } catch (err) {
-    console.error('[API/wam-ipe]', err)
+    console.error('[API/wam-ipe]', fetchUrl, err)
     return NextResponse.json({ error: 'Failed to fetch WAM-IPE frames' }, { status: 500 })
+  } finally {
+    clearTimeout(timeoutId)
   }
 }

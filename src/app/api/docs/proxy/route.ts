@@ -37,15 +37,17 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Dominio no permitido' }, { status: 403 })
   }
 
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 15000)
   try {
     const upstream = await fetch(rawUrl, {
+      signal: controller.signal,
       headers: {
         'User-Agent':
           'Mozilla/5.0 (compatible; space-weather-app/0.1; +https://localhost)',
         Accept: 'application/pdf,*/*',
       },
-      // Cache PDF for 24 hours — these rarely change
-      next: { revalidate: 86400 },
+      cache: 'no-store',
     })
 
     if (!upstream.ok) {
@@ -67,7 +69,9 @@ export async function GET(req: NextRequest) {
       },
     })
   } catch (err) {
-    console.error('[API/docs/proxy]', err)
+    console.error('[API/docs/proxy]', rawUrl, err)
     return NextResponse.json({ error: 'Error al obtener el documento' }, { status: 500 })
+  } finally {
+    clearTimeout(timeoutId)
   }
 }
