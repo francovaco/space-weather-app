@@ -179,7 +179,7 @@ export function GLOTECClient() {
           <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">
             GloTEC — Contenido Total de Electrones
           </h1>
-          <DataAge timestamp={headerFrames?.[0]?.time_tag} />
+          <DataAge timestamp={headerFrames?.at(-1)?.time_tag} />
         </div>
         <p className="mt-1 text-xs text-text-muted">
           Global Total Electron Content · Modelo asimilativo de la ionósfera en tiempo real · Actualización cada 10 min
