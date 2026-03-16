@@ -111,35 +111,35 @@ const SWPC_BASE = process.env.NEXT_PUBLIC_SWPC_SERVICES || 'https://services.swp
  */
 export const SWPC_ENDPOINTS = {
   // Magnetometer — updates every 1 min
-  magnetometer1h: `${SWPC_BASE}/json/goes/primary/magnetometers-1-hour.json`,
+  magnetometer1h: `${SWPC_BASE}/json/goes/primary/magnetometers-6-hour.json`,
   magnetometer6h: `${SWPC_BASE}/json/goes/primary/magnetometers-6-hour.json`,
   magnetometer1d: `${SWPC_BASE}/json/goes/primary/magnetometers-1-day.json`,
   magnetometer3d: `${SWPC_BASE}/json/goes/primary/magnetometers-3-day.json`,
   magnetometer7d: `${SWPC_BASE}/json/goes/primary/magnetometers-7-day.json`,
 
   // X-Ray Flux — updates every 1 min
-  xray1h: `${SWPC_BASE}/json/goes/primary/xrays-1-hour.json`,
+  xray1h: `${SWPC_BASE}/json/goes/primary/xrays-6-hour.json`,
   xray6h: `${SWPC_BASE}/json/goes/primary/xrays-6-hour.json`,
   xray1d: `${SWPC_BASE}/json/goes/primary/xrays-1-day.json`,
   xray3d: `${SWPC_BASE}/json/goes/primary/xrays-3-day.json`,
   xray7d: `${SWPC_BASE}/json/goes/primary/xrays-7-day.json`,
 
   // Electron Flux — updates every 5 min
-  electrons1h: `${SWPC_BASE}/json/goes/primary/integral-electrons-1-hour.json`,
+  electrons1h: `${SWPC_BASE}/json/goes/primary/integral-electrons-6-hour.json`,
   electrons6h: `${SWPC_BASE}/json/goes/primary/integral-electrons-6-hour.json`,
   electrons1d: `${SWPC_BASE}/json/goes/primary/integral-electrons-1-day.json`,
   electrons3d: `${SWPC_BASE}/json/goes/primary/integral-electrons-3-day.json`,
   electrons7d: `${SWPC_BASE}/json/goes/primary/integral-electrons-7-day.json`,
 
   // Proton Flux — updates every 5 min
-  protons1h: `${SWPC_BASE}/json/goes/primary/integral-protons-1-hour.json`,
+  protons1h: `${SWPC_BASE}/json/goes/primary/integral-protons-6-hour.json`,
   protons6h: `${SWPC_BASE}/json/goes/primary/integral-protons-6-hour.json`,
   protons1d: `${SWPC_BASE}/json/goes/primary/integral-protons-1-day.json`,
   protons3d: `${SWPC_BASE}/json/goes/primary/integral-protons-3-day.json`,
   protons7d: `${SWPC_BASE}/json/goes/primary/integral-protons-7-day.json`,
 
   // DSCOVR IMF (Magnetometer at L1) — updates every 1 min
-  dscovrMag1h: `${SWPC_BASE}/products/solar-wind/mag-1-hour.json`,
+  dscovrMag1h: `${SWPC_BASE}/products/solar-wind/mag-6-hour.json`,
   dscovrMag6h: `${SWPC_BASE}/products/solar-wind/mag-6-hour.json`,
   dscovrMag1d: `${SWPC_BASE}/products/solar-wind/mag-1-day.json`,
   dscovrMag3d: `${SWPC_BASE}/products/solar-wind/mag-3-day.json`,
