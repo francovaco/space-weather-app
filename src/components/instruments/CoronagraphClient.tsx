@@ -47,7 +47,7 @@ export function CoronagraphClient() {
   const { data: frames, isLoading, isError } = useAutoRefresh<CoronaFrame[]>({
     queryKey: ['coronagraph', source],
     fetcher: () => getCoronagraphFrames(source) as Promise<CoronaFrame[]>,
-    intervalMs: REFRESH_INTERVALS.TEN_MIN,
+    intervalMs: REFRESH_INTERVALS.FIVE_MIN,
   })
 
   return (
@@ -61,7 +61,7 @@ export function CoronagraphClient() {
           <DataAge timestamp={frames?.[frames.length - 1]?.time_tag} />
         </div>
         <p className="mt-1 text-xs text-text-muted">
-          Detección de CMEs · GOES CCOR-1 · LASCO C2 y C3 · Actualización cada 10 min
+          Detección de CMEs · GOES CCOR-1 · LASCO C2 y C3 · Actualización cada 5 min
         </p>
       </div>
 
