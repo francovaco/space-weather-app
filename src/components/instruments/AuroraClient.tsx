@@ -4,14 +4,21 @@
 // Aurora 30-minute forecast — North & South pole side by side
 // ============================================================
 import { useState, useRef, useEffect, useCallback } from 'react'
+import dynamic from 'next/dynamic'
 import { useAutoRefresh, REFRESH_INTERVALS } from '@/hooks/useAutoRefresh'
 import { getAuroraFrames } from '@/lib/swpc-api'
 import { UsageImpacts } from '@/components/ui/UsageImpacts'
 import { SectionDetails } from '@/components/ui/SectionDetails'
 import { LoadingMessage, ErrorMessage, EmptyMessage, PreloadProgress } from '@/components/ui/StatusMessages'
-import { Play, Pause, SkipBack, SkipForward, Download } from 'lucide-react'
+import { Play, Pause, SkipBack, SkipForward, Download, Layers, Box } from 'lucide-react'
 import { DataAge } from '@/components/ui/DataAge'
 import { cn } from '@/lib/utils'
+
+// Carga dinámica del globo 3D (Three.js no es compatible con SSR)
+const AuroraGlobe3D = dynamic(
+  () => import('./AuroraGlobe3D').then((m) => ({ default: m.AuroraGlobe3D })),
+  { ssr: false, loading: () => null },
+)
 
 interface AuroraFrame {
   url: string
@@ -108,7 +115,11 @@ const IMPACTS = [
   'Posible visibilidad de auroras en latitudes inusuales durante eventos severos',
 ]
 
+type ViewMode = '2d' | '3d'
+
 export function AuroraClient() {
+  const [viewMode, setViewMode] = useState<ViewMode>('2d')
+
   const { data: northFrames } = useAutoRefresh<AuroraFrame[]>({
     queryKey: ['aurora', 'north'],
     fetcher: () => getAuroraFrames('north') as Promise<AuroraFrame[]>,
@@ -118,23 +129,57 @@ export function AuroraClient() {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div>
-        <div className="flex items-center gap-2">
-          <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">
-            Pronóstico de Aurora — 30 Minutos
-          </h1>
-          <DataAge timestamp={northFrames?.[northFrames.length - 1]?.time_tag} />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <div className="flex items-center gap-2">
+            <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">
+              Pronóstico de Aurora — 30 Minutos
+            </h1>
+            <DataAge timestamp={northFrames?.[northFrames.length - 1]?.time_tag} alwaysElapsed />
+          </div>
+          <p className="mt-1 text-xs text-text-muted">
+            Modelo OVATION · Probabilidad de aurora boreal y austral · Actualización cada 5 min
+          </p>
         </div>
-        <p className="mt-1 text-xs text-text-muted">
-          Modelo OVATION · Probabilidad de aurora boreal y austral · Actualización cada 5 min
-        </p>
+
+        {/* Toggle 2D / 3D */}
+        <div className="flex items-center gap-1 rounded-lg border border-border bg-background-secondary p-1">
+          <button
+            onClick={() => setViewMode('2d')}
+            className={cn(
+              'flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-all',
+              viewMode === '2d'
+                ? 'bg-primary text-white shadow-glow-blue'
+                : 'text-text-muted hover:text-text-primary',
+            )}
+          >
+            <Layers size={14} />
+            <span>2D</span>
+          </button>
+          <button
+            onClick={() => setViewMode('3d')}
+            className={cn(
+              'flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-all',
+              viewMode === '3d'
+                ? 'bg-accent-cyan text-white shadow-glow-blue'
+                : 'text-text-muted hover:text-text-primary',
+            )}
+          >
+            <Box size={14} />
+            <span>3D Interactiva</span>
+          </button>
+        </div>
       </div>
 
-      {/* Dual players */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <AuroraPanel pole="north" label="Polo Norte (Boreal)" />
-        <AuroraPanel pole="south" label="Polo Sur (Austral)" />
-      </div>
+      {/* Contenido según modo */}
+      {viewMode === '2d' ? (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <AuroraPanel pole="north" label="Polo Norte (Boreal)" />
+          <AuroraPanel pole="south" label="Polo Sur (Austral)" />
+        </div>
+      ) : (
+        <AuroraGlobe3D />
+      )}
 
       {/* Shared Usage & Impacts */}
       <UsageImpacts usage={USAGE} impacts={IMPACTS} />

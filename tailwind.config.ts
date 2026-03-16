@@ -100,6 +100,7 @@ const config: Config = {
       animation: {
         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         'spin-slow': 'spin 8s linear infinite',
+        'spin-slow-reverse': 'spin 8s linear infinite reverse',
         'fade-in': 'fadeIn 0.4s ease-out',
         'slide-up': 'slideUp 0.3s ease-out',
         blink: 'blink 1s step-end infinite',

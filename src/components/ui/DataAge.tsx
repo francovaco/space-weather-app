@@ -10,9 +10,10 @@ import { cn } from '@/lib/utils'
 interface DataAgeProps {
   timestamp?: string | null
   className?: string
+  alwaysElapsed?: boolean
 }
 
-export function DataAge({ timestamp, className }: DataAgeProps) {
+export function DataAge({ timestamp, className, alwaysElapsed = false }: DataAgeProps) {
   const [ageText, setAgeText] = useState<string>('---')
   const [statusColor, setStatusColor] = useState<string>('text-text-muted')
 
@@ -35,10 +36,10 @@ export function DataAge({ timestamp, className }: DataAgeProps) {
       }
 
       if (diffMin < 0) {
-        setAgeText('Reciente')
-        setStatusColor('text-accent-cyan')
+        setAgeText(alwaysElapsed ? 'Hace <1 min' : 'Reciente')
+        setStatusColor(alwaysElapsed ? 'text-green-500' : 'text-accent-cyan')
       } else if (diffMin < 2) {
-        setAgeText('En vivo')
+        setAgeText(alwaysElapsed ? 'Hace 1 min' : 'En vivo')
         setStatusColor('text-green-500')
       } else if (diffMin < 10) {
         setAgeText(`Hace ${diffMin} min`)
