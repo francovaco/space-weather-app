@@ -52,10 +52,15 @@ export function AnimationPlayer({
     }
   }, [player.showGrid])
 
-  // Preload all frames into image cache
+  // Preload frames into image cache with a max-size cap to limit memory usage
+  const MAX_CACHE_SIZE = 60
   useEffect(() => {
     frames.forEach((frame) => {
       if (!imageCache.current.has(frame.url)) {
+        if (imageCache.current.size >= MAX_CACHE_SIZE) {
+          const oldestKey = imageCache.current.keys().next().value
+          if (oldestKey) imageCache.current.delete(oldestKey)
+        }
         const img = new Image()
         img.crossOrigin = 'anonymous'
         img.src = frame.url

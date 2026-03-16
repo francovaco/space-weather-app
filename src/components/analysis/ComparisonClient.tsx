@@ -13,7 +13,7 @@ import {
 } from '@/lib/swpc-api'
 import { LoadingMessage, ErrorMessage } from '@/components/ui/StatusMessages'
 import { Layout, Data } from 'plotly.js'
-import { Activity, Zap, Radio, Gauge, barChart as BarChart3, Info } from 'lucide-react'
+import { Activity, Zap, Radio, Gauge, Info } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 type InstrumentType = 'xray' | 'proton' | 'electron' | 'mag'

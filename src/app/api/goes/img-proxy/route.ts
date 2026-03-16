@@ -28,7 +28,9 @@ export async function GET(req: NextRequest) {
 
     if (!upstream.ok) {
       console.error(`[img-proxy] upstream ${upstream.status} for ${raw}`)
-      return new NextResponse(`upstream ${upstream.status}`, { status: upstream.status })
+      // Use 404 for missing frames, 502 for all other upstream errors
+      const status = upstream.status === 404 ? 404 : 502
+      return new NextResponse(status === 404 ? 'not found' : 'upstream error', { status })
     }
 
     const ct  = upstream.headers.get('content-type') ?? 'image/jpeg'

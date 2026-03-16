@@ -10,14 +10,26 @@ import { NextRequest, NextResponse } from 'next/server'
  * timestamps based on the known 10-minute update schedule.
  * In production, this could be enhanced by scraping the CDN directory listing.
  */
+const VALID_BANDS = ['01','02','03','04','05','06','07','08','09','10','11','12','13','14','15','16']
+const VALID_SECTORS = ['FD', 'SSA', 'CONUS', 'MESO1', 'MESO2']
+
 export async function GET(req: NextRequest) {
   const band = req.nextUrl.searchParams.get('band') ?? '13'
   const sector = req.nextUrl.searchParams.get('sector') ?? 'SSA'
   const count = parseInt(req.nextUrl.searchParams.get('count') ?? '24', 10)
   const resolution = req.nextUrl.searchParams.get('resolution') ?? '678'
 
+  const bandPadded = band.padStart(2, '0')
+  if (!VALID_BANDS.includes(bandPadded)) {
+    return NextResponse.json({ error: 'Invalid band' }, { status: 400 })
+  }
+  const sectorUpper = sector.toUpperCase()
+  if (!VALID_SECTORS.includes(sectorUpper)) {
+    return NextResponse.json({ error: 'Invalid sector' }, { status: 400 })
+  }
+
   // Build timestamps: last `count` frames, 10-min intervals
-  const frames = buildFrameList(band, sector, resolution, Math.min(count, 240))
+  const frames = buildFrameList(bandPadded, sectorUpper, resolution, Math.min(count, 240))
 
   return NextResponse.json(
     { band, sector, resolution, count: frames.length, frames },

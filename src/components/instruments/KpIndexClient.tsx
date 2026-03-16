@@ -5,6 +5,7 @@
 // ============================================================
 import { useMemo, useState } from 'react'
 import { LoadingMessage, ErrorMessage, EmptyMessage } from '@/components/ui/StatusMessages'
+import { RefreshCw } from 'lucide-react'
 import { PlotlyChart, PLOTLY_DARK_LAYOUT } from '@/components/charts/PlotlyChart'
 import { TimeRangeSelector } from '@/components/ui/TimeRangeSelector'
 import { DataExporter } from '@/components/ui/DataExporter'
@@ -37,7 +38,7 @@ export function KpIndexClient() {
   const [range, setRange] = useState<TimeRange>('3d')
   const [selectedDate, setSelectedDate] = useState<string | undefined>()
 
-  const { data: samples, isLoading, isError } = useAutoRefresh<KpReading[]>({
+  const { data: samples, isLoading, isError, isFetching } = useAutoRefresh<KpReading[]>({
     queryKey: ['kp-index', range, selectedDate],
     fetcher: () => {
       if (range === 'historical' && selectedDate) {
@@ -124,11 +125,11 @@ export function KpIndexClient() {
       { type: 'line', xref: 'paper', yref: 'y', x0: 0, x1: 1, y0: 9, y1: 9, line: { color: '#960000', width: 1, dash: 'dot' } },
     ],
     annotations: [
-      { xref: 'paper', yref: 'y', x: 1.02, y: 5, text: 'G1', showarrow: false, font: { size: 10, color: '#ffff00', fontWeight: 'bold' }, xanchor: 'left' },
-      { xref: 'paper', yref: 'y', x: 1.02, y: 6, text: 'G2', showarrow: false, font: { size: 10, color: '#ff9600', fontWeight: 'bold' }, xanchor: 'left' },
-      { xref: 'paper', yref: 'y', x: 1.02, y: 7, text: 'G3', showarrow: false, font: { size: 10, color: '#ff0000', fontWeight: 'bold' }, xanchor: 'left' },
-      { xref: 'paper', yref: 'y', x: 1.02, y: 8, text: 'G4', showarrow: false, font: { size: 10, color: '#c80000', fontWeight: 'bold' }, xanchor: 'left' },
-      { xref: 'paper', yref: 'y', x: 1.02, y: 9, text: 'G5', showarrow: false, font: { size: 10, color: '#960000', fontWeight: 'bold' }, xanchor: 'left' },
+      { xref: 'paper', yref: 'y', x: 1.02, y: 5, text: '<b>G1</b>', showarrow: false, font: { size: 10, color: '#ffff00' }, xanchor: 'left' },
+      { xref: 'paper', yref: 'y', x: 1.02, y: 6, text: '<b>G2</b>', showarrow: false, font: { size: 10, color: '#ff9600' }, xanchor: 'left' },
+      { xref: 'paper', yref: 'y', x: 1.02, y: 7, text: '<b>G3</b>', showarrow: false, font: { size: 10, color: '#ff0000' }, xanchor: 'left' },
+      { xref: 'paper', yref: 'y', x: 1.02, y: 8, text: '<b>G4</b>', showarrow: false, font: { size: 10, color: '#c80000' }, xanchor: 'left' },
+      { xref: 'paper', yref: 'y', x: 1.02, y: 9, text: '<b>G5</b>', showarrow: false, font: { size: 10, color: '#960000' }, xanchor: 'left' },
     ],
   }
 
@@ -140,16 +141,14 @@ export function KpIndexClient() {
           <div className="flex items-center gap-2">
             <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">Índice Planetario Kp</h1>
             <DataAge timestamp={samples?.[samples.length - 1]?.time_tag} />
+            {isFetching && !isLoading && <RefreshCw size={11} className="animate-spin text-accent-cyan opacity-60" />}
           </div>
           <p className="mt-1 text-xs text-text-muted">SWPC · Actividad geomagnética global · Actualización cada 3 horas</p>
         </div>
         <div className="flex items-center gap-4">
-          <DataExporter 
-            data={plotData[0]?.x ? (plotData[0].x as any[]).map((x, i) => ({ 
-              time: x, 
-              kp: (plotData[0].customdata as any[])[i] 
-            })) : []} 
-            filename={`kp-index-${range}${selectedDate ? `-${selectedDate}` : ''}`} 
+          <DataExporter
+            data={samples ? samples.map(s => ({ time: s.time_tag, kp: s.kp })) : []}
+            filename={`kp-index-${range}${selectedDate ? `-${selectedDate}` : ''}`}
           />
           <TimeRangeSelector 
             value={range} 

@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { 
   AlertTriangle, ChevronRight, Snowflake, CheckCircle2, Eye, Gauge, 
   Wind, Droplets, MapPin, Sun, Cloud, CloudRain, CloudLightning, 
@@ -8,7 +8,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
-import { LoadingMessage, EmptyMessage } from '@/components/ui/StatusMessages'
+import { LoadingMessage, EmptyMessage, ErrorMessage } from '@/components/ui/StatusMessages'
 import { 
   XRayData, 
   ProtonFluxData, 
@@ -95,12 +95,15 @@ function getWeatherIcon(code: number, size = 24, className = "") {
 async function fetchEarthquakes(): Promise<Earthquake[]> {
   try {
     const res = await fetch('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson')
+    if (!res.ok) return []
     const data = await res.json()
+    if (!data.features || !Array.isArray(data.features)) return []
     const now = Date.now()
     const threeDaysAgo = now - (3 * 24 * 60 * 60 * 1000)
 
     return data.features
       .filter((f: any) => {
+        if (!f.properties?.place) return false
         const place = f.properties.place.toLowerCase()
         const time = f.properties.time
         return (place.includes('argentina') || place.includes('chile')) && time >= threeDaysAgo
@@ -109,22 +112,22 @@ async function fetchEarthquakes(): Promise<Earthquake[]> {
         const placeParts = f.properties.place.split(', ')
         let city = placeParts[0]
         const country = placeParts[1] || 'Región'
-        
+
         if (city.includes(' of ')) {
           city = city.split(' of ')[1]
         }
-        
+
         return {
           id: f.id,
           mag: f.properties.mag,
           place: city,
           country: country,
           time: f.properties.time,
-          depth: f.geometry.coordinates[2]
+          depth: f.geometry?.coordinates?.[2] ?? 0
         }
       })
       .sort((a: any, b: any) => b.time - a.time)
-      .slice(0, 10) // Aumentamos un poco el límite ya que son 3 días
+      .slice(0, 10)
   } catch (err) {
     console.error('USGS fetch error:', err)
     return []
@@ -149,10 +152,13 @@ export function DashboardClient() {
   const [lightningData, setLightningData] = useState<{ count: number, closest: number | null, status: string } | null>(null)
   const [nasaPrecipData, setNasaPrecipData] = useState<{ last24h: number, last7d: number, monthTotal: number, latestDate: string, source: string } | null>(null)
 
+  // Persist current coordinates across renders to avoid stale closures
+  const currentCoordsRef = useRef<{ lat: number; lon: number } | null>(null)
+  // Exposed so the retry button can trigger a re-fetch without restarting the effect
+  const fetchWeatherRef = useRef<() => void>()
+
   useEffect(() => {
-    let intervalId: any
-    let currentLat: number | undefined
-    let currentLon: number | undefined
+    let intervalId: ReturnType<typeof setInterval> | undefined
 
     const fetchWeather = async (lat?: number, lon?: number) => {
       try {
@@ -165,12 +171,13 @@ export function DashboardClient() {
           const data = await res.json()
           setWeather(data)
           if (lat !== undefined && lon !== undefined) {
+            currentCoordsRef.current = { lat, lon }
             localStorage.setItem('last_lat', lat.toString())
             localStorage.setItem('last_lon', lon.toString())
-            
+
             // Also fetch extra data
-            fetch(`/api/lightning/nearby?lat=${lat}&lon=${lon}`).then(r => r.json()).then(setLightningData).catch(() => null)
-            fetch(`/api/nasa/precipitation?lat=${lat}&lon=${lon}`).then(r => r.json()).then(setNasaPrecipData).catch(() => null)
+            fetch(`/api/lightning/nearby?lat=${lat}&lon=${lon}`).then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json() }).then(setLightningData).catch(() => null)
+            fetch(`/api/nasa/precipitation?lat=${lat}&lon=${lon}`).then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json() }).then(setNasaPrecipData).catch(() => null)
           }
         }
       } catch (err) { 
@@ -186,14 +193,21 @@ export function DashboardClient() {
       intervalId = setInterval(() => fetchWeather(lat, lon), 60000)
     }
 
+    // Expose for retry button: re-fetch with current coords
+    fetchWeatherRef.current = () => {
+      const coords = currentCoordsRef.current
+      fetchWeather(coords?.lat, coords?.lon)
+    }
+
     const savedLat = localStorage.getItem('last_lat')
     const savedLon = localStorage.getItem('last_lon')
 
     if (savedLat && savedLon) {
-      currentLat = parseFloat(savedLat)
-      currentLon = parseFloat(savedLon)
+      const lat = parseFloat(savedLat)
+      const lon = parseFloat(savedLon)
+      currentCoordsRef.current = { lat, lon }
       setUsingFallback(false)
-      startPolling(currentLat, currentLon)
+      startPolling(lat, lon)
     } else {
       setUsingFallback(true)
       startPolling()
@@ -204,7 +218,8 @@ export function DashboardClient() {
         (p) => {
           const newLat = p.coords.latitude
           const newLon = p.coords.longitude
-          if (usingFallback || !currentLat || Math.abs(currentLat - newLat) > 0.01) {
+          const prev = currentCoordsRef.current
+          if (!prev || Math.abs(prev.lat - newLat) > 0.01) {
             setUsingFallback(false)
             startPolling(newLat, newLon)
           }
@@ -215,20 +230,32 @@ export function DashboardClient() {
             startPolling()
           }
         },
-        { timeout: 10000, enableHighAccuracy: false }
+        { timeout: 5000, enableHighAccuracy: false }
       )
     }
 
     fetchEarthquakes().then(setEarthquakeData)
     const eqInterval = setInterval(() => fetchEarthquakes().then(setEarthquakeData), 300000)
 
+    const fetchWithTimeout = async (url: string, ms = 15000) => {
+      const ctrl = new AbortController()
+      const id = setTimeout(() => ctrl.abort(), ms)
+      try {
+        const r = await fetch(url, { signal: ctrl.signal })
+        if (!r.ok) throw new Error(`HTTP ${r.status}`)
+        return r.json()
+      } finally {
+        clearTimeout(id)
+      }
+    }
+
     const fetchSpace = async () => {
       try {
         const [xr, pr, kp, gs] = await Promise.all([
-          fetch('/api/swpc/xray-flux').then(r => r.json()),
-          fetch('/api/swpc/proton-flux').then(r => r.json()),
-          fetch('/api/swpc/kp-index').then(r => r.json()),
-          fetch('/api/goes/status').then(r => r.json())
+          fetchWithTimeout('/api/swpc/xray-flux'),
+          fetchWithTimeout('/api/swpc/proton-flux'),
+          fetchWithTimeout('/api/swpc/kp-index'),
+          fetchWithTimeout('/api/goes/status'),
         ])
         setXrayData(xr)
         setProtonData(pr)
@@ -244,8 +271,8 @@ export function DashboardClient() {
       const lat = localStorage.getItem('last_lat')
       const lon = localStorage.getItem('last_lon')
       if (lat && lon) {
-        fetch(`/api/lightning/nearby?lat=${lat}&lon=${lon}`).then(r => r.json()).then(setLightningData).catch(() => null)
-        fetch(`/api/nasa/precipitation?lat=${lat}&lon=${lon}`).then(r => r.json()).then(setNasaPrecipData).catch(() => null)
+        fetch(`/api/lightning/nearby?lat=${lat}&lon=${lon}`).then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json() }).then(setLightningData).catch(() => null)
+        fetch(`/api/nasa/precipitation?lat=${lat}&lon=${lon}`).then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json() }).then(setNasaPrecipData).catch(() => null)
       }
     }
     fetchExtraData()
@@ -257,7 +284,7 @@ export function DashboardClient() {
       clearInterval(spaceInterval)
       clearInterval(extraInterval)
     }
-  }, [usingFallback])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Space Weather Logic
   const xrayLong = xrayData?.find(d => d.energy === '0.1-0.8nm')
@@ -326,9 +353,13 @@ export function DashboardClient() {
         {/* Current Weather & Forecast */}
         {(!weatherLoading && !weather?.current) ? (
           <div className="card lg:col-span-3 h-[355px] flex items-center justify-center">
-            <EmptyMessage 
-              message="Pronóstico no disponible" 
+            <ErrorMessage
+              message="Pronóstico no disponible"
               description="No se pudieron obtener los datos meteorológicos locales del SMN."
+              onRetry={() => {
+                setWeatherLoading(true)
+                fetchWeatherRef.current?.()
+              }}
             />
           </div>
         ) : (
@@ -547,8 +578,8 @@ export function DashboardClient() {
 
       {/* Icon Reference Modal */}
       {showIconRef && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4" onClick={() => setShowIconRef(false)}>
-          <div className="card w-full max-w-sm border-accent-cyan/30 shadow-2xl" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4" onClick={() => setShowIconRef(false)} role="presentation">
+          <div className="card w-full max-w-sm border-accent-cyan/30 shadow-2xl" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Iconografía Meteorológica">
             <div className="flex items-center justify-between mb-6 border-b border-white/10 pb-4">
               <h3 className="text-sm font-black uppercase tracking-widest text-white">Iconografía Meteorológica</h3>
               <button onClick={() => setShowIconRef(false)} className="text-text-dim hover:text-white transition-colors">✕</button>
@@ -567,8 +598,8 @@ export function DashboardClient() {
 
       {/* Day Details Modal */}
       {selectedDay && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4" onClick={() => setSelectedDay(null)}>
-          <div className="card w-full max-w-sm border-accent-cyan/30 shadow-2xl" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4" onClick={() => setSelectedDay(null)} role="presentation">
+          <div className="card w-full max-w-sm border-accent-cyan/30 shadow-2xl" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Reporte Detallado del Día">
             <div className="flex items-center justify-between mb-6 border-b border-white/10 pb-4">
               <div className="flex flex-col">
                 <h3 className="text-base font-black uppercase tracking-widest text-white">

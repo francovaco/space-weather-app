@@ -91,8 +91,8 @@ export function AnomalyMonitorClient() {
     if (range === '1d') days = 1
     if (range === '3d') days = 3
     if (range === '7d') days = 7
-    // For 1h and 6h, we still get at least 1 day of notifications for context
-    if (range === '1h' || range === '6h') days = 1
+    // For 6h, we still get at least 1 day of notifications for context
+    if (range === '6h') days = 1
     
     const start = new Date(now.getTime() - days * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
     return { start, end }

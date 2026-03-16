@@ -5,6 +5,7 @@
 // ============================================================
 import { useState, useMemo } from 'react'
 import { LoadingMessage, ErrorMessage, EmptyMessage } from '@/components/ui/StatusMessages'
+import { RefreshCw } from 'lucide-react'
 import { PlotlyChart, PLOTLY_DARK_LAYOUT, PLOTLY_DEFAULT_CONFIG } from '@/components/charts/PlotlyChart'
 import { TimeRangeSelector } from '@/components/ui/TimeRangeSelector'
 import { DataExporter } from '@/components/ui/DataExporter'
@@ -39,7 +40,7 @@ export function MagnetometerClient() {
   const [range, setRange] = useState<TimeRange>('6h')
   const [normalize, setNormalize] = useState(false)
 
-  const { data: samples, isLoading, isError } = useAutoRefresh<MagnetometerReading[]>({
+  const { data: samples, isLoading, isError, isFetching } = useAutoRefresh<MagnetometerReading[]>({
     queryKey: ['magnetometer', range],
     fetcher: async () => {
       const data = await getMagnetometerData(timeRangeToParam(range)) as MagnetometerReading[]
@@ -56,9 +57,9 @@ export function MagnetometerClient() {
     let activeEvent: { start: string; end?: string } | null = null
 
     for (let i = 0; i < samples.length; i++) {
-      const s = samples[i] as any
-      // SWPC uses true/1 for arcjet_flag
-      const isArcjet = s.arcjet_flag === true || s.arcjet_flag === 1 || s.arcjet_flag === 'true'
+      const s = samples[i]
+      // SWPC uses 1 for arcjet_flag (typed as number in MagnetometerReading)
+      const isArcjet = s.arcjet_flag === 1
 
       if (isArcjet && !activeEvent) {
         activeEvent = { start: s.time_tag }
@@ -138,7 +139,7 @@ export function MagnetometerClient() {
     const min = Math.min(...totalVals), max = Math.max(...totalVals)
     const tickVals = [0, 25, 50, 75, 100]
     const tickTexts = tickVals.map(pct => (min + (pct / 100) * (max - min)).toFixed(1))
-    return { tickvals: tickVals, ticktext: tickTexts, range: [0, 105], type: 'linear' }
+    return { tickvals: tickVals, ticktext: tickTexts, range: [0, 105], type: 'linear' as const }
   }, [samples, normalize])
 
   // Combined shapes and annotations
@@ -160,8 +161,8 @@ export function MagnetometerClient() {
     const a: Partial<Plotly.Annotations>[] = []
     // Arcjet labels
     arcjetEvents.forEach(event => {
-      a.push({ x: event.start, y: 1, xref: 'x', yref: 'paper', text: 'Arcjet Start', showarrow: false, font: { size: 9, color: 'rgba(255, 255, 255, 0.6)' }, textangle: -90, xanchor: 'right', yanchor: 'top', yshift: -10 })
-      if (event.end) a.push({ x: event.end, y: 1, xref: 'x', yref: 'paper', text: 'Arcjet End', showarrow: false, font: { size: 9, color: 'rgba(255, 255, 255, 0.6)' }, textangle: -90, xanchor: 'right', yanchor: 'top', yshift: -10 })
+      a.push({ x: event.start, y: 1, xref: 'x', yref: 'paper', text: 'Arcjet Start', showarrow: false, font: { size: 9, color: 'rgba(255, 255, 255, 0.6)' }, textangle: -90, xanchor: 'right', yanchor: 'top', yshift: -10 } as unknown as Partial<Plotly.Annotations>)
+      if (event.end) a.push({ x: event.end, y: 1, xref: 'x', yref: 'paper', text: 'Arcjet End', showarrow: false, font: { size: 9, color: 'rgba(255, 255, 255, 0.6)' }, textangle: -90, xanchor: 'right', yanchor: 'top', yshift: -10 } as unknown as Partial<Plotly.Annotations>)
     })
     // Noon/Midnight labels
     diurnalMarkers.forEach(m => {
@@ -188,6 +189,7 @@ export function MagnetometerClient() {
           <div className="flex items-center gap-2">
             <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">Magnetómetro</h1>
             <DataAge timestamp={samples?.[samples.length - 1]?.time_tag} />
+            {isFetching && !isLoading && <RefreshCw size={11} className="animate-spin text-accent-cyan opacity-60" />}
           </div>
           <p className="mt-1 text-xs text-text-muted">GOES-19 · Componentes Hp, He, Hn y Campo Total · Actualización cada 1 min</p>
         </div>

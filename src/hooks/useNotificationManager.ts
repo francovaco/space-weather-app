@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getXRayFluxData, getKpIndexData } from '@/lib/swpc-api'
+import type { XRayData, KpIndexData } from '@/types/swpc'
 import { useNotificationStore } from '@/stores/notificationStore'
 
 export function useNotificationManager() {
@@ -17,16 +18,16 @@ export function useNotificationManager() {
   } = useNotificationStore()
 
   // Polling data specifically for alerts (not linked to UI, runs in background)
-  const { data: xray } = useQuery({
+  const { data: xray } = useQuery<XRayData>({
     queryKey: ['alerts-xray'],
-    queryFn: () => getXRayFluxData('1-hour'),
+    queryFn: () => getXRayFluxData('1-hour') as Promise<XRayData>,
     refetchInterval: 60000,
     enabled: enabled
   })
 
-  const { data: kp } = useQuery({
+  const { data: kp } = useQuery<KpIndexData>({
     queryKey: ['alerts-kp'],
-    queryFn: () => getKpIndexData(),
+    queryFn: () => getKpIndexData() as Promise<KpIndexData>,
     refetchInterval: 60000,
     enabled: enabled
   })
@@ -37,7 +38,7 @@ export function useNotificationManager() {
 
     // 1. Check X-Ray flares (X Class)
     if (notifyXClass && xray && xray.length > 0) {
-      const longWave = (xray as any[]).filter(d => d.energy === '0.1-0.8nm')
+      const longWave = xray.filter(d => d.energy === '0.1-0.8nm')
       const latest = longWave[longWave.length - 1]
       
       if (latest && latest.flux >= 1e-4) { // X-Class threshold
@@ -53,9 +54,9 @@ export function useNotificationManager() {
       }
     }
 
-    // 2. Check Kp Index
-    if (kp && (kp as any[]).length > 0) {
-      const latest = (kp as any[])[(kp as any[]).length - 1]
+    // 2. Check Kp Index (only when notifyG3Plus is enabled)
+    if (notifyG3Plus && kp && kp.length > 0) {
+      const latest = kp[kp.length - 1]
       const currentKp = latest.kp
       const ts = latest.time_tag
 
@@ -69,7 +70,7 @@ export function useNotificationManager() {
         markNotified('kp', ts)
       }
     }
-  }, [enabled, xray, kp, notifyXClass, minKpThreshold, lastNotifiedXray, lastNotifiedKp, markNotified])
+  }, [enabled, xray, kp, notifyXClass, notifyG3Plus, minKpThreshold, lastNotifiedXray, lastNotifiedKp, markNotified])
 
   function sendNotification(title: string, options: NotificationOptions) {
     if (Notification.permission === 'granted') {

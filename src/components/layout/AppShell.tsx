@@ -12,11 +12,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { sidebarOpen } = useUIStore()
   const hydrated = useUIHydrated()
 
-  // Don't render layout until Zustand has rehydrated from localStorage
-  if (!hydrated) return null
-
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
+    // Keep layout in DOM during hydration to avoid layout shift; hide visually until ready
+    <div className={cn('flex h-screen overflow-hidden bg-background', !hydrated && 'invisible')}>
       {/* Sidebar */}
       <Sidebar />
 

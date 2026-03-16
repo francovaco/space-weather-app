@@ -5,7 +5,7 @@
 import { useQuery } from '@tanstack/react-query'
 
 interface UseAutoRefreshOptions {
-  queryKey: string[]
+  queryKey: readonly unknown[]
   fetcher: () => Promise<unknown>
   /** Refresh interval in milliseconds */
   intervalMs: number

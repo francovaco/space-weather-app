@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
     const gfsData = gfsRes && gfsRes.ok ? await gfsRes.json() : null
 
     // PETICIÓN 3: Nombre de ciudad
-    const geoRes = await fetch(`${BIGDATACLOUD_BASE}?latitude=${fixedLat}&longitude=${fixedLon}&localityLanguage=es`).catch(() => null)
+    const geoRes = await fetch(`${BIGDATACLOUD_BASE}?latitude=${fixedLat}&longitude=${fixedLon}&localityLanguage=es`, { signal: controller.signal }).catch(() => null)
     const geoData = geoRes ? await geoRes.json() : null
     const cityName = geoData?.city || geoData?.locality || 'Ubicación Detectada'
 

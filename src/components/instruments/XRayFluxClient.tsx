@@ -5,6 +5,7 @@
 // ============================================================
 import { useState, useMemo } from 'react'
 import { LoadingMessage, ErrorMessage, EmptyMessage } from '@/components/ui/StatusMessages'
+import { RefreshCw } from 'lucide-react'
 import { PlotlyChart, PLOTLY_DARK_LAYOUT, PLOTLY_DEFAULT_CONFIG } from '@/components/charts/PlotlyChart'
 import { TimeRangeSelector } from '@/components/ui/TimeRangeSelector'
 import { DataExporter } from '@/components/ui/DataExporter'
@@ -57,7 +58,7 @@ export function XRayFluxClient() {
   const [range, setRange] = useState<TimeRange>('6h')
   const [normalize, setNormalize] = useState(false)
 
-  const { data: rawData, isLoading, isError } = useAutoRefresh<XRaySample[]>({
+  const { data: rawData, isLoading, isError, isFetching } = useAutoRefresh<XRaySample[]>({
     queryKey: ['xray-flux', range],
     fetcher: async () => {
       const data = await getXRayFluxData(timeRangeToParam(range)) as XRaySample[]
@@ -94,7 +95,7 @@ export function XRayFluxClient() {
   const { yAxisConfig, classLines, classLabels } = useMemo(() => {
     if (!rawData || longWave.length === 0) {
       return { 
-        yAxisConfig: { type: 'log', range: [-9, -2] },
+        yAxisConfig: { type: 'log' as const, range: [-9, -2] },
         classLines: FLARE_CLASSES.map(fc => ({ y: Math.log10(fc.value), label: fc.label })),
         classLabels: FLARE_CLASSES.map(fc => ({ y: Math.log10(fc.value), label: fc.label }))
       }
@@ -118,14 +119,14 @@ export function XRayFluxClient() {
       })).filter(c => c.y >= -10 && c.y <= 120)
 
       return {
-        yAxisConfig: { tickvals: tickVals, ticktext: tickTexts, range: [0, 105], type: 'linear' },
+        yAxisConfig: { tickvals: tickVals, ticktext: tickTexts, range: [0, 105], type: 'linear' as const },
         classLines: normalizedClasses,
         classLabels: normalizedClasses
       }
     }
 
     return {
-      yAxisConfig: { type: 'log', range: [-9, -2], dtick: 1 },
+      yAxisConfig: { type: 'log' as const, range: [-9, -2], dtick: 1 },
       classLines: FLARE_CLASSES.map(fc => ({ y: fc.value, label: fc.label })),
       classLabels: FLARE_CLASSES.map(fc => ({ y: Math.log10(fc.value), label: fc.label }))
     }
@@ -138,7 +139,7 @@ export function XRayFluxClient() {
     yaxis: {
       ...PLOTLY_DARK_LAYOUT.yaxis,
       title: { text: 'Flujo Rayos X (W/m²)', font: { size: 11, color: '#64748b' } },
-      ...yAxisConfig as any,
+      ...yAxisConfig,
       automargin: true,
     },
     margin: { l: 65, r: 40, t: 40, b: 65 },
@@ -163,6 +164,7 @@ export function XRayFluxClient() {
           <div className="flex items-center gap-2">
             <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">Flujo de Rayos X</h1>
             <DataAge timestamp={rawData?.[rawData.length - 1]?.time_tag} />
+            {isFetching && !isLoading && <RefreshCw size={11} className="animate-spin text-accent-cyan opacity-60" />}
           </div>
           <p className="mt-1 text-xs text-text-muted">GOES-19 · Clasificación de Fulguraciones Solares · Actualización cada 1 min</p>
         </div>

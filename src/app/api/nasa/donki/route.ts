@@ -5,7 +5,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 const NASA_API_KEY = process.env.NASA_API_KEY || 'DEMO_KEY'
+const USING_DEMO_KEY = !process.env.NASA_API_KEY
 const DONKI_BASE = 'https://api.nasa.gov/DONKI/notifications'
+
+if (USING_DEMO_KEY) {
+  console.warn('[api/nasa/donki] NASA_API_KEY no configurada — usando DEMO_KEY (límite: 30 req/hora). Define NASA_API_KEY en .env.local para aumentar el límite.')
+}
 
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl
@@ -35,12 +40,13 @@ export async function GET(req: NextRequest) {
     
     // Filter for notifications that mention spacecraft impact or anomalies if possible
     // or just return all and let the client filter
-    return NextResponse.json(data, {
-      headers: {
-        'Cache-Control': 'public, max-age=300, s-maxage=600',
-        'X-Data-Source': 'NASA DONKI',
-      },
-    })
+    const responseHeaders: Record<string, string> = {
+      'Cache-Control': 'public, max-age=300, s-maxage=600',
+      'X-Data-Source': 'NASA DONKI',
+    }
+    if (USING_DEMO_KEY) responseHeaders['X-Rate-Limit-Warning'] = 'DEMO_KEY active — 30 req/hour limit'
+
+    return NextResponse.json(data, { headers: responseHeaders })
   } catch (err) {
     console.error('[API/nasa/donki]', err)
     return NextResponse.json({ error: 'Failed to fetch NASA DONKI data' }, { status: 500 })

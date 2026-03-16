@@ -90,3 +90,5 @@ logs/
 *.cert
 /tmp/
 GEMINI.md
+CLAUDE.md
+/.claude/

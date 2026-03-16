@@ -5,6 +5,7 @@
 // ============================================================
 import { useState, useMemo } from 'react'
 import { LoadingMessage, ErrorMessage, EmptyMessage } from '@/components/ui/StatusMessages'
+import { RefreshCw } from 'lucide-react'
 import { PlotlyChart, PLOTLY_DARK_LAYOUT, PLOTLY_DEFAULT_CONFIG } from '@/components/charts/PlotlyChart'
 import { TimeRangeSelector } from '@/components/ui/TimeRangeSelector'
 import { NormalizeToggle, normalizeSeries } from '@/components/ui/NormalizeToggle'
@@ -54,7 +55,7 @@ export function ProtonFluxClient() {
   const [range, setRange] = useState<TimeRange>('1d')
   const [normalize, setNormalize] = useState(false)
 
-  const { data: rawData, isLoading, isError } = useAutoRefresh<ProtonSample[]>({
+  const { data: rawData, isLoading, isError, isFetching } = useAutoRefresh<ProtonSample[]>({
     queryKey: ['proton-flux', range],
     fetcher: async () => {
       const data = await getProtonFluxData(timeRangeToParam(range)) as ProtonSample[]
@@ -87,7 +88,7 @@ export function ProtonFluxClient() {
 
   // Smart threshold and axis mapping
   const { thresholdY, yAxisConfig, labelSuffix } = useMemo(() => {
-    if (!rawData) return { thresholdY: 10, yAxisConfig: { type: 'log', range: [-2, 6] }, labelSuffix: '' }
+    if (!rawData) return { thresholdY: 10, yAxisConfig: { type: 'log' as const, range: [-2, 6] }, labelSuffix: '' }
     
     if (normalize) {
       const refBand = rawData.filter(d => d.energy === '>=10 MeV').map(d => d.flux).filter(v => v !== null && !isNaN(v))
@@ -109,13 +110,13 @@ export function ProtonFluxClient() {
           tickvals: tickVals,
           ticktext: tickTexts,
           range: [0, isPinned ? 130 : Math.max(105, calcY + 10)],
-          type: 'linear'
+          type: 'linear' as const
         },
         labelSuffix: isPinned ? ' (Fuera de escala)' : ''
       }
     }
     
-    return { thresholdY: 10, yAxisConfig: { type: 'log', range: [-2, 6] }, labelSuffix: '' }
+    return { thresholdY: 10, yAxisConfig: { type: 'log' as const, range: [-2, 6] }, labelSuffix: '' }
   }, [rawData, normalize])
 
   const layout: Partial<Plotly.Layout> = {
@@ -161,6 +162,7 @@ export function ProtonFluxClient() {
           <div className="flex items-center gap-2">
             <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">Flujo de Protones</h1>
             <DataAge timestamp={rawData?.[rawData.length - 1]?.time_tag} />
+            {isFetching && !isLoading && <RefreshCw size={11} className="animate-spin text-accent-cyan opacity-60" />}
           </div>
           <p className="mt-1 text-xs text-text-muted">GOES · Flujo integral en múltiples niveles de energía · Actualización cada 5 min</p>
         </div>
