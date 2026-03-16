@@ -81,6 +81,10 @@ export const getGLOTECFrames = (view: 'atlantic' | 'pacific', type: 'tec' | 'ano
 export const getCTIPEFrames = () =>
   apiFetch(`${BASE}/ctipe`)
 
+// --- Geospace Ground Magnetic Perturbations ---
+export const getGeoMagPerturbationFrames = (view: 'global' | 'polar-lt') =>
+  apiFetch(`${BASE}/geo-mag-perturbations?view=${view}`)
+
 // --- Kp Index ---
 export const getKpIndexData = (date?: string) =>
   apiFetch(`${BASE}/kp-index${date ? `?date=${date}` : ''}`)

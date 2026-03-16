@@ -354,10 +354,10 @@ export function SatelliteStatusClient() {
             <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">
               Estado del Satélite e Instrumentos
             </h1>
-            <DataAge timestamp={data?.fetchedAt} />
+            <DataAge timestamp={data?.fetchedAt} alwaysElapsed />
           </div>
           <p className="mt-1 text-xs text-text-muted">
-            GOES-19 (GOES Este) · Fuente: NOAA OSPO · Actualización automática cada 1 minuto
+            GOES-19 (GOES Este) · Fuente: NOAA OSPO · Actualización automática cada 5 minutos
           </p>
         </div>
         <div className="flex items-center gap-2">

@@ -11,7 +11,7 @@ import {
   Satellite, BookOpen, Activity, Image as ImageIcon, Zap, Radio,
   Sun, Wind, Eye, Globe, ChevronDown, ChevronRight,
   Gauge, Layers, SunDim, BarChart3, CloudSun, BrainCircuit,
-  Info, Shield, Orbit, Repeat2, GitCompare, AlertTriangle,
+  Info, Shield, Orbit, Repeat2, GitCompare, AlertTriangle, Magnet,
 } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 
@@ -69,6 +69,11 @@ const NAV_ITEMS: NavItem[] = [
     label: 'Pronóstico de Aurora',
     href: '/aurora',
     icon: <SunDim size={15} />,
+  },
+  {
+    label: 'Perturbaciones Magnéticas',
+    href: '/geo-mag-perturbations',
+    icon: <Magnet size={15} />,
   },
   {
     label: 'D-RAP Absorción HF',

@@ -383,7 +383,7 @@ function ChannelGrid({ onSelect }:{ onSelect:(c:Channel)=>void }) {
       } catch { /* silent */ }
     }
     fetchLatest()
-    const id = setInterval(fetchLatest, 10 * 60 * 1000)
+    const id = setInterval(fetchLatest, 5 * 60 * 1000)
     return () => { cancelled = true; clearInterval(id) }
   }, [])
 
@@ -394,7 +394,7 @@ function ChannelGrid({ onSelect }:{ onSelect:(c:Channel)=>void }) {
           <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">
             Imágenes Satelitales ABI
           </h1>
-          <DataAge timestamp={latestFn ? getFrameIsoTimestamp(latestFn) : null} />
+          <DataAge timestamp={latestFn ? getFrameIsoTimestamp(latestFn) : null} alwaysElapsed />
         </div>
         <p className="mt-1 text-sm text-text-muted">
           GOES-19 · Sector Sudamérica Sur (SSA) · Actualización cada 10 minutos
@@ -464,12 +464,15 @@ function ChannelCard({ channel:ch, onSelect, latestFn }:{ channel:Channel; onSel
     if (!inView) return
     const controller = new AbortController()
     const thumbRaw = isGlm ? `${CDN_GLM}/latest.jpg` : `${CDN_ABI}/${ch.id}/latest.jpg`
-    const thumbSrc = proxy(thumbRaw)
+    // Cache-bust con el timestamp del frame más reciente: cada nuevo latestFn genera
+    // una URL distinta → el browser no puede servir la versión cacheada anterior.
+    const bust = latestFn ? latestFn.slice(0, 11) : String(Math.floor(Date.now() / 600000))
+    const thumbSrc = `${proxy(thumbRaw)}&_t=${bust}`
 
     const loadTask = async () => {
       if (controller.signal.aborted) return
       try {
-        const res = await fetch(thumbSrc, { signal: controller.signal })
+        const res = await fetch(thumbSrc, { signal: controller.signal, cache: 'no-store' })
         if (!res.ok) throw new Error()
         const blob = await res.blob()
         const url = URL.createObjectURL(blob)
