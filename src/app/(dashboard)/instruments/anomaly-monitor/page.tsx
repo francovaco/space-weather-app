@@ -5,6 +5,7 @@
 import { Metadata } from 'next'
 import { AnomalyMonitorClient } from '@/components/instruments/AnomalyMonitorClient'
 
+export const dynamic = 'force-dynamic'
 export const metadata: Metadata = {
   title: 'Monitor de Anomalías Satelitales | GOES-19 Monitor',
   description: 'Correlación de reportes NASA DONKI con picos de radiación de GOES-19.',
