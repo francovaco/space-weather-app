@@ -1,5 +1,12 @@
+// @ts-check
+import { withSentryConfig } from '@sentry/nextjs'
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Enable Next.js instrumentation hook (loads Sentry server/edge configs)
+  experimental: {
+    instrumentationHook: true,
+  },
   images: {
     remotePatterns: [
       {
@@ -40,4 +47,13 @@ const nextConfig = {
   },
 }
 
-export default nextConfig
+export default withSentryConfig(nextConfig, {
+  // Suppress Sentry CLI output during builds when DSN is not set
+  silent: !process.env.NEXT_PUBLIC_SENTRY_DSN,
+  // Disable source map upload if no auth token provided
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  // Disable telemetry
+  telemetry: false,
+  // Don't fail build if Sentry upload fails
+  hideSourceMaps: true,
+})

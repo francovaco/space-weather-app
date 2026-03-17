@@ -186,6 +186,7 @@ export function Sidebar() {
         'transition-all duration-300',
         sidebarOpen ? 'w-60' : 'w-14'
       )}
+      aria-label="Barra lateral de navegación"
     >
       {/* Logo area */}
       <Link href="/" prefetch={false} className="flex h-14 items-center border-b border-border hover:bg-border/40 transition-colors">
@@ -199,8 +200,8 @@ export function Sidebar() {
       </Link>
 
       {/* Nav items */}
-      <nav className="flex-1 overflow-y-auto py-3">
-        <ul className="space-y-0.5 px-2">
+      <nav className="flex-1 overflow-y-auto py-3" aria-label="Navegación principal">
+        <ul className="space-y-0.5 px-2" role="list">
           {NAV_ITEMS.map((item) => (
             <NavItemComponent
               key={item.label}
@@ -298,6 +299,9 @@ function NavItemComponent({ item, pathname, collapsed, expanded, onToggle, depth
             className={baseClass}
             onClick={handlePopoverToggle}
             title={item.label}
+            aria-label={item.label}
+            aria-expanded={popoverOpen}
+            aria-haspopup="true"
           >
             <span className="shrink-0">{item.icon}</span>
           </button>
@@ -368,7 +372,12 @@ function NavItemComponent({ item, pathname, collapsed, expanded, onToggle, depth
     // Expanded sidebar: normal accordion
     return (
       <li>
-        <button className={baseClass} onClick={() => onToggle(item.label)}>
+        <button
+          className={baseClass}
+          onClick={() => onToggle(item.label)}
+          aria-expanded={isExpanded}
+          aria-label={item.label}
+        >
           <span className="shrink-0">{item.icon}</span>
           <span className="flex-1 text-left">{item.label}</span>
           {isExpanded ? <ChevronDown size={11} /> : <ChevronRight size={11} />}

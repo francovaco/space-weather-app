@@ -1,11 +1,12 @@
 // ============================================================
 // src/app/layout.tsx — Root layout
 // ============================================================
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Space_Mono, Orbitron, JetBrains_Mono } from 'next/font/google'
 import '@/styles/globals.css'
 import { Providers } from './providers'
 import { AppShell } from '@/components/layout/AppShell'
+import { ServiceWorkerRegistration } from '@/components/pwa/ServiceWorkerRegistration'
 
 const spaceMono = Space_Mono({
   weight: ['400', '700'],
@@ -28,6 +29,11 @@ const jetbrainsMono = JetBrains_Mono({
   display: 'swap',
 })
 
+export const viewport: Viewport = {
+  themeColor: '#0ea5e9',
+  colorScheme: 'dark',
+}
+
 export const metadata: Metadata = {
   title: {
     template: '%s | GOES-19 Clima Espacial',
@@ -48,13 +54,19 @@ export const metadata: Metadata = {
     'flujo de protones',
     'flujo de electrones',
   ],
+  manifest: '/manifest.webmanifest',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Clima Espacial',
+  },
   icons: {
     icon: [
       { url: '/app-logo.png', type: 'image/png' },
       { url: '/app-logo.png', type: 'image/png', sizes: '32x32' },
     ],
     shortcut: '/app-logo.png',
-    apple: '/app-logo.png',
+    apple: '/apple-icon.png',
   },
 }
 
@@ -72,6 +84,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <Providers>
           <AppShell>{children}</AppShell>
+          <ServiceWorkerRegistration />
         </Providers>
       </body>
     </html>

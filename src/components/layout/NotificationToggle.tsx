@@ -56,17 +56,25 @@ export function NotificationToggle() {
         onClick={() => setOpen(!open)}
         className={cn(
           'flex h-9 w-9 items-center justify-center rounded-full border transition-all outline-none',
-          enabled 
-            ? 'border-accent-cyan/50 bg-accent-cyan/10 text-accent-cyan shadow-glow-blue' 
+          enabled
+            ? 'border-accent-cyan/50 bg-accent-cyan/10 text-accent-cyan shadow-glow-blue'
             : 'border-border bg-background-secondary text-text-muted hover:text-text-primary'
         )}
+        aria-label={enabled ? 'Alertas activas — Configurar alertas' : 'Alertas desactivadas — Configurar alertas'}
+        aria-expanded={open}
+        aria-haspopup="dialog"
         title="Configurar Alertas de Clima Espacial"
       >
         {enabled ? <Bell size={18} className="animate-pulse" /> : <BellOff size={18} />}
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-3 z-50 w-80 rounded-xl border border-border bg-background-card p-5 shadow-2xl animate-in fade-in zoom-in-95 slide-in-from-top-2 overflow-hidden">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Configuración de alertas de clima espacial"
+          className="absolute right-0 mt-3 z-50 w-80 rounded-xl border border-border bg-background-card p-5 shadow-2xl animate-in fade-in zoom-in-95 slide-in-from-top-2 overflow-hidden"
+        >
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-2.5 min-w-0">
               <ShieldAlert size={18} className="text-accent-cyan shrink-0" />
@@ -87,6 +95,9 @@ export function NotificationToggle() {
               </div>
               <button
                 onClick={toggleNotifications}
+                role="switch"
+                aria-checked={enabled}
+                aria-label="Activar o desactivar notificaciones"
                 className={cn(
                   'relative inline-flex h-6 w-11 items-center rounded-full transition-colors outline-none shrink-0',
                   enabled ? 'bg-primary' : 'bg-slate-700'
@@ -120,10 +131,14 @@ export function NotificationToggle() {
                     </span>
                   </div>
                   <div className="px-1">
-                    <input 
+                    <input
                       type="range" min="5" max="9" step="1"
                       value={minKpThreshold}
                       onChange={(e) => setSettings({ minKpThreshold: parseInt(e.target.value) })}
+                      aria-label={`Umbral de tormenta Kp: nivel G${minKpThreshold - 4} (Kp ${minKpThreshold})`}
+                      aria-valuemin={5}
+                      aria-valuemax={9}
+                      aria-valuenow={minKpThreshold}
                       className="w-full accent-primary h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer"
                     />
                     <div className="flex justify-between text-[10px] text-text-dim mt-2.5 font-data font-medium">

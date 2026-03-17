@@ -122,7 +122,13 @@ export function useNotificationManager() {
 }
 
 function sendNotification(title: string, options: NotificationOptions) {
-  if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+  if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return
+  // Prefer service worker showNotification — works when page is backgrounded
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.ready
+      .then((reg) => reg.showNotification(title, options))
+      .catch(() => new Notification(title, options))
+  } else {
     new Notification(title, options)
   }
 }

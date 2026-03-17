@@ -1,0 +1,53 @@
+{
+  "name": "GOES-19 Clima Espacial",
+  "short_name": "Clima Espacial",
+  "description": "Monitoreo de clima espacial en tiempo real con datos del satélite GOES-19. Tormentas geomagnéticas, fulguraciones solares, aurora y más.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#060a12",
+  "theme_color": "#0ea5e9",
+  "orientation": "any",
+  "lang": "es",
+  "categories": ["weather", "science", "utilities"],
+  "icons": [
+    {
+      "src": "/app-logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/app-logo-sq.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/apple-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Panel Principal",
+      "short_name": "Panel",
+      "url": "/",
+      "description": "Vista general del clima espacial en tiempo real"
+    },
+    {
+      "name": "Índice Kp",
+      "short_name": "Kp",
+      "url": "/instruments/kp-index",
+      "description": "Actividad geomagnética actual"
+    },
+    {
+      "name": "Flujo de Rayos X",
+      "short_name": "X-Ray",
+      "url": "/instruments/xray-flux",
+      "description": "Fulguraciones solares en tiempo real"
+    }
+  ]
+}
