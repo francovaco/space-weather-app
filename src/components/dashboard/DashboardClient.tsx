@@ -447,7 +447,7 @@ export function DashboardClient() {
 
           {/* Footer Buttons - Always at bottom, non-scrollable */}
           <div className="mt-3 space-y-1 pt-2 border-t border-white/5 shrink-0">
-            <Link href="https://www.inpres.gob.ar/desktop/" target="_blank" className="flex items-center justify-between rounded-lg border border-border bg-background-secondary/50 px-2 py-1.5 text-[12px] font-black text-text-muted hover:text-white hover:border-accent-cyan transition-all group">
+            <Link href="/inpres-earthquakes" className="flex items-center justify-between rounded-lg border border-border bg-background-secondary/50 px-2 py-1.5 text-[12px] font-black text-text-muted hover:text-white hover:border-accent-cyan transition-all group">
               <span className="uppercase tracking-widest">Sismos INPRES</span>
               <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform text-accent-cyan" />
             </Link>
