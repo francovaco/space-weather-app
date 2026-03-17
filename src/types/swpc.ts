@@ -222,6 +222,37 @@ export interface GOESStatusData {
   sourceUrl: string
 }
 
+// --- Solar Cycle Progression ---
+
+export interface SolarCycleObserved {
+  'time-tag': string
+  ssn: number | null
+  smoothed_ssn: number | null
+  observed_swpc_ssn: number | null
+  smoothed_swpc_ssn: number | null
+  'f10.7': number | null
+  'smoothed_f10.7': number | null
+}
+
+export type SolarCycleObservedData = SolarCycleObserved[]
+
+export interface SolarCyclePredicted {
+  'time-tag': string
+  predicted_ssn: number
+  high_ssn: number
+  low_ssn: number
+  'predicted_f10.7': number
+  'high_f10.7': number
+  'low_f10.7': number
+}
+
+export type SolarCyclePredictedData = SolarCyclePredicted[]
+
+export interface SolarCycleData {
+  observed: SolarCycleObservedData
+  predicted: SolarCyclePredictedData
+}
+
 // --- Common ---
 
 export type TimeRange = '6h' | '1d' | '3d' | '7d' | 'historical'

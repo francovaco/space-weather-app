@@ -11,7 +11,7 @@ import {
   Satellite, BookOpen, Activity, Image as ImageIcon, Zap, Radio,
   Sun, Wind, Eye, Globe, ChevronDown, ChevronRight,
   Gauge, Layers, SunDim, BarChart3, CloudSun, BrainCircuit,
-  Info, Shield, Orbit, Repeat2, GitCompare, AlertTriangle, Magnet, LayoutDashboard,
+  Info, Shield, Orbit, Repeat2, GitCompare, AlertTriangle, Magnet, LayoutDashboard, TrendingUp,
 } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 
@@ -69,6 +69,11 @@ const NAV_ITEMS: NavItem[] = [
     label: 'Índice Kp',
     href: '/instruments/kp-index',
     icon: <BarChart3 size={15} />,
+  },
+  {
+    label: 'Ciclo Solar',
+    href: '/solar-cycle',
+    icon: <TrendingUp size={15} />,
   },
   {
     label: 'Pronóstico de Aurora',

@@ -89,6 +89,10 @@ export const getGeoMagPerturbationFrames = (view: 'global' | 'polar-lt') =>
 export const getKpIndexData = (date?: string) =>
   apiFetch(`${BASE}/kp-index${date ? `?date=${date}` : ''}`)
 
+// --- Solar Cycle Progression ---
+export const getSolarCycleData = () =>
+  apiFetch(`${BASE}/solar-cycle`)
+
 // --- NASA DONKI ---
 export const getDONKINotifications = (startDate?: string, endDate?: string, type: string = 'all') =>
   apiFetch(`/api/nasa/donki?type=${type}${startDate ? `&startDate=${startDate}` : ''}${endDate ? `&endDate=${endDate}` : ''}`)
