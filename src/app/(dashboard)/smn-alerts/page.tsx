@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import dynamic from 'next/dynamic'
+import Link from 'next/link'
 
 export const metadata: Metadata = { title: 'Mapa de Alertas — SMN Argentina' }
 
@@ -16,6 +17,9 @@ export default function SMNAlertsPage() {
   return (
     <div className="flex flex-col gap-3 h-full">
       <div>
+        <Link href="/" className="inline-flex items-center gap-1 text-xs text-text-muted hover:text-accent-cyan mb-2 transition-colors">
+          ← Panel Principal
+        </Link>
         <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">
           Mapa de Alertas Meteorológicas
         </h1>
