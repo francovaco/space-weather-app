@@ -367,7 +367,7 @@ export function DashboardClient() {
               {smnAlerts === null ? (
                 <div className="flex items-center gap-2 rounded-lg border border-border bg-background-secondary/50 p-2.5">
                   <div className="h-3 w-3 animate-pulse rounded-full bg-text-muted/40" />
-                  <p className="text-[12px] font-bold uppercase text-text-muted">Consultando SMN...</p>
+                  <p className="text-[12px] font-bold uppercase text-text-muted">Consultando alertas...</p>
                 </div>
               ) : smnAlerts.alerts.length > 0 ? (
                 <>
@@ -403,7 +403,7 @@ export function DashboardClient() {
                   <div>
                     <p className="text-[14px] font-black text-white leading-tight uppercase tracking-tighter">Sin Alertas Activas</p>
                     <p className="mt-0.5 text-[11px] font-bold leading-normal text-green-400/80 uppercase tracking-tight">
-                      {smnAlerts.area_name ? `${smnAlerts.area_name} · SMN` : 'Condiciones normales · SMN'}
+                      {smnAlerts.area_name ?? 'Condiciones normales'}
                     </p>
                   </div>
                 </div>
