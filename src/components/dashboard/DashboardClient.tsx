@@ -403,7 +403,7 @@ export function DashboardClient() {
                   <div>
                     <p className="text-[14px] font-black text-white leading-tight uppercase tracking-tighter">Sin Alertas Activas</p>
                     <p className="mt-0.5 text-[11px] font-bold leading-normal text-green-400/80 uppercase tracking-tight">
-                      {smnAlerts.area_name ?? 'Condiciones normales'}
+                      {smnAlerts.area_name ? `Zona: ${smnAlerts.area_name}` : 'Condiciones normales'}
                     </p>
                   </div>
                 </div>
