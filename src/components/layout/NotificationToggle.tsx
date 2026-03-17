@@ -6,7 +6,7 @@ import { useState, useEffect, useRef } from 'react'
 import { cn } from '@/lib/utils'
 
 export function NotificationToggle() {
-  const { enabled, setEnabled, minKpThreshold, setSettings, notifyXClass } = useNotificationStore()
+  const { enabled, setEnabled, minKpThreshold, setSettings, notifyXClass, notifySwpcAlerts } = useNotificationStore()
   const [permission, setPermission] = useState<NotificationPermission>('default')
   const [open, setOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
@@ -139,10 +139,25 @@ export function NotificationToggle() {
                     <span className="text-xs text-text-secondary font-semibold">Fulguraciones X</span>
                     <span className="text-[10px] text-text-dim truncate">Apagones de radio R3+</span>
                   </div>
-                  <input 
-                    type="checkbox" 
+                  <input
+                    type="checkbox"
                     checked={notifyXClass}
                     onChange={(e) => setSettings({ notifyXClass: e.target.checked })}
+                    onClick={(e) => e.stopPropagation()}
+                    className="h-4.5 w-4.5 rounded border-slate-700 bg-slate-800 text-primary focus:ring-primary/50 shrink-0"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between rounded-lg border border-white/5 p-3 hover:bg-white/5 transition-colors cursor-pointer"
+                     onClick={() => setSettings({ notifySwpcAlerts: !notifySwpcAlerts })}>
+                  <div className="flex flex-col gap-0.5 min-w-0">
+                    <span className="text-xs text-text-secondary font-semibold">Alertas oficiales SWPC</span>
+                    <span className="text-[10px] text-text-dim truncate">Vigilancias, advertencias y alertas NOAA</span>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={notifySwpcAlerts}
+                    onChange={(e) => setSettings({ notifySwpcAlerts: e.target.checked })}
                     onClick={(e) => e.stopPropagation()}
                     className="h-4.5 w-4.5 rounded border-slate-700 bg-slate-800 text-primary focus:ring-primary/50 shrink-0"
                   />

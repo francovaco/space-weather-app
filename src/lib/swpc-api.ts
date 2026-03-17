@@ -89,6 +89,10 @@ export const getGeoMagPerturbationFrames = (view: 'global' | 'polar-lt') =>
 export const getKpIndexData = (date?: string) =>
   apiFetch(`${BASE}/kp-index${date ? `?date=${date}` : ''}`)
 
+// --- SWPC Alerts, Watches & Warnings ---
+export const getSwpcAlerts = () =>
+  apiFetch(`${BASE}/alerts`)
+
 // --- Solar Cycle Progression ---
 export const getSolarCycleData = () =>
   apiFetch(`${BASE}/solar-cycle`)

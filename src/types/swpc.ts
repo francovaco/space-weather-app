@@ -222,6 +222,59 @@ export interface GOESStatusData {
   sourceUrl: string
 }
 
+// --- SWPC Official Alerts, Watches & Warnings ---
+
+export interface SwpcAlert {
+  product_id: string
+  issue_datetime: string // "2026-03-16 21:08:59.560"
+  message: string
+}
+
+export type SwpcAlertSeverity = 'watch' | 'warning' | 'alert' | 'summary' | 'info'
+
+export interface ParsedSwpcAlert {
+  product_id: string
+  issue_datetime: string
+  code: string         // e.g. "WATA30"
+  severity: SwpcAlertSeverity
+  title: string
+  comment: string
+  raw: string
+}
+
+/** Parse the raw SWPC message text into structured fields */
+export function parseSwpcAlert(raw: SwpcAlert): ParsedSwpcAlert {
+  const msg = raw.message
+
+  const codeMatch = msg.match(/Space Weather Message Code:\s*(\w+)/)
+  const code = codeMatch?.[1] ?? raw.product_id
+
+  // Severity from code prefix
+  let severity: SwpcAlertSeverity = 'info'
+  if (code.startsWith('WAT')) severity = 'watch'
+  else if (code.startsWith('WAR')) severity = 'warning'
+  else if (code.startsWith('ALT')) severity = 'alert'
+  else if (code.startsWith('SUM')) severity = 'summary'
+
+  // Title: first non-header content line (WATCH:, WARNING:, ALERT:, SUMMARY:)
+  const titleMatch = msg.match(/\n\n(WATCH|WARNING|ALERT|SUMMARY|EXTENDED WATCH|CANCEL)[^\n]+/)
+  const title = titleMatch?.[0]?.trim() ?? code
+
+  // Comment block
+  const commentMatch = msg.match(/Comment:\s*([\s\S]+?)(?:\n\nNOAA|\n\nPotential|$)/)
+  const comment = commentMatch?.[1]?.trim().replace(/\r\n/g, ' ') ?? ''
+
+  return {
+    product_id: raw.product_id,
+    issue_datetime: raw.issue_datetime,
+    code,
+    severity,
+    title,
+    comment,
+    raw: msg,
+  }
+}
+
 // --- Solar Cycle Progression ---
 
 export interface SolarCycleObserved {
