@@ -71,8 +71,7 @@ export interface ProtonFluxReading {
   time_tag: string
   satellite: number
   flux: number
-  energy: '>10 MeV' | '>50 MeV' | '>100 MeV' | '>500 MeV'
-  observed_flux: number
+  energy: '>=1 MeV' | '>=5 MeV' | '>=10 MeV' | '>=30 MeV' | '>=50 MeV' | '>=60 MeV' | '>=100 MeV' | '>=500 MeV'
 }
 
 export type ProtonFluxData = ProtonFluxReading[]

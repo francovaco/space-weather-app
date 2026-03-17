@@ -89,8 +89,7 @@ export const ProtonFluxReadingSchema = z.object({
   time_tag: z.string(),
   satellite: z.number(),
   flux: z.number(),
-  energy: z.enum(['>10 MeV', '>50 MeV', '>100 MeV', '>500 MeV']),
-  observed_flux: z.number(),
+  energy: z.enum(['>=1 MeV', '>=5 MeV', '>=10 MeV', '>=30 MeV', '>=50 MeV', '>=60 MeV', '>=100 MeV', '>=500 MeV']),
 })
 
 export const ProtonFluxDataSchema = z.array(ProtonFluxReadingSchema)
