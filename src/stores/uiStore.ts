@@ -37,7 +37,7 @@ interface UIStore {
 export const useUIStore = create<UIStore>()(
   persist(
     (set) => ({
-      sidebarOpen: true,
+      sidebarOpen: false,
       setSidebarOpen: (open) => set({ sidebarOpen: open }),
       toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
 
@@ -61,6 +61,7 @@ export const useUIStore = create<UIStore>()(
     }),
     {
       name: 'ui-preferences',
+      version: 1,
     }
   )
 )

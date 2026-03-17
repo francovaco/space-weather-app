@@ -217,8 +217,7 @@ export function Sidebar() {
       {/* Footer */}
       {sidebarOpen && (
         <div className="border-t border-border px-3 py-2">
-          <p className="text-2xs text-text-muted">GOES-19 · NOAA/SWPC</p>
-          <p className="text-2xs text-text-dim">v0.1.0</p>
+          <p className="text-2xs text-text-dim">v{process.env.NEXT_PUBLIC_APP_VERSION ?? '0.1.0'}</p>
         </div>
       )}
     </aside>

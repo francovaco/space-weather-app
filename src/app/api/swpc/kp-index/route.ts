@@ -31,7 +31,9 @@ export async function GET(req: Request) {
 
       const validated = validateData(KpIndexDataSchema, data, 'kp-index/gfz')
       if (!validated.ok) return validated.response
-      return NextResponse.json(validated.data)
+      return NextResponse.json(validated.data, {
+        headers: { 'Cache-Control': 'public, max-age=55, s-maxage=60', 'X-Data-Source': GFZ_URL },
+      })
     } catch (err) {
       console.error('[API/kp-index] GFZ historical fetch failed', GFZ_URL, err)
       // Fall through to standard NOAA for "recent" historical if GFZ fails
@@ -49,8 +51,9 @@ export async function GET(req: Request) {
       signal: primaryController.signal,
       cache: 'no-store',
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'User-Agent': 'space-weather-app/0.1',
         'Accept': 'application/json',
+        'Accept-Encoding': 'identity',
       },
     })
 
@@ -73,7 +76,9 @@ export async function GET(req: Request) {
 
     const validated = validateData(KpIndexDataSchema, data, 'kp-index/noaa')
     if (!validated.ok) return validated.response
-    return NextResponse.json(validated.data)
+    return NextResponse.json(validated.data, {
+      headers: { 'Cache-Control': 'public, max-age=55, s-maxage=60', 'X-Data-Source': PRIMARY_URL },
+    })
   } catch (err: any) {
     console.error('[API/kp-index] Primary failed, attempting fallback...', PRIMARY_URL, err.message)
 
@@ -111,7 +116,9 @@ export async function GET(req: Request) {
       const data = Object.values(aggregated).sort((a, b) => a.time_tag.localeCompare(b.time_tag))
       const validatedFb = validateData(KpIndexDataSchema, data, 'kp-index/fallback')
       if (!validatedFb.ok) return validatedFb.response
-      return NextResponse.json(validatedFb.data)
+      return NextResponse.json(validatedFb.data, {
+        headers: { 'Cache-Control': 'public, max-age=55, s-maxage=60' },
+      })
     } catch (fbErr: any) {
       console.error('[API/kp-index] Fallback failed', 'https://services.swpc.noaa.gov/json/planetary_k_index_1m.json', fbErr)
       return NextResponse.json({ error: 'All NOAA sources failed' }, { status: 503 })
