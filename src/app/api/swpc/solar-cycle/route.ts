@@ -19,12 +19,12 @@ export async function GET() {
       fetch(OBSERVED_URL, {
         signal: controller.signal,
         cache: 'no-store',
-        headers: { 'User-Agent': 'space-weather-app/0.1' },
+        headers: { 'User-Agent': 'space-weather-app/0.1', 'Accept-Encoding': 'identity' },
       }),
       fetch(PREDICTED_URL, {
         signal: controller.signal,
         cache: 'no-store',
-        headers: { 'User-Agent': 'space-weather-app/0.1' },
+        headers: { 'User-Agent': 'space-weather-app/0.1', 'Accept-Encoding': 'identity' },
       }),
     ])
 

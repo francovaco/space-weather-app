@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
     const res = await fetch(url, {
       signal: controller.signal,
       cache: 'no-store',
-      headers: { 'User-Agent': 'space-weather-app/0.1' },
+      headers: { 'User-Agent': 'space-weather-app/0.1', 'Accept-Encoding': 'identity' },
     })
 
     if (!res.ok) {

@@ -15,7 +15,7 @@ export async function GET() {
     const res = await fetch(ALERTS_URL, {
       signal: controller.signal,
       cache: 'no-store',
-      headers: { 'User-Agent': 'space-weather-app/0.1' },
+      headers: { 'User-Agent': 'space-weather-app/0.1', 'Accept-Encoding': 'identity' },
     })
 
     if (!res.ok) return NextResponse.json({ error: 'Upstream error' }, { status: 502 })

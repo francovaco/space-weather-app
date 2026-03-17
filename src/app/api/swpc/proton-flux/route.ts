@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), 10000)
   try {
-    const res = await fetch(url, { signal: controller.signal, cache: 'no-store',headers: { 'User-Agent': 'space-weather-app/0.1' } })
+    const res = await fetch(url, { signal: controller.signal, cache: 'no-store',headers: { 'User-Agent': 'space-weather-app/0.1', 'Accept-Encoding': 'identity' } })
     if (!res.ok) return NextResponse.json({ error: 'Upstream error' }, { status: 502 })
     const raw = await res.json()
     const validated = validateData(ProtonFluxDataSchema, raw, 'proton-flux')
