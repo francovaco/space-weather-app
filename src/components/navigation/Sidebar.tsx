@@ -48,7 +48,6 @@ const NAV_ITEMS: NavItem[] = [
     label: 'SWFO-L1 · Solar-1',
     href: '/swfo-l1',
     icon: <Rocket size={15} />,
-    badge: 'Próx.',
   },
   {
     label: 'Imágenes ABI',
