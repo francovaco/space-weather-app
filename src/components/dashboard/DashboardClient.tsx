@@ -107,6 +107,11 @@ export function DashboardClient() {
   const [selectedDay, setSelectedDay] = useState<DailyForecast | null>(null)
   const [earthquakeData, setEarthquakeData] = useState<Earthquake[]>([])
 
+  // SMN alerts state
+  interface SmnAlert { event_id: number; event_name: string; level: number; level_label: string; level_color: 'yellow' | 'orange' | 'red' }
+  interface SmnAlertsResponse { area_id: number | null; area_name: string | null; provinces: string[]; alerts: SmnAlert[]; updated: string | null }
+  const [smnAlerts, setSmnAlerts] = useState<SmnAlertsResponse | null>(null)
+
   // Space weather data states
   const [xrayData, setXrayData] = useState<XRayData | null>(null)
   const [protonData, setProtonData] = useState<ProtonFluxData | null>(null)
@@ -114,12 +119,16 @@ export function DashboardClient() {
   const [goesData, setGoesData] = useState<GOESStatusData | null>(null)
   const [nasaPrecipData, setNasaPrecipData] = useState<{ last24h: number, last7d: number, monthTotal: number, latestDate: string, source: string } | null>(null)
 
-  // Precipitaciones NASA: se actualiza cuando cambia la ubicación
+  // Precipitaciones NASA + alertas SMN: se actualizan cuando cambia la ubicación
   useEffect(() => {
     if (!weatherLoc) return
     fetch(`/api/nasa/precipitation?lat=${weatherLoc.lat}&lon=${weatherLoc.lon}`)
       .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json() })
       .then(setNasaPrecipData)
+      .catch(() => null)
+    fetch(`/api/smn/alerts?lat=${weatherLoc.lat}&lon=${weatherLoc.lon}`)
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json() })
+      .then(setSmnAlerts)
       .catch(() => null)
   }, [weatherLoc?.lat, weatherLoc?.lon]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -355,23 +364,38 @@ export function DashboardClient() {
           
           {/* Scrollable Content Area */}
           <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar space-y-4">
-            {/* Estado de Alertas Meteorológicas */}
+            {/* Alertas SMN — Sistema de Alerta Temprana */}
             <div className="space-y-2">
-              {weather?.alerts && weather.alerts.length > 0 ? (
+              {smnAlerts === null ? (
+                <div className="flex items-center gap-2 rounded-lg border border-border bg-background-secondary/50 p-2.5">
+                  <div className="h-3 w-3 animate-pulse rounded-full bg-text-muted/40" />
+                  <p className="text-[12px] font-bold uppercase text-text-muted">Consultando SMN...</p>
+                </div>
+              ) : smnAlerts.alerts.length > 0 ? (
                 <>
-                  {weather.alerts.map((alert: any, idx: number) => (
-                    <div key={idx} className="flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/10 p-2 group hover-marquee">
-                      <AlertTriangle size={16} className="text-red-500 mt-0.5 shrink-0" />
-                      <div className="flex-1 overflow-hidden">
-                        <div className="marquee-container">
-                          <p className="marquee-content text-[14px] font-black text-white leading-tight uppercase">{alert.title || 'Alerta Meteorológica'}</p>
-                        </div>
-                        <div className="marquee-container">
-                          <p className="marquee-content text-[12px] font-bold text-red-400/90 mt-1 leading-tight uppercase">{alert.description}</p>
+                  {smnAlerts.area_name && (
+                    <p className="text-[10px] font-black uppercase tracking-widest text-text-muted px-0.5">
+                      Zona: {smnAlerts.area_name}{smnAlerts.provinces?.length ? ` · ${smnAlerts.provinces[0]}` : ''}
+                    </p>
+                  )}
+                  {smnAlerts.alerts.map((alert) => {
+                    const borderColor = alert.level_color === 'red' ? 'border-red-500/40 bg-red-500/10' : alert.level_color === 'orange' ? 'border-orange-500/40 bg-orange-500/10' : 'border-yellow-500/40 bg-yellow-500/10'
+                    const textColor = alert.level_color === 'red' ? 'text-red-400' : alert.level_color === 'orange' ? 'text-orange-400' : 'text-yellow-400'
+                    const dotColor = alert.level_color === 'red' ? 'bg-red-500' : alert.level_color === 'orange' ? 'bg-orange-500' : 'bg-yellow-400'
+                    return (
+                      <div key={alert.event_id} className={`flex items-center gap-2.5 rounded-lg border p-2.5 ${borderColor}`}>
+                        <div className={`h-2.5 w-2.5 shrink-0 rounded-full ${dotColor} animate-pulse`} />
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-[13px] font-black uppercase leading-tight ${textColor}`}>
+                            {alert.event_name}
+                          </p>
+                          <p className="text-[11px] font-bold text-text-muted uppercase tracking-tight">
+                            Nivel {alert.level_label} · SMN Argentina
+                          </p>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </>
               ) : (
                 <div className="flex items-start gap-3 rounded-lg border border-green-500/20 bg-green-500/5 p-2.5">
@@ -379,8 +403,10 @@ export function DashboardClient() {
                     <CheckCircle2 size={16} />
                   </div>
                   <div>
-                    <p className="text-[14px] font-black text-white leading-tight uppercase tracking-tighter">Sin Alertas Críticas</p>
-                    <p className="mt-0.5 text-[13px] font-bold leading-normal text-green-400/80 uppercase tracking-tight">Condiciones estables.</p>
+                    <p className="text-[14px] font-black text-white leading-tight uppercase tracking-tighter">Sin Alertas Activas</p>
+                    <p className="mt-0.5 text-[11px] font-bold leading-normal text-green-400/80 uppercase tracking-tight">
+                      {smnAlerts.area_name ? `${smnAlerts.area_name} · SMN` : 'Condiciones normales · SMN'}
+                    </p>
                   </div>
                 </div>
               )}
