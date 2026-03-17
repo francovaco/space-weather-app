@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { instrumentedFetch } from '@/lib/instrumented-fetch'
+import { logger } from '@/lib/logger'
 
 const SWPC_BASE = 'https://services.swpc.noaa.gov'
 
@@ -26,11 +28,11 @@ export async function GET(req: NextRequest) {
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), 10000)
   try {
-    const res = await fetch(fetchUrl, {
+    const res = await instrumentedFetch(fetchUrl, {
       signal: controller.signal,
       cache: 'no-store',
       headers: { 'User-Agent': 'space-weather-app/0.1' },
-    })
+    }, 'swpc/geo-mag-perturbations')
     if (!res.ok) return NextResponse.json({ error: 'Upstream error' }, { status: 502 })
 
     const html = await res.text()
@@ -52,7 +54,7 @@ export async function GET(req: NextRequest) {
       },
     })
   } catch (err) {
-    console.error('[API/geo-mag-perturbations]', fetchUrl, err)
+    logger.error('Failed to fetch geomagnetic perturbation frames', { route: 'swpc/geo-mag-perturbations', url: fetchUrl, err })
     return NextResponse.json({ error: 'Failed to fetch geomagnetic perturbation frames' }, { status: 500 })
   } finally {
     clearTimeout(timeoutId)

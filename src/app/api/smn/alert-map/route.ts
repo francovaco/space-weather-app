@@ -4,6 +4,8 @@
 // y sus niveles de alerta actuales — para renderizar con MapLibre
 // ============================================================
 import { NextResponse } from 'next/server'
+import { instrumentedFetch } from '@/lib/instrumented-fetch'
+import { logger } from '@/lib/logger'
 
 const SMN_HTML = 'https://ws2.smn.gob.ar/alertas'
 const SMN_API  = 'https://ws1.smn.gob.ar/v1'
@@ -27,7 +29,7 @@ const EVENT_NAMES: Record<number, string> = {
 
 async function getJwt(): Promise<string> {
   if (jwtCache && Date.now() < jwtCache.expiresAt) return jwtCache.token
-  const html = await fetch(SMN_HTML, { cache: 'no-store' }).then(r => r.text())
+  const html = await instrumentedFetch(SMN_HTML, { cache: 'no-store' }, 'smn/alert-map').then(r => r.text())
   const m = html.match(/localStorage\.setItem\('token',\s*'([^']+)'\)/)
   if (!m) throw new Error('SMN JWT not found')
   jwtCache = { token: m[1], expiresAt: Date.now() + 50 * 60 * 1000 }
@@ -36,10 +38,10 @@ async function getJwt(): Promise<string> {
 
 async function getAlerts(jwt: string): Promise<AreaAlert[]> {
   if (alertsRawCache && Date.now() < alertsRawCache.expiresAt) return alertsRawCache.data
-  const res = await fetch(`${SMN_API}/warning/alert/area?mode=alert&compact=true`, {
+  const res = await instrumentedFetch(`${SMN_API}/warning/alert/area?mode=alert&compact=true`, {
     headers: { Authorization: `JWT ${jwt}` },
     cache: 'no-store',
-  })
+  }, 'smn/alert-map')
   if (!res.ok) throw new Error(`SMN alerts error: ${res.status}`)
   const data: AreaAlert[] = await res.json()
   alertsRawCache = { data, expiresAt: Date.now() + 30 * 60 * 1000 }
@@ -73,10 +75,10 @@ async function getGeoJSON(jwt: string, alerts: AreaAlert[]): Promise<GeoJSON.Fea
   }
 
   // Full rebuild
-  const res = await fetch(`${SMN_API}/georef/area?show_geometry=true`, {
+  const res = await instrumentedFetch(`${SMN_API}/georef/area?show_geometry=true`, {
     headers: { Authorization: `JWT ${jwt}` },
     cache: 'no-store',
-  })
+  }, 'smn/alert-map')
   if (!res.ok) throw new Error(`SMN georef error: ${res.status}`)
   const areas = await res.json()
 
@@ -122,7 +124,7 @@ export async function GET() {
       headers: { 'Cache-Control': 'public, max-age=1800, s-maxage=1800' },
     })
   } catch (err) {
-    console.error('[API/smn/alert-map]', err)
+    logger.error('Failed to fetch SMN alert map', { route: 'smn/alert-map', err })
     return NextResponse.json({ error: 'Error al cargar mapa SMN' }, { status: 500 })
   }
 }

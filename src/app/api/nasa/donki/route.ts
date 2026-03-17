@@ -3,13 +3,15 @@
 // Proxies NASA DONKI Space Weather Notifications
 // ============================================================
 import { NextRequest, NextResponse } from 'next/server'
+import { instrumentedFetch } from '@/lib/instrumented-fetch'
+import { logger } from '@/lib/logger'
 
 const NASA_API_KEY = process.env.NASA_API_KEY || 'DEMO_KEY'
 const USING_DEMO_KEY = !process.env.NASA_API_KEY
 const DONKI_BASE = 'https://api.nasa.gov/DONKI/notifications'
 
 if (USING_DEMO_KEY) {
-  console.warn('[api/nasa/donki] NASA_API_KEY no configurada — usando DEMO_KEY (límite: 30 req/hora). Define NASA_API_KEY en .env.local para aumentar el límite.')
+  logger.warn('NASA_API_KEY not configured — using DEMO_KEY (30 req/hour limit)', { route: 'nasa/donki' })
 }
 
 export async function GET(req: NextRequest) {
@@ -28,14 +30,14 @@ export async function GET(req: NextRequest) {
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), 10000)
   try {
-    const res = await fetch(url, {
+    const res = await instrumentedFetch(url, {
       signal: controller.signal,
       cache: 'no-store',
       headers: { 'User-Agent': 'Mozilla/5.0' },
-    })
+    }, 'nasa/donki')
 
     if (!res.ok) {
-      console.error(`NASA DONKI Error: ${res.status} ${url}`)
+      logger.warn('NASA DONKI upstream error', { route: 'nasa/donki', url, status: res.status })
       return NextResponse.json({ error: 'Upstream error (NASA DONKI)', status: res.status }, { status: 502 })
     }
 
@@ -51,7 +53,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(data, { headers: responseHeaders })
   } catch (err) {
-    console.error('[API/nasa/donki]', url, err)
+    logger.error('Failed to fetch NASA DONKI data', { route: 'nasa/donki', url, err })
     return NextResponse.json({ error: 'Failed to fetch NASA DONKI data' }, { status: 500 })
   } finally {
     clearTimeout(timeoutId)

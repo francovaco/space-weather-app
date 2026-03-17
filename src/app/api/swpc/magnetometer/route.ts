@@ -5,6 +5,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { SWPC_ENDPOINTS } from '@/lib/swpc-api'
 import { validateData, MagnetometerDataSchema } from '@/lib/schemas'
+import { instrumentedFetch } from '@/lib/instrumented-fetch'
+import { logger } from '@/lib/logger'
 
 const RANGE_MAP: Record<string, string> = {
   '1-hour': SWPC_ENDPOINTS.magnetometer1h,
@@ -41,11 +43,11 @@ export async function GET(req: NextRequest) {
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), 10000)
   try {
-    const res = await fetch(url, {
+    const res = await instrumentedFetch(url, {
       signal: controller.signal,
       cache: 'no-store',
       headers: { 'User-Agent': 'space-weather-app/0.1', 'Accept-Encoding': 'identity' },
-    })
+    }, 'swpc/magnetometer')
 
     if (!res.ok) {
       return NextResponse.json({ error: 'Upstream error', status: res.status }, { status: 502 })
@@ -63,7 +65,7 @@ export async function GET(req: NextRequest) {
       },
     })
   } catch (err) {
-    console.error('[API/magnetometer]', url, err)
+    logger.error('Failed to fetch magnetometer data', { route: 'swpc/magnetometer', url, err })
     return NextResponse.json({ error: 'Failed to fetch magnetometer data' }, { status: 500 })
   } finally {
     clearTimeout(timeoutId)

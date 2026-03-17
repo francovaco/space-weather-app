@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 import { validateData, KpIndexDataSchema } from '@/lib/schemas'
+import { instrumentedFetch } from '@/lib/instrumented-fetch'
+import { logger } from '@/lib/logger'
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url)
@@ -16,7 +18,7 @@ export async function GET(req: Request) {
     const gfzController = new AbortController()
     const gfzTimeoutId = setTimeout(() => gfzController.abort(), 10000)
     try {
-      const res = await fetch(GFZ_URL, { signal: gfzController.signal, cache: 'no-store' })
+      const res = await instrumentedFetch(GFZ_URL, { signal: gfzController.signal, cache: 'no-store' }, 'swpc/kp-index')
       if (!res.ok) throw new Error('GFZ API error')
 
       const raw = await res.json()
@@ -35,7 +37,7 @@ export async function GET(req: Request) {
         headers: { 'Cache-Control': 'public, max-age=55, s-maxage=60', 'X-Data-Source': GFZ_URL },
       })
     } catch (err) {
-      console.error('[API/kp-index] GFZ historical fetch failed', GFZ_URL, err)
+      logger.warn('GFZ historical Kp fetch failed, falling through to NOAA', { route: 'swpc/kp-index', url: GFZ_URL, err })
       // Fall through to standard NOAA for "recent" historical if GFZ fails
     } finally {
       clearTimeout(gfzTimeoutId)
@@ -47,7 +49,7 @@ export async function GET(req: Request) {
   const primaryController = new AbortController()
   const primaryTimeoutId = setTimeout(() => primaryController.abort(), 10000)
   try {
-    const res = await fetch(PRIMARY_URL, {
+    const res = await instrumentedFetch(PRIMARY_URL, {
       signal: primaryController.signal,
       cache: 'no-store',
       headers: {
@@ -55,7 +57,7 @@ export async function GET(req: Request) {
         'Accept': 'application/json',
         'Accept-Encoding': 'identity',
       },
-    })
+    }, 'swpc/kp-index')
 
     if (!res.ok) {
       throw new Error(`HTTP ${res.status}`)
@@ -80,16 +82,16 @@ export async function GET(req: Request) {
       headers: { 'Cache-Control': 'public, max-age=55, s-maxage=60', 'X-Data-Source': PRIMARY_URL },
     })
   } catch (err: any) {
-    console.error('[API/kp-index] Primary failed, attempting fallback...', PRIMARY_URL, err.message)
+    logger.warn('Kp primary NOAA fetch failed, trying fallback', { route: 'swpc/kp-index', url: PRIMARY_URL, err })
 
     // Fallback to 1-minute data if primary 3-hour data fails
     const fallbackController = new AbortController()
     const fallbackTimeoutId = setTimeout(() => fallbackController.abort(), 10000)
     try {
-      const fbRes = await fetch('https://services.swpc.noaa.gov/json/planetary_k_index_1m.json', {
+      const fbRes = await instrumentedFetch('https://services.swpc.noaa.gov/json/planetary_k_index_1m.json', {
         signal: fallbackController.signal,
         cache: 'no-store',
-      })
+      }, 'swpc/kp-index')
       if (!fbRes.ok) throw new Error('Fallback failed')
 
       const fbRaw = await fbRes.json()
@@ -120,7 +122,7 @@ export async function GET(req: Request) {
         headers: { 'Cache-Control': 'public, max-age=55, s-maxage=60' },
       })
     } catch (fbErr: any) {
-      console.error('[API/kp-index] Fallback failed', 'https://services.swpc.noaa.gov/json/planetary_k_index_1m.json', fbErr)
+      logger.error('All Kp NOAA sources failed', { route: 'swpc/kp-index', url: 'https://services.swpc.noaa.gov/json/planetary_k_index_1m.json', err: fbErr })
       return NextResponse.json({ error: 'All NOAA sources failed' }, { status: 503 })
     } finally {
       clearTimeout(fallbackTimeoutId)

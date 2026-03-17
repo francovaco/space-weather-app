@@ -2,6 +2,8 @@
 // src/app/api/goes/status/route.ts
 // ============================================================
 import { NextResponse } from 'next/server'
+import { instrumentedFetch } from '@/lib/instrumented-fetch'
+import { logger } from '@/lib/logger'
 
 const STATUS_URL = 'https://www.ospo.noaa.gov/operations/goes/status.html'
 
@@ -105,11 +107,11 @@ export async function GET() {
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), 10000)
   try {
-    const res = await fetch(STATUS_URL, {
+    const res = await instrumentedFetch(STATUS_URL, {
       signal: controller.signal,
       cache: 'no-store',
       headers: { 'User-Agent': 'space-weather-app/0.1', Accept: 'text/html' },
-    })
+    }, 'goes/status')
 
     if (!res.ok) {
       return NextResponse.json<GOESStatusResponse>({
@@ -127,7 +129,7 @@ export async function GET() {
       { headers: { 'Cache-Control': 'public, max-age=280, s-maxage=300' } }
     )
   } catch (err) {
-    console.error('[API/goes/status]', STATUS_URL, err)
+    logger.error('Failed to fetch GOES status', { route: 'goes/status', url: STATUS_URL, err })
     return NextResponse.json<GOESStatusResponse>({
       fetchedAt: new Date().toISOString(), sourceUrl: STATUS_URL,
       satellites: [], anomalies: [],

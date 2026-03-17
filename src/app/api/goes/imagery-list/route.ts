@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { instrumentedFetch } from '@/lib/instrumented-fetch'
+import { logger } from '@/lib/logger'
 
 const HEADERS = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
@@ -23,7 +25,7 @@ export async function GET(req: NextRequest) {
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), 10000)
   try {
-    const res = await fetch(dirUrl, { signal: controller.signal, headers: HEADERS, cache: 'no-store' })
+    const res = await instrumentedFetch(dirUrl, { signal: controller.signal, headers: HEADERS, cache: 'no-store' }, 'goes/imagery-list')
     if (!res.ok) return NextResponse.json({ error: `CDN ${res.status}`, dirUrl }, { status: 502 })
 
     const html = await res.text()
@@ -37,7 +39,7 @@ export async function GET(req: NextRequest) {
       { headers: { 'Cache-Control': 'public, max-age=120' } }
     )
   } catch (err) {
-    console.error('[API/goes/imagery-list]', dirUrl, err)
+    logger.error('Failed to fetch imagery list', { route: 'goes/imagery-list', url: dirUrl, err })
     return NextResponse.json({ error: String(err), dirUrl }, { status: 502 })
   } finally {
     clearTimeout(timeoutId)

@@ -3,6 +3,7 @@
 // ============================================================
 import { z } from 'zod'
 import { NextResponse } from 'next/server'
+import { logger } from './logger'
 
 // ---- Helper ------------------------------------------------
 
@@ -18,7 +19,7 @@ export function validateData<T>(
 ): { ok: true; data: T } | { ok: false; response: NextResponse } {
   const result = schema.safeParse(data)
   if (!result.success) {
-    console.error(`[Zod/${context}] Validation failed`, result.error.flatten())
+    logger.warn('Zod validation failed', { route: context, err: result.error.flatten() })
     return {
       ok: false,
       response: NextResponse.json(

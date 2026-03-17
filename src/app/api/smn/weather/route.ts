@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { instrumentedFetch } from '@/lib/instrumented-fetch'
+import { logger } from '@/lib/logger'
 
 export async function GET(req: NextRequest) {
   let lat = parseFloat(req.nextUrl.searchParams.get('lat') || '')
@@ -22,17 +24,17 @@ export async function GET(req: NextRequest) {
     // PETICIÓN 1: Clima base (Open-Meteo Best Match)
     // Reducimos revalidate a 120s (2 min) para detectar cambios rápidos de nubosidad
     const coreUrl = `${OPEN_METEO_BASE}/forecast?latitude=${fixedLat}&longitude=${fixedLon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,wind_speed_10m,wind_direction_10m,surface_pressure,visibility,uv_index,precipitation&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max,wind_speed_10m_max,precipitation_sum,precipitation_probability_max&timezone=auto`
-    const weatherRes = await fetch(coreUrl, { signal: controller.signal, next: { revalidate: 120 } })
+    const weatherRes = await instrumentedFetch(coreUrl, { signal: controller.signal, next: { revalidate: 120 } }, 'smn/weather')
     if (!weatherRes.ok) throw new Error('Core weather failed')
     const data = await weatherRes.json()
 
     // PETICIÓN 2: Modelo GFS (Exclusivo para la tabla de comparación)
     const gfsUrl = `${OPEN_METEO_BASE}/forecast?latitude=${fixedLat}&longitude=${fixedLon}&models=gfs_seamless&daily=temperature_2m_max,wind_speed_10m_max,precipitation_sum,relative_humidity_2m_mean,surface_pressure_max&timezone=auto`
-    const gfsRes = await fetch(gfsUrl, { signal: controller.signal, next: { revalidate: 600 } }).catch(() => null)
+    const gfsRes = await instrumentedFetch(gfsUrl, { signal: controller.signal, next: { revalidate: 600 } }, 'smn/weather').catch(() => null)
     const gfsData = gfsRes && gfsRes.ok ? await gfsRes.json() : null
 
     // PETICIÓN 3: Nombre de ciudad
-    const geoRes = await fetch(`${BIGDATACLOUD_BASE}?latitude=${fixedLat}&longitude=${fixedLon}&localityLanguage=es`, { signal: controller.signal }).catch(() => null)
+    const geoRes = await instrumentedFetch(`${BIGDATACLOUD_BASE}?latitude=${fixedLat}&longitude=${fixedLon}&localityLanguage=es`, { signal: controller.signal }, 'smn/weather').catch(() => null)
     const geoData = geoRes ? await geoRes.json() : null
     const cityName = geoData?.city || geoData?.locality || 'Ubicación Detectada'
 
@@ -94,7 +96,7 @@ export async function GET(req: NextRequest) {
     })
 
   } catch (err) {
-    console.error('Weather API Error:', err)
+    logger.error('Weather API fetch failed', { route: 'smn/weather', err })
     return NextResponse.json({
       current: null, forecast: [], alerts: [], hasAlerts: false, status: 'error'
     })

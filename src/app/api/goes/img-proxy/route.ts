@@ -1,6 +1,8 @@
 // src/app/api/goes/img-proxy/route.ts
 // Proxies NOAA CDN images — adds Referer to bypass hotlink protection
 import { NextRequest, NextResponse } from 'next/server'
+import { instrumentedFetch } from '@/lib/instrumented-fetch'
+import { logger } from '@/lib/logger'
 
 export async function GET(req: NextRequest) {
   const raw = req.nextUrl.searchParams.get('url')
@@ -23,14 +25,14 @@ export async function GET(req: NextRequest) {
       headers['Origin'] = 'https://www.star.nesdis.noaa.gov'
     }
 
-    const upstream = await fetch(raw, {
+    const upstream = await instrumentedFetch(raw, {
       signal: controller.signal,
       headers,
       cache: 'no-store',
-    })
+    }, 'goes/img-proxy')
 
     if (!upstream.ok) {
-      console.error(`[img-proxy] upstream ${upstream.status} for ${raw}`)
+      logger.warn('Upstream returned non-OK status', { route: 'goes/img-proxy', url: raw, status: upstream.status })
       // Use 404 for missing frames, 502 for all other upstream errors
       const status = upstream.status === 404 ? 404 : 502
       return new NextResponse(status === 404 ? 'not found' : 'upstream error', { status })
@@ -49,7 +51,7 @@ export async function GET(req: NextRequest) {
       },
     })
   } catch (err) {
-    console.error('[API/goes/img-proxy]', raw, err)
+    logger.error('Failed to proxy image', { route: 'goes/img-proxy', url: raw, err })
     return new NextResponse('proxy error', { status: 502 })
   } finally {
     clearTimeout(timeoutId)

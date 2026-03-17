@@ -4,6 +4,8 @@
 // ============================================================
 import { NextResponse } from 'next/server'
 import { validateData, SwpcAlertsDataSchema } from '@/lib/schemas'
+import { instrumentedFetch } from '@/lib/instrumented-fetch'
+import { logger } from '@/lib/logger'
 
 const ALERTS_URL = 'https://services.swpc.noaa.gov/products/alerts.json'
 
@@ -12,11 +14,11 @@ export async function GET() {
   const timeoutId = setTimeout(() => controller.abort(), 10000)
 
   try {
-    const res = await fetch(ALERTS_URL, {
+    const res = await instrumentedFetch(ALERTS_URL, {
       signal: controller.signal,
       cache: 'no-store',
       headers: { 'User-Agent': 'space-weather-app/0.1', 'Accept-Encoding': 'identity' },
-    })
+    }, 'swpc/alerts')
 
     if (!res.ok) return NextResponse.json({ error: 'Upstream error' }, { status: 502 })
 
@@ -32,7 +34,7 @@ export async function GET() {
       },
     })
   } catch (err) {
-    console.error('[API/alerts]', err)
+    logger.error('Failed to fetch alerts', { route: 'swpc/alerts', url: ALERTS_URL, err })
     return NextResponse.json({ error: 'Failed to fetch alerts' }, { status: 500 })
   } finally {
     clearTimeout(timeoutId)

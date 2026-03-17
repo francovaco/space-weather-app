@@ -5,6 +5,8 @@
 // Usage: /api/docs/proxy?url=https://...
 // ============================================================
 import { NextRequest, NextResponse } from 'next/server'
+import { instrumentedFetch } from '@/lib/instrumented-fetch'
+import { logger } from '@/lib/logger'
 
 // Allowlist of trusted PDF domains
 const ALLOWED_DOMAINS = [
@@ -40,7 +42,7 @@ export async function GET(req: NextRequest) {
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), 15000)
   try {
-    const upstream = await fetch(rawUrl, {
+    const upstream = await instrumentedFetch(rawUrl, {
       signal: controller.signal,
       headers: {
         'User-Agent':
@@ -48,7 +50,7 @@ export async function GET(req: NextRequest) {
         Accept: 'application/pdf,*/*',
       },
       cache: 'no-store',
-    })
+    }, 'docs/proxy')
 
     if (!upstream.ok) {
       return NextResponse.json(
@@ -69,7 +71,7 @@ export async function GET(req: NextRequest) {
       },
     })
   } catch (err) {
-    console.error('[API/docs/proxy]', rawUrl, err)
+    logger.error('Failed to fetch document', { route: 'docs/proxy', url: rawUrl, err })
     return NextResponse.json({ error: 'Error al obtener el documento' }, { status: 500 })
   } finally {
     clearTimeout(timeoutId)

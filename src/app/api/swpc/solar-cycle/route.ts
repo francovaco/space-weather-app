@@ -4,6 +4,8 @@
 // ============================================================
 import { NextResponse } from 'next/server'
 import { validateData, SolarCycleDataSchema } from '@/lib/schemas'
+import { instrumentedFetch } from '@/lib/instrumented-fetch'
+import { logger } from '@/lib/logger'
 
 const OBSERVED_URL =
   'https://services.swpc.noaa.gov/json/solar-cycle/observed-solar-cycle-indices.json'
@@ -16,16 +18,16 @@ export async function GET() {
 
   try {
     const [observedRes, predictedRes] = await Promise.all([
-      fetch(OBSERVED_URL, {
+      instrumentedFetch(OBSERVED_URL, {
         signal: controller.signal,
         cache: 'no-store',
         headers: { 'User-Agent': 'space-weather-app/0.1', 'Accept-Encoding': 'identity' },
-      }),
-      fetch(PREDICTED_URL, {
+      }, 'swpc/solar-cycle'),
+      instrumentedFetch(PREDICTED_URL, {
         signal: controller.signal,
         cache: 'no-store',
         headers: { 'User-Agent': 'space-weather-app/0.1', 'Accept-Encoding': 'identity' },
-      }),
+      }, 'swpc/solar-cycle'),
     ])
 
     if (!observedRes.ok || !predictedRes.ok) {
@@ -51,7 +53,7 @@ export async function GET() {
       },
     )
   } catch (err) {
-    console.error('[API/solar-cycle]', err)
+    logger.error('Failed to fetch solar cycle data', { route: 'swpc/solar-cycle', err })
     return NextResponse.json({ error: 'Failed to fetch solar cycle data' }, { status: 500 })
   } finally {
     clearTimeout(timeoutId)

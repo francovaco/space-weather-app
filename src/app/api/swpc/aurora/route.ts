@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { instrumentedFetch } from '@/lib/instrumented-fetch'
+import { logger } from '@/lib/logger'
 
 const SWPC_BASE = 'https://services.swpc.noaa.gov'
 
@@ -19,11 +21,11 @@ export async function GET(req: NextRequest) {
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), 10000)
   try {
-    const res = await fetch(url, {
+    const res = await instrumentedFetch(url, {
       signal: controller.signal,
       cache: 'no-store',
       headers: { 'User-Agent': 'space-weather-app/0.1' },
-    })
+    }, 'swpc/aurora')
     if (!res.ok) return NextResponse.json({ error: 'Upstream error' }, { status: 502 })
 
     const raw: RawFrame[] = await res.json()
@@ -37,7 +39,7 @@ export async function GET(req: NextRequest) {
       headers: { 'Cache-Control': 'public, max-age=280, s-maxage=300' },
     })
   } catch (err) {
-    console.error('[API/aurora]', url, err)
+    logger.error('Failed to fetch aurora frames', { route: 'swpc/aurora', url, err })
     return NextResponse.json({ error: 'Failed to fetch aurora frames' }, { status: 500 })
   } finally {
     clearTimeout(timeoutId)

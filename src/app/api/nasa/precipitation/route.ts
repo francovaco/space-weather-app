@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { instrumentedFetch } from '@/lib/instrumented-fetch'
+import { logger } from '@/lib/logger'
 
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl
@@ -22,7 +24,7 @@ export async function GET(req: NextRequest) {
 
     const precipController = new AbortController()
     const precipTimeoutId = setTimeout(() => precipController.abort(), 10000)
-    const res = await fetch(url, { signal: precipController.signal, cache: 'no-store' })
+    const res = await instrumentedFetch(url, { signal: precipController.signal, cache: 'no-store' }, 'nasa/precipitation')
     clearTimeout(precipTimeoutId)
     if (!res.ok) throw new Error('NASA POWER API failed')
     
@@ -65,7 +67,7 @@ export async function GET(req: NextRequest) {
     })
 
   } catch (err) {
-    console.error('[API/nasa/precipitation]', err)
+    logger.error('Failed to fetch NASA precipitation data', { route: 'nasa/precipitation', err })
     return NextResponse.json({ error: 'Failed to fetch NASA data' }, { status: 500 })
   }
 }

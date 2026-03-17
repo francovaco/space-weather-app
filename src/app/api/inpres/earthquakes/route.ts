@@ -4,6 +4,8 @@
 // https://www.inpres.gob.ar/mapa/sismos.xml
 // ============================================================
 import { NextResponse } from 'next/server'
+import { instrumentedFetch } from '@/lib/instrumented-fetch'
+import { logger } from '@/lib/logger'
 
 const INPRES_XML = 'https://www.inpres.gob.ar/mapa/sismos.xml'
 
@@ -57,7 +59,7 @@ export async function GET() {
   }
 
   try {
-    const res = await fetch(INPRES_XML, { cache: 'no-store' })
+    const res = await instrumentedFetch(INPRES_XML, { cache: 'no-store' }, 'inpres/earthquakes')
     if (!res.ok) throw new Error(`INPRES HTTP ${res.status}`)
     const xml = await res.text()
     const data = parseXml(xml)
@@ -71,7 +73,7 @@ export async function GET() {
       },
     })
   } catch (err) {
-    console.error('[API/inpres/earthquakes]', err)
+    logger.error('Failed to fetch INPRES earthquake data', { route: 'inpres/earthquakes', url: INPRES_XML, err })
     return NextResponse.json({ error: 'Error al cargar datos INPRES' }, { status: 500 })
   }
 }
