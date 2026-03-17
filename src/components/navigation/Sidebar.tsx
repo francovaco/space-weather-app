@@ -3,6 +3,7 @@
 // src/components/navigation/Sidebar.tsx
 // ============================================================
 import Link from 'next/link'
+import NextImage from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useUIStore } from '@/stores/uiStore'
 import { cn } from '@/lib/utils'
@@ -193,9 +194,7 @@ export function Sidebar() {
             Monitor Espacial
           </span>
         ) : (
-          <div className="mx-auto flex h-9 w-9 items-center justify-center rounded-full border border-accent-cyan/40 bg-accent-cyan/10 shadow-glow-cyan">
-            <Radiation size={18} className="text-accent-cyan" />
-          </div>
+          <NextImage src="/assets/logo.png" alt="Logo" width={56} height={56} className="h-14 w-14 object-contain p-1" />
         )}
       </Link>
 

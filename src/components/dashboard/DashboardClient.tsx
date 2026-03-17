@@ -225,9 +225,7 @@ export function DashboardClient() {
       {/* Intro section */}
       <div className="rounded-xl border border-accent-cyan/20 bg-accent-cyan/5 p-4 shadow-glow-blue/5">
         <div className="flex items-start gap-5">
-          <div className="hidden sm:flex h-36 w-36 shrink-0 items-center justify-center rounded-xl bg-accent-cyan/10 ring-1 ring-accent-cyan/30 overflow-hidden">
-            <img src="/assets/logo.png" alt="Logo" className="w-full h-full object-contain p-1" />
-          </div>
+          <img src="/assets/logo.png" alt="Logo" className="hidden sm:block h-36 w-36 object-contain shrink-0" />
           <div className="flex-1">
             <div className="flex flex-col gap-3">
               <p className="text-[13px] font-black text-white leading-tight uppercase tracking-widest flex items-center gap-2">
@@ -453,7 +451,7 @@ export function DashboardClient() {
               <span className="uppercase tracking-widest">Sismos INPRES</span>
               <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform text-accent-cyan" />
             </Link>
-            <Link href="https://www.smn.gob.ar/alertas" target="_blank" className="flex items-center justify-between rounded-lg border border-border bg-background-secondary/50 px-2 py-1.5 text-[12px] font-black text-text-muted hover:text-white hover:border-accent-cyan transition-all group">
+            <Link href="/smn-alerts" className="flex items-center justify-between rounded-lg border border-border bg-background-secondary/50 px-2 py-1.5 text-[12px] font-black text-text-muted hover:text-white hover:border-accent-cyan transition-all group">
               <span className="uppercase tracking-widest">Mapa sistema de alerta temprana</span>
               <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform text-accent-cyan" />
             </Link>
