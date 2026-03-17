@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { validateData, KpIndexDataSchema } from '@/lib/schemas'
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url)
@@ -28,7 +29,9 @@ export async function GET(req: Request) {
         station_count: 13, // GFZ is a network of 13 stations
       }))
 
-      return NextResponse.json(data)
+      const validated = validateData(KpIndexDataSchema, data, 'kp-index/gfz')
+      if (!validated.ok) return validated.response
+      return NextResponse.json(validated.data)
     } catch (err) {
       console.error('[API/kp-index] GFZ historical fetch failed', GFZ_URL, err)
       // Fall through to standard NOAA for "recent" historical if GFZ fails
@@ -68,7 +71,9 @@ export async function GET(req: Request) {
       station_count: parseInt(row[3], 10) || 0,
     })).filter(d => d.time_tag && !isNaN(d.kp))
 
-    return NextResponse.json(data)
+    const validated = validateData(KpIndexDataSchema, data, 'kp-index/noaa')
+    if (!validated.ok) return validated.response
+    return NextResponse.json(validated.data)
   } catch (err: any) {
     console.error('[API/kp-index] Primary failed, attempting fallback...', PRIMARY_URL, err.message)
 
@@ -104,7 +109,9 @@ export async function GET(req: Request) {
       })
 
       const data = Object.values(aggregated).sort((a, b) => a.time_tag.localeCompare(b.time_tag))
-      return NextResponse.json(data)
+      const validatedFb = validateData(KpIndexDataSchema, data, 'kp-index/fallback')
+      if (!validatedFb.ok) return validatedFb.response
+      return NextResponse.json(validatedFb.data)
     } catch (fbErr: any) {
       console.error('[API/kp-index] Fallback failed', 'https://services.swpc.noaa.gov/json/planetary_k_index_1m.json', fbErr)
       return NextResponse.json({ error: 'All NOAA sources failed' }, { status: 503 })

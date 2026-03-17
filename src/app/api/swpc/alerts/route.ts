@@ -3,6 +3,7 @@
 // Proxy for NOAA/SWPC official alerts, watches & warnings feed
 // ============================================================
 import { NextResponse } from 'next/server'
+import { validateData, SwpcAlertsDataSchema } from '@/lib/schemas'
 
 const ALERTS_URL = 'https://services.swpc.noaa.gov/products/alerts.json'
 
@@ -19,9 +20,11 @@ export async function GET() {
 
     if (!res.ok) return NextResponse.json({ error: 'Upstream error' }, { status: 502 })
 
-    const data = await res.json()
+    const raw = await res.json()
+    const validated = validateData(SwpcAlertsDataSchema, raw, 'alerts')
+    if (!validated.ok) return validated.response
 
-    return NextResponse.json(data, {
+    return NextResponse.json(validated.data, {
       headers: {
         'Cache-Control': 'public, max-age=55, s-maxage=60',
         'X-Data-Source': ALERTS_URL,

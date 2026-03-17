@@ -4,6 +4,7 @@
 // ============================================================
 import { NextRequest, NextResponse } from 'next/server'
 import { SWPC_ENDPOINTS } from '@/lib/swpc-api'
+import { validateData, MagnetometerDataSchema } from '@/lib/schemas'
 
 const RANGE_MAP: Record<string, string> = {
   '1-hour': SWPC_ENDPOINTS.magnetometer1h,
@@ -50,9 +51,11 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Upstream error', status: res.status }, { status: 502 })
     }
 
-    const data = await res.json()
+    const raw = await res.json()
+    const validated = validateData(MagnetometerDataSchema, raw, 'magnetometer')
+    if (!validated.ok) return validated.response
 
-    return NextResponse.json(data, {
+    return NextResponse.json(validated.data, {
       headers: {
         'Cache-Control': 'public, max-age=55, s-maxage=60',
         'X-Data-Source': url,

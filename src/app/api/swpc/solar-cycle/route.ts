@@ -3,6 +3,7 @@
 // Proxy for NOAA/SWPC Solar Cycle Progression data
 // ============================================================
 import { NextResponse } from 'next/server'
+import { validateData, SolarCycleDataSchema } from '@/lib/schemas'
 
 const OBSERVED_URL =
   'https://services.swpc.noaa.gov/json/solar-cycle/observed-solar-cycle-indices.json'
@@ -36,8 +37,11 @@ export async function GET() {
       predictedRes.json(),
     ])
 
+    const validated = validateData(SolarCycleDataSchema, { observed, predicted }, 'solar-cycle')
+    if (!validated.ok) return validated.response
+
     return NextResponse.json(
-      { observed, predicted },
+      validated.data,
       {
         headers: {
           'Cache-Control': 'public, max-age=3600, s-maxage=3600',

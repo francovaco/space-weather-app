@@ -4,6 +4,7 @@
 // ============================================================
 import { NextRequest, NextResponse } from 'next/server'
 import { SWPC_ENDPOINTS } from '@/lib/swpc-api'
+import { validateData, DSCOVRMagDataSchema } from '@/lib/schemas'
 
 const RANGE_MAP: Record<string, string> = {
   '1-hour': SWPC_ENDPOINTS.dscovrMag1h,
@@ -37,17 +38,20 @@ export async function GET(req: NextRequest) {
 
     // Map to objects: ["time_tag", "bx", "by", "bz", "bt", "lat", "lon"]
     // Some endpoints might return more/less columns, but mag usually has 7
-    const data = raw.slice(1).map(row => ({
+    const mapped = raw.slice(1).map((row: any[]) => ({
       time_tag: row[0],
       bx: parseFloat(row[1]),
       by: parseFloat(row[2]),
       bz: parseFloat(row[3]),
       bt: parseFloat(row[4]),
       lat: parseFloat(row[5]),
-      lon: parseFloat(row[6])
-    })).filter(d => !isNaN(d.bt))
+      lon: parseFloat(row[6]),
+    })).filter((d: { bt: number }) => !isNaN(d.bt))
 
-    return NextResponse.json(data, {
+    const validated = validateData(DSCOVRMagDataSchema, mapped, 'dscovr-mag')
+    if (!validated.ok) return validated.response
+
+    return NextResponse.json(validated.data, {
       headers: {
         'Cache-Control': 'public, max-age=55, s-maxage=60',
         'X-Data-Source': url,

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { SWPC_ENDPOINTS } from '@/lib/swpc-api'
+import { validateData, XRayDataSchema } from '@/lib/schemas'
 
 const RANGE_MAP: Record<string, string> = {
   '1-hour': SWPC_ENDPOINTS.xray1h,
@@ -17,8 +18,10 @@ export async function GET(req: NextRequest) {
   try {
     const res = await fetch(url, { signal: controller.signal, cache: 'no-store',headers: { 'User-Agent': 'space-weather-app/0.1' } })
     if (!res.ok) return NextResponse.json({ error: 'Upstream error' }, { status: 502 })
-    const data = await res.json()
-    return NextResponse.json(data, { headers: { 'Cache-Control': 'public, max-age=55, s-maxage=60', 'X-Data-Source': url } })
+    const raw = await res.json()
+    const validated = validateData(XRayDataSchema, raw, 'xray-flux')
+    if (!validated.ok) return validated.response
+    return NextResponse.json(validated.data, { headers: { 'Cache-Control': 'public, max-age=55, s-maxage=60', 'X-Data-Source': url } })
   } catch (err) {
     console.error('[API/xray-flux]', url, err)
     return NextResponse.json({ error: 'Failed to fetch X-ray data' }, { status: 500 })
