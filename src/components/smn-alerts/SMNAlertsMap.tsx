@@ -33,8 +33,8 @@ interface PopupInfo {
 // ── Constants ─────────────────────────────────────────────────
 
 const LEVEL_COLORS: Record<number, string> = {
-  1: 'transparent',
-  2: 'transparent',
+  1: '#22c55e', // verde
+  2: '#22c55e', // verde
   3: '#f59e0b', // amarillo
   4: '#f97316', // naranja
   5: '#ef4444', // rojo
@@ -120,9 +120,13 @@ export function SMNAlertsMap() {
               3, LEVEL_COLORS[3],
               4, LEVEL_COLORS[4],
               5, LEVEL_COLORS[5],
-              'transparent',
+              LEVEL_COLORS[1],
             ],
-            'fill-opacity': 0.45,
+            'fill-opacity': [
+              'match', ['get', 'maxLevel'],
+              3, 0.45, 4, 0.45, 5, 0.5,
+              0.2,
+            ],
           },
         })
 
@@ -137,7 +141,7 @@ export function SMNAlertsMap() {
               3, LEVEL_COLORS[3],
               4, LEVEL_COLORS[4],
               5, LEVEL_COLORS[5],
-              '#334155',
+              LEVEL_COLORS[1],
             ],
             'line-width': [
               'match', ['get', 'maxLevel'],
@@ -309,7 +313,7 @@ export function SMNAlertsMap() {
             </div>
           ))}
           <div className="flex items-center gap-2">
-            <span className="h-3 w-3 rounded-sm shrink-0 border border-border" style={{ background: 'transparent' }} />
+            <span className="h-3 w-3 rounded-sm shrink-0" style={{ background: LEVEL_COLORS[1] }} />
             <span className="text-2xs text-text-secondary">Sin alerta</span>
           </div>
         </div>
