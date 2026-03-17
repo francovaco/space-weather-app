@@ -260,3 +260,8 @@
 .group:hover .marquee-container .marquee-content {
   transform: translateX(min(0px, calc(100cqw - 100%)));
 }
+
+/* Hide native MapLibre GeolocateControl button (we use our own) */
+.maplibregl-ctrl-geolocate {
+  display: none !important;
+}

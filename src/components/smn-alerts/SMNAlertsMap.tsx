@@ -6,7 +6,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
-import { AlertTriangle, RefreshCw, MapPin, X, Layers } from 'lucide-react'
+import { AlertTriangle, RefreshCw, MapPin, X, Layers, LocateFixed } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 // ── Types ─────────────────────────────────────────────────────
@@ -75,7 +75,7 @@ const DARK_STYLE: maplibregl.StyleSpecification = {
 export function SMNAlertsMap() {
   const mapContainer = useRef<HTMLDivElement>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
-  const userMarkerRef = useRef<maplibregl.Marker | null>(null)
+  const geolocateRef = useRef<maplibregl.GeolocateControl | null>(null)
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -83,6 +83,7 @@ export function SMNAlertsMap() {
   const [lastUpdate, setLastUpdate] = useState<string | null>(null)
   const [alertCount, setAlertCount] = useState(0)
   const [showNoAlertZones, setShowNoAlertZones] = useState(false)
+  const [locating, setLocating] = useState(false)
 
   const loadData = useCallback(async (map: maplibregl.Map) => {
     setLoading(true)
@@ -230,21 +231,21 @@ export function SMNAlertsMap() {
 
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right')
 
+    const geolocate = new maplibregl.GeolocateControl({
+      positionOptions: { enableHighAccuracy: true },
+      trackUserLocation: false,
+      fitBoundsOptions: { maxZoom: 9 },
+    })
+    // Hide the native button (we use our own)
+    map.addControl(geolocate, 'top-right')
+    geolocateRef.current = geolocate
+
+    geolocate.on('geolocate', () => setLocating(false))
+    geolocate.on('error', () => setLocating(false))
+
     map.on('load', () => {
       mapRef.current = map
       loadData(map)
-
-      // Try to show user location
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition((pos) => {
-          const { latitude, longitude } = pos.coords
-          const el = document.createElement('div')
-          el.className = 'w-3 h-3 rounded-full bg-accent-cyan border-2 border-white shadow-lg shadow-cyan-500/50'
-          userMarkerRef.current = new maplibregl.Marker({ element: el })
-            .setLngLat([longitude, latitude])
-            .addTo(map)
-        }, () => null, { timeout: 5000 })
-      }
     })
 
     return () => { map.remove(); mapRef.current = null }
@@ -263,6 +264,12 @@ export function SMNAlertsMap() {
 
   const handleRefresh = () => {
     if (mapRef.current) loadData(mapRef.current)
+  }
+
+  const handleLocate = () => {
+    if (!geolocateRef.current) return
+    setLocating(true)
+    geolocateRef.current.trigger()
   }
 
   return (
@@ -296,7 +303,7 @@ export function SMNAlertsMap() {
           <p className="font-display text-xs font-bold uppercase tracking-wider text-text-primary">
             Sistema de Alerta Temprana
           </p>
-          <p className="text-2xs text-text-muted">SMN Argentina · {alertCount > 0 ? `${alertCount} zonas con alerta` : 'Sin alertas activas'}</p>
+          <p className="text-2xs text-text-muted">{alertCount > 0 ? `${alertCount} zonas con alerta` : 'Sin alertas activas'}</p>
         </div>
       </div>
 
@@ -338,16 +345,17 @@ export function SMNAlertsMap() {
             <Layers size={10} />
             Zonas
           </button>
+          <button
+            onClick={handleLocate}
+            className="flex items-center gap-1.5 rounded border border-border bg-background-secondary/90 px-2.5 py-1.5 text-2xs text-text-muted backdrop-blur-sm transition-colors hover:text-accent-cyan hover:border-accent-cyan/40"
+          >
+            <LocateFixed size={10} className={cn(locating && 'animate-pulse text-accent-cyan')} />
+            Mi ubicación
+          </button>
         </div>
       </div>
 
       {/* User location label */}
-      {userMarkerRef.current && (
-        <div className="absolute bottom-8 right-3 flex items-center gap-1.5 rounded border border-accent-cyan/30 bg-background-secondary/90 px-2.5 py-1.5 backdrop-blur-sm pointer-events-none">
-          <MapPin size={10} className="text-accent-cyan" />
-          <span className="text-2xs text-accent-cyan">Tu ubicación</span>
-        </div>
-      )}
 
       {/* Click popup */}
       {popup && (

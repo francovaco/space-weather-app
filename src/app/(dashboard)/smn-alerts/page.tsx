@@ -20,7 +20,7 @@ export default function SMNAlertsPage() {
           Mapa de Alertas Meteorológicas
         </h1>
         <p className="mt-1 text-xs text-text-muted">
-          SMN Argentina · Sistema de Alerta Temprana · 171 zonas · Actualización cada 30 min
+          Sistema de Alerta Temprana · 171 zonas · Actualización cada 30 min
         </p>
       </div>
       <div className="h-[calc(100vh-10rem)]">
