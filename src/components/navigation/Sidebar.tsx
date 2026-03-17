@@ -3,7 +3,6 @@
 // src/components/navigation/Sidebar.tsx
 // ============================================================
 import Link from 'next/link'
-import NextImage from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useUIStore } from '@/stores/uiStore'
 import { cn } from '@/lib/utils'
@@ -11,7 +10,7 @@ import {
   Satellite, BookOpen, Activity, Image as ImageIcon, Zap, Radio,
   Sun, Wind, Eye, Globe, ChevronDown, ChevronRight,
   Gauge, Layers, SunDim, BarChart3, CloudSun, BrainCircuit,
-  Info, Shield, Orbit, Repeat2, GitCompare, AlertTriangle, Magnet, LayoutDashboard, TrendingUp,
+  Info, Shield, Orbit, Repeat2, GitCompare, AlertTriangle, Magnet, LayoutDashboard, TrendingUp, Radiation, Rocket,
 } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 
@@ -43,6 +42,12 @@ const NAV_ITEMS: NavItem[] = [
     label: 'Estado del Satélite',
     href: '/satellite-status',
     icon: <Satellite size={15} />,
+  },
+  {
+    label: 'SWFO-L1 · Solar-1',
+    href: '/swfo-l1',
+    icon: <Rocket size={15} />,
+    badge: 'Próx.',
   },
   {
     label: 'Imágenes ABI',
@@ -188,7 +193,9 @@ export function Sidebar() {
             Monitor Espacial
           </span>
         ) : (
-          <NextImage src="/assets/logo.png" alt="Logo" width={200} height={48} className="mx-auto h-12 w-auto object-contain p-1" />
+          <div className="mx-auto flex h-9 w-9 items-center justify-center rounded-full border border-accent-cyan/40 bg-accent-cyan/10 shadow-glow-cyan">
+            <Radiation size={18} className="text-accent-cyan" />
+          </div>
         )}
       </Link>
 
