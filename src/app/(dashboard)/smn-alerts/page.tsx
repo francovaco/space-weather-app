@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
+import { ChevronLeft } from 'lucide-react'
 
 export const metadata: Metadata = { title: 'Mapa de Alertas — SMN Argentina' }
 
@@ -17,8 +18,9 @@ export default function SMNAlertsPage() {
   return (
     <div className="flex flex-col gap-3 h-full">
       <div>
-        <Link href="/" className="inline-flex items-center gap-1 text-xs text-text-muted hover:text-accent-cyan mb-2 transition-colors">
-          ← Panel Principal
+        <Link href="/" className="ctrl-btn mb-2 w-auto px-2 gap-1 text-xs" title="Panel Principal">
+          <ChevronLeft size={14} />
+          <span>Panel Principal</span>
         </Link>
         <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">
           Mapa de Alertas Meteorológicas
