@@ -23,7 +23,7 @@ export default function SMNAlertsPage() {
           SMN Argentina · Sistema de Alerta Temprana · 171 zonas · Actualización cada 30 min
         </p>
       </div>
-      <div className="flex-1 min-h-[600px]">
+      <div className="h-[calc(100vh-10rem)]">
         <SMNAlertsMap />
       </div>
     </div>
