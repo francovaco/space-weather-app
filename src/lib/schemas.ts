@@ -77,8 +77,8 @@ export const XRayDataSchema = z.array(XRayReadingSchema)
 export const ElectronFluxReadingSchema = z.object({
   time_tag: z.string(),
   satellite: z.number(),
-  electron_flux: z.number(),
-  energy: z.enum(['>2 MeV', '>4 MeV']),
+  flux: z.number(),
+  energy: z.enum(['>=2 MeV', '>=4 MeV']),
 })
 
 export const ElectronFluxDataSchema = z.array(ElectronFluxReadingSchema)

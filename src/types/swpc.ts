@@ -59,8 +59,8 @@ export function classifyXRay(flux: number): { cls: XRayClass; value: string } {
 export interface ElectronFluxReading {
   time_tag: string
   satellite: number
-  electron_flux: number
-  energy: '>2 MeV' | '>4 MeV'
+  flux: number
+  energy: '>=2 MeV' | '>=4 MeV'
 }
 
 export type ElectronFluxData = ElectronFluxReading[]
