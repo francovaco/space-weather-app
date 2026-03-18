@@ -95,3 +95,8 @@ logs/
 GEMINI.md
 CLAUDE.md
 /.claude/
+*/venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
