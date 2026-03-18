@@ -73,7 +73,7 @@ function KpPredictionBar({ predictions, method }: { predictions: KpPrediction[];
           'rounded px-1.5 py-0.5 text-2xs font-medium',
           method === 'lstm' ? 'bg-primary/20 text-primary' : 'bg-border/60 text-text-muted'
         )}>
-          {method === 'lstm' ? 'Modelo LSTM' : 'Reglas NOAA'}
+          {method === 'lstm' ? 'Modelo LSTM' : 'Modelo Base'}
         </span>
       </div>
       <div className="grid grid-cols-3 gap-3">

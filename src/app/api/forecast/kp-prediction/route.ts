@@ -8,6 +8,7 @@ import { instrumentedFetch } from '@/lib/instrumented-fetch'
 import { logger } from '@/lib/logger'
 
 const FORECAST_SERVICE_URL = process.env.FORECAST_SERVICE_URL
+const FORECAST_MODEL_VERSION = process.env.FORECAST_MODEL_VERSION
 
 export async function GET() {
   if (!FORECAST_SERVICE_URL) {
@@ -37,6 +38,9 @@ export async function GET() {
     }
 
     const data = await res.json()
+    if (FORECAST_MODEL_VERSION && data.model_version !== undefined) {
+      data.model_version = FORECAST_MODEL_VERSION
+    }
     return NextResponse.json(data, {
       headers: { 'Cache-Control': 'public, max-age=55, s-maxage=60' },
     })
