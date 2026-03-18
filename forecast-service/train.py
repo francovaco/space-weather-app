@@ -268,6 +268,28 @@ def train(
             )
     logger.info("Training complete. Best val loss: %.4f. Saved to %s", best_val_loss, WEIGHTS_DIR / "kp_lstm.pt")
 
+    # Export best model to ONNX (used by the service — no PyTorch needed at runtime)
+    checkpoint = torch.load(WEIGHTS_DIR / "kp_lstm.pt", map_location="cpu", weights_only=True)
+    best_model = KpLSTM(input_size=3, hidden_size=hidden_size, num_layers=num_layers, dropout=0.0)
+    best_model.load_state_dict(checkpoint["model_state_dict"])
+    best_model.eval()
+    dummy_input = torch.zeros(1, seq_len, 3)
+    onnx_path = WEIGHTS_DIR / "kp_lstm.onnx"
+    torch.onnx.export(
+        best_model,
+        dummy_input,
+        onnx_path,
+        input_names=["input"],
+        output_names=["output"],
+        dynamic_axes={"input": {0: "batch"}, "output": {0: "batch"}},
+        opset_version=17,
+    )
+    # Save norms alongside ONNX for the predictor to load
+    import json as _json
+    with open(WEIGHTS_DIR / "norms.json", "w") as f:
+        _json.dump({**norms, "trained_at": checkpoint["trained_at"], "version": checkpoint["version"]}, f)
+    logger.info("ONNX model exported to %s", onnx_path)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train LSTM Kp predictor")
