@@ -42,7 +42,7 @@ app.add_middleware(
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "model_loaded": predictor is not None and predictor._model is not None}
+    return {"status": "ok", "model_loaded": predictor is not None and predictor._session is not None}
 
 
 @app.get("/predict")
