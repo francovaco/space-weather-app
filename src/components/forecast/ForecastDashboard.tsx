@@ -32,7 +32,7 @@ function ProbabilityGauge({ label, value, color }: { label: string; value: numbe
   return (
     <div className="flex flex-col gap-1">
       <div className="flex items-center justify-between">
-        <span className="text-2xs text-text-secondary">{label}</span>
+        <span className="text-xs text-text-secondary">{label}</span>
         <span className="font-mono text-xs font-bold" style={{ color }}>{value}%</span>
       </div>
       <div className="h-1.5 w-full rounded-full bg-border/60">
@@ -50,11 +50,11 @@ function ProbabilityGauge({ label, value, color }: { label: string; value: numbe
 function CondChip({ label, value, unit, highlight }: { label: string; value: string | null; unit: string; highlight?: boolean }) {
   return (
     <div className={cn('flex flex-col items-center rounded border px-3 py-2 text-center', highlight ? 'border-primary/40 bg-primary/5' : 'border-border bg-background-secondary')}>
-      <span className="text-2xs text-text-muted">{label}</span>
+      <span className="text-xs text-text-muted">{label}</span>
       <span className={cn('font-mono text-sm font-bold', highlight ? 'text-primary' : 'text-text-primary')}>
         {value ?? '—'}
       </span>
-      <span className="text-2xs text-text-dim">{unit}</span>
+      <span className="text-xs text-text-dim">{unit}</span>
     </div>
   )
 }
@@ -70,7 +70,7 @@ function KpPredictionBar({ predictions, method }: { predictions: KpPrediction[];
           Predicción de Kp
         </h3>
         <span className={cn(
-          'rounded px-1.5 py-0.5 text-2xs font-medium',
+          'rounded px-1.5 py-0.5 text-xs font-medium',
           method === 'lstm' ? 'bg-primary/20 text-primary' : 'bg-border/60 text-text-muted'
         )}>
           {method === 'lstm' ? 'Modelo LSTM' : 'Modelo Base'}
@@ -82,14 +82,14 @@ function KpPredictionBar({ predictions, method }: { predictions: KpPrediction[];
           const scaleInfo = GEOMAGNETIC_SCALE[scale]
           return (
             <div key={p.horizon_hours} className="flex flex-col items-center gap-1 rounded border border-border bg-background/60 py-3">
-              <span className="text-2xs text-text-muted">+{p.horizon_hours}h</span>
+              <span className="text-xs text-text-muted">+{p.horizon_hours}h</span>
               <span className="font-mono text-xl font-bold" style={{ color: scaleInfo.color }}>
                 {p.predicted_kp.toFixed(1)}
               </span>
-              <span className="text-2xs font-medium" style={{ color: scaleInfo.color }}>
+              <span className="text-xs font-medium" style={{ color: scaleInfo.color }}>
                 {scale} {scaleInfo.label}
               </span>
-              <span className="text-2xs text-text-dim">{Math.round(p.confidence * 100)}% conf.</span>
+              <span className="text-xs text-text-dim">{Math.round(p.confidence * 100)}% conf.</span>
             </div>
           )
         })}
@@ -155,14 +155,14 @@ export function ForecastDashboard() {
       {/* Header */}
       <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="font-display text-lg font-bold text-text-primary">Predicción del Clima Espacial</h1>
-          <p className="text-2xs text-text-muted">
+          <h1 className="font-display text-xl font-bold uppercase tracking-widest text-text-primary">Predicción del Clima Espacial</h1>
+          <p className="mt-1 text-xs text-text-muted">
             Evaluación en tiempo real
           </p>
         </div>
         <div className="flex items-center gap-3">
           {forecast.data_age_minutes > 0 && (
-            <span className="flex items-center gap-1 text-2xs text-text-dim">
+            <span className="flex items-center gap-1 text-xs text-text-dim">
               <Clock size={10} />
               Datos: hace {forecast.data_age_minutes} min
             </span>
@@ -188,10 +188,10 @@ export function ForecastDashboard() {
           <p className="font-display text-2xl font-bold" style={{ color: gScaleInfo.color }}>
             {currentGScale} — {gScaleInfo.label}
           </p>
-          <p className="text-2xs text-text-muted">Kp = {conditions.kp_current?.toFixed(1) ?? '—'}</p>
+          <p className="text-xs text-text-muted">Kp = {conditions.kp_current?.toFixed(1) ?? '—'}</p>
         </div>
         <div className="text-right">
-          <p className="text-2xs text-text-secondary">Alertas activas</p>
+          <p className="text-xs text-text-secondary">Alertas activas</p>
           <p className="font-mono text-3xl font-bold text-text-primary">{alerts.length}</p>
         </div>
       </div>
@@ -302,12 +302,12 @@ export function ForecastDashboard() {
                 >
                   <div className="mb-1.5 flex items-start justify-between gap-2">
                     <span className="text-xs font-semibold text-text-primary">{alert.title}</span>
-                    <span className={cn('shrink-0 rounded px-1.5 py-0.5 text-2xs font-bold', styles.badge)}>
+                    <span className={cn('shrink-0 rounded px-1.5 py-0.5 text-xs font-bold', styles.badge)}>
                       {SEVERITY_LABEL[alert.severity]}
                     </span>
                   </div>
-                  <p className="text-2xs text-text-secondary leading-relaxed">{alert.description}</p>
-                  <div className="mt-1.5 flex items-center gap-3 text-2xs text-text-dim">
+                  <p className="text-xs text-text-secondary leading-relaxed">{alert.description}</p>
+                  <div className="mt-1.5 flex items-center gap-3 text-xs text-text-dim">
                     <span>Valor: <span className={cn('font-mono font-bold', styles.text)}>{alert.value.toExponential ? (Math.abs(alert.value) < 0.01 ? alert.value.toExponential(1) : alert.value.toFixed(1)) : alert.value} {alert.unit}</span></span>
                     <span>Umbral: {alert.threshold.toExponential ? (Math.abs(alert.threshold) < 0.01 ? alert.threshold.toExponential(1) : alert.threshold) : alert.threshold} {alert.unit}</span>
                   </div>
@@ -318,11 +318,39 @@ export function ForecastDashboard() {
         )}
       </section>
 
-      {predService?.available && (
-        <footer className="border-t border-border pt-3 text-2xs text-text-dim">
-          <span className="text-primary">Predicción LSTM: servicio activo v{predService.model_version}</span>
-        </footer>
-      )}
+      {/* Detalles del modelo */}
+      <section className="rounded border border-border bg-background-secondary p-4">
+        <h2 className="mb-3 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-text-secondary">
+          <BrainCircuit size={12} />
+          Cómo funciona el sistema de predicción
+        </h2>
+        <div className="space-y-3 text-xs text-text-secondary leading-relaxed">
+          <p>
+            El sistema analiza en tiempo real múltiples parámetros del entorno espacial para estimar el estado geomagnético
+            actual y proyectar su evolución en las próximas horas. Cada actualización procesa los valores más recientes
+            del campo magnético interplanetario, la velocidad y densidad del viento solar, el flujo de rayos X y
+            partículas energéticas, y el índice Kp instantáneo.
+          </p>
+          <p>
+            Las predicciones de Kp se generan mediante una red neuronal recurrente de tipo <span className="font-mono text-primary">LSTM</span> (Long Short-Term Memory),
+            entrenada con secuencias históricas de 24 pasos de los mismos parámetros que el sistema monitorea en tiempo real.
+            La red aprende patrones temporales en el comportamiento del campo magnético terrestre y los correlaciona
+            con la actividad del viento solar, permitiendo estimar la intensidad geomagnética esperada a <span className="text-text-primary font-medium">+1h, +3h y +6h</span>.
+          </p>
+          <p>
+            El nivel de confianza disminuye con el horizonte temporal: las predicciones a corto plazo (~78%) son más
+            precisas que las de largo plazo (~48%), dado que la dinámica del plasma solar introduce mayor incertidumbre
+            a medida que se extiende la ventana de predicción. Cuando el modelo neuronal no está disponible, el sistema
+            activa automáticamente un <span className="text-text-primary font-medium">Modelo Base</span> de predicción
+            analítica que estima la evolución del Kp a partir de los valores actuales del campo Bz y la velocidad del viento solar.
+          </p>
+          {predService?.available && (
+            <p className="text-primary">
+              Modelo LSTM activo · v{predService.model_version}
+            </p>
+          )}
+        </div>
+      </section>
     </div>
   )
 }
