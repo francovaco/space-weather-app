@@ -27,8 +27,8 @@ test.describe('Magnetómetro GOES', () => {
 
   test('selector de rango temporal está visible', async ({ page }) => {
     await page.goto('/instruments/magnetometer')
-    // TimeRangeSelector usa botones o tabs con texto como "1h", "6h", "1d"
-    const rangeSelector = page.locator('[data-testid="time-range-selector"], button').filter({ hasText: /1h|6h|1d/i })
+    // TimeRangeSelector usa botones con labels "6 Horas", "1 Día", "3 Días", "7 Días"
+    const rangeSelector = page.locator('button').filter({ hasText: /6 Horas|1 Día|horas/i })
     await expect(rangeSelector.first()).toBeVisible({ timeout: 10_000 })
   })
 

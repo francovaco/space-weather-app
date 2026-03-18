@@ -13,14 +13,16 @@ test.describe('App Shell', () => {
   })
 
   test('título de la app está en el documento', async ({ page }) => {
-    await expect(page).toHaveTitle(/Monitor Espacial|Space Weather/i)
+    // El home exporta title: 'Panel Principal', que con el template da 'Panel Principal | GOES-19 Clima Espacial'
+    await expect(page).toHaveTitle(/Panel Principal|Clima Espacial/i)
   })
 
   test('sidebar es visible y contiene el logo', async ({ page }) => {
-    const sidebar = page.locator('nav, aside').first()
+    // El sidebar siempre está presente aunque esté colapsado (sidebarOpen default = false)
+    const sidebar = page.locator('aside[aria-label="Barra lateral de navegación"]')
     await expect(sidebar).toBeVisible()
-    // El texto "Monitor Espacial" aparece en el sidebar expandido
-    await expect(page.getByText('Monitor Espacial').first()).toBeVisible()
+    // Cuando está colapsado muestra la imagen del logo
+    await expect(sidebar.locator('img[alt="Logo"]')).toBeVisible()
   })
 
   test('topbar muestra el reloj UTC', async ({ page }) => {

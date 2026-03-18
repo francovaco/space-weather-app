@@ -35,12 +35,12 @@ test.describe('Navegación entre páginas', () => {
     await mockApis(page, { all: true })
     await page.goto('/')
 
-    // Busca cualquier enlace que lleve a /noaa-scales
-    const link = page.locator('a[href="/noaa-scales"]').first()
+    // Busca el enlace a /solar-synoptic que es un item de nivel superior del sidebar
+    const link = page.locator('a[href="/solar-synoptic"]').first()
     await expect(link).toBeAttached({ timeout: 8_000 })
     await link.click()
 
-    await expect(page).toHaveURL(/noaa-scales/, { timeout: 8_000 })
+    await expect(page).toHaveURL(/solar-synoptic/, { timeout: 8_000 })
   })
 
   test('navegar de instrumentos de vuelta a / conserva el layout', async ({ page }) => {
@@ -50,8 +50,8 @@ test.describe('Navegación entre páginas', () => {
     const homeLink = page.locator('a[href="/"]').first()
     await homeLink.click()
     await expect(page).toHaveURL('/', { timeout: 8_000 })
-    // El sidebar sigue visible
-    await expect(page.getByText('Monitor Espacial').first()).toBeVisible()
+    // El sidebar sigue visible (aunque colapsado por defecto)
+    await expect(page.locator('aside[aria-label="Barra lateral de navegación"]')).toBeVisible()
   })
 })
 
