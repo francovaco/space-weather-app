@@ -1,0 +1,11 @@
+{
+  "fetchedAt": "2026-03-17T00:00:00.000Z",
+  "sourceUrl": "https://www.ospo.noaa.gov/operations/goes/status.html",
+  "satellites": [
+    { "name": "GOES-16", "role": "GOES-East",     "color": "GREEN"   },
+    { "name": "GOES-17", "role": "On-orbit spare", "color": "YELLOW"  },
+    { "name": "GOES-18", "role": "GOES-West",      "color": "GREEN"   },
+    { "name": "GOES-19", "role": "GOES-East backup","color": "GREEN"  }
+  ],
+  "anomalies": []
+}

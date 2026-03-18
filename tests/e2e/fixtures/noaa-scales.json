@@ -1,0 +1,12 @@
+{
+  "-1": {
+    "G":  { "Scale": "G0",   "text": "Below threshold" },
+    "R":  { "Scale": "None", "text": "" },
+    "S":  { "Scale": "None", "text": "" }
+  },
+  "0": {
+    "G":  { "Scale": "G0",   "text": "Below threshold" },
+    "R":  { "Scale": "None", "text": "" },
+    "S":  { "Scale": "None", "text": "" }
+  }
+}

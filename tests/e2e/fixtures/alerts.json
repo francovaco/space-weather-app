@@ -1,0 +1,7 @@
+[
+  {
+    "product_id": "WATA50 KWNP 170000",
+    "issue_datetime": "2026-03-17 00:00:00",
+    "message": "Space Weather Message Code: ALTEF3\nSerial Number: 123\nIssue Time: 2026 Mar 17 0000 UTC\n\nALERT: Electron 2MeV Integral Flux exceeded 1000pfu\nThreshold Reached: 2026 Mar 17 0000 UTC\nStation: GOES-19"
+  }
+]

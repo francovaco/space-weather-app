@@ -1,0 +1,8 @@
+[
+  { "time_tag": "2026-03-17 00:00:00.000", "satellite": 19, "Hp": 102.4, "He": -48.3, "Hn": 19.7, "total": 114.8, "arcjet_flag": false },
+  { "time_tag": "2026-03-17 00:01:00.000", "satellite": 19, "Hp": 101.9, "He": -49.1, "Hn": 20.2, "total": 114.2, "arcjet_flag": false },
+  { "time_tag": "2026-03-17 00:02:00.000", "satellite": 19, "Hp": 103.1, "He": -47.8, "Hn": 18.9, "total": 115.1, "arcjet_flag": false },
+  { "time_tag": "2026-03-17 00:03:00.000", "satellite": 19, "Hp": 100.5, "He": -50.2, "Hn": 20.1, "total": 113.8, "arcjet_flag": false },
+  { "time_tag": "2026-03-17 00:04:00.000", "satellite": 19, "Hp": 104.2, "He": -46.5, "Hn": 21.3, "total": 116.0, "arcjet_flag": false },
+  { "time_tag": "2026-03-17 00:05:00.000", "satellite": 19, "Hp": 99.8,  "He": -51.0, "Hn": 19.4, "total": 113.2, "arcjet_flag": false }
+]

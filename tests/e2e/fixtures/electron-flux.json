@@ -1,0 +1,7 @@
+[
+  { "time_tag": "2026-03-17 00:00:00.000", "satellite": 19, "flux": 4200.5, "energy": ">=2 MeV" },
+  { "time_tag": "2026-03-17 00:01:00.000", "satellite": 19, "flux": 4350.2, "energy": ">=2 MeV" },
+  { "time_tag": "2026-03-17 00:02:00.000", "satellite": 19, "flux": 4100.8, "energy": ">=2 MeV" },
+  { "time_tag": "2026-03-17 00:00:00.000", "satellite": 19, "flux": 120.3,  "energy": ">=4 MeV" },
+  { "time_tag": "2026-03-17 00:01:00.000", "satellite": 19, "flux": 125.1,  "energy": ">=4 MeV" }
+]
