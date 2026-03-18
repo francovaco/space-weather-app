@@ -30,6 +30,12 @@ const NAV_ITEMS: NavItem[] = [
     icon: <Gauge size={15} />,
   },
   {
+    label: 'Pronóstico IA',
+    href: '/forecast',
+    icon: <BrainCircuit size={15} />,
+    badge: 'NUEVO',
+  },
+  {
     label: 'Panorama Espacial',
     href: '/space-weather-overview',
     icon: <LayoutDashboard size={15} />,
