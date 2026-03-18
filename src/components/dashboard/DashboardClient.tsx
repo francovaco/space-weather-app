@@ -4,7 +4,7 @@ import {
   AlertTriangle, ChevronRight, Snowflake, CheckCircle2, Eye, Gauge,
   Wind, Droplets, MapPin, Sun, Cloud, CloudRain, CloudLightning,
   Zap, Activity, Globe, Satellite, Thermometer,
-  Sunrise, Sunset, Navigation, CloudSun
+  Sunrise, Sunset, Navigation, CloudSun, Sparkles
 } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
@@ -15,6 +15,7 @@ import {
   KpIndexData,
   GOESStatusData
 } from '@/types/swpc'
+import type { ForecastResponse } from '@/types/forecast'
 import { useWeatherQuery } from '@/hooks/useWeatherQuery'
 import type { WeatherApiData, DailyForecast } from '@/hooks/useWeatherQuery'
 
@@ -118,6 +119,7 @@ export function DashboardClient() {
   const [kpData, setKpData] = useState<KpIndexData | null>(null)
   const [goesData, setGoesData] = useState<GOESStatusData | null>(null)
   const [nasaPrecipData, setNasaPrecipData] = useState<{ last24h: number, last7d: number, monthTotal: number, latestDate: string, source: string } | null>(null)
+  const [forecastData, setForecastData] = useState<ForecastResponse | null>(null)
 
   // Precipitaciones NASA + alertas SMN: se actualizan cuando cambia la ubicación
   useEffect(() => {
@@ -150,13 +152,15 @@ export function DashboardClient() {
 
     const fetchSpace = async () => {
       try {
-        const [xr, pr, kp, gs] = await Promise.all([
+        const [xr, pr, kp, gs, fc] = await Promise.all([
           fetchWithTimeout('/api/swpc/xray-flux'),
           fetchWithTimeout('/api/swpc/proton-flux'),
           fetchWithTimeout('/api/swpc/kp-index'),
           fetchWithTimeout('/api/goes/status'),
+          fetchWithTimeout('/api/forecast/alerts'),
         ])
         setXrayData(xr)
+        setForecastData(fc)
         setProtonData(pr)
         setKpData(kp)
         setGoesData(gs)
@@ -445,8 +449,36 @@ export function DashboardClient() {
             </div>
           </div>
 
+          {/* Alertas Clima Espacial */}
+          {forecastData && forecastData.alerts.length > 0 && (
+            <div className="space-y-1.5 pt-1 border-t border-white/5">
+              <p className="text-[13px] font-black text-primary uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                <Sparkles size={12} />
+                Clima Espacial
+              </p>
+              {forecastData.alerts.slice(0, 3).map(alert => {
+                const borderColor = alert.severity === 'alert' ? 'border-red-500/40 bg-red-500/10' : alert.severity === 'warning' ? 'border-orange-400/40 bg-orange-400/10' : 'border-yellow-400/40 bg-yellow-400/10'
+                const textColor = alert.severity === 'alert' ? 'text-red-400' : alert.severity === 'warning' ? 'text-orange-300' : 'text-yellow-300'
+                const dotColor = alert.severity === 'alert' ? 'bg-red-500' : alert.severity === 'warning' ? 'bg-orange-400' : 'bg-yellow-400'
+                return (
+                  <div key={alert.id} className={`flex items-center gap-2.5 rounded-lg border p-2.5 ${borderColor}`}>
+                    <div className={`h-2.5 w-2.5 shrink-0 rounded-full ${dotColor} animate-pulse`} />
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-[12px] font-black uppercase leading-tight ${textColor}`}>{alert.title}</p>
+                      <p className="text-[10px] font-bold text-text-muted uppercase tracking-tight">{alert.value.toFixed(1)} {alert.unit}</p>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
           {/* Footer Buttons - Always at bottom, non-scrollable */}
           <div className="mt-3 space-y-1 pt-2 border-t border-white/5 shrink-0">
+            <Link href="/forecast" className="flex items-center justify-between rounded-lg border border-border bg-background-secondary/50 px-2 py-1.5 text-[12px] font-black text-text-muted hover:text-white hover:border-primary transition-all group">
+              <span className="uppercase tracking-widest flex items-center gap-1.5"><Sparkles size={11} />Predicción IA</span>
+              <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform text-primary" />
+            </Link>
             <Link href="/inpres-earthquakes" className="flex items-center justify-between rounded-lg border border-border bg-background-secondary/50 px-2 py-1.5 text-[12px] font-black text-text-muted hover:text-white hover:border-accent-cyan transition-all group">
               <span className="uppercase tracking-widest">Sismos INPRES</span>
               <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform text-accent-cyan" />
