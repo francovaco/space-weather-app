@@ -155,9 +155,9 @@ export function ForecastDashboard() {
       {/* Header */}
       <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="font-display text-lg font-bold text-text-primary">Pronóstico de Clima Espacial</h1>
+          <h1 className="font-display text-lg font-bold text-text-primary">Predicción del Clima Espacial</h1>
           <p className="text-2xs text-text-muted">
-            Evaluación en tiempo real · Datos NOAA/SWPC · Umbrales NSWPC
+            Evaluación en tiempo real
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -318,17 +318,11 @@ export function ForecastDashboard() {
         )}
       </section>
 
-      {/* Data Sources Footer */}
-      <footer className="border-t border-border pt-3 text-2xs text-text-dim">
-        <div className="flex flex-wrap gap-x-4 gap-y-1">
-          <span>DSCOVR RTSW (IMF/Bz): NOAA SWPC</span>
-          <span>Viento Solar (plasma): NOAA SWPC</span>
-          <span>Índice Kp: NOAA/GFZ Potsdam</span>
-          <span>Flujo X: GOES-19 EXIS</span>
-          <span>Protones: GOES-19 SEISS</span>
-          {predService?.available && <span className="text-primary">Predicción LSTM: servicio activo v{predService.model_version}</span>}
-        </div>
-      </footer>
+      {predService?.available && (
+        <footer className="border-t border-border pt-3 text-2xs text-text-dim">
+          <span className="text-primary">Predicción LSTM: servicio activo v{predService.model_version}</span>
+        </footer>
+      )}
     </div>
   )
 }

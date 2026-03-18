@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils'
 import {
   Satellite, BookOpen, Activity, Image as ImageIcon, Zap, Radio,
   Sun, Wind, Eye, Globe, ChevronDown, ChevronRight,
-  Gauge, Layers, SunDim, BarChart3, CloudSun, BrainCircuit,
+  Gauge, Layers, SunDim, BarChart3, CloudSun, BrainCircuit, Sparkles,
   Info, Shield, Orbit, Repeat2, GitCompare, AlertTriangle, Magnet, LayoutDashboard, TrendingUp, Radiation, Rocket,
 } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
@@ -32,7 +32,7 @@ const NAV_ITEMS: NavItem[] = [
   {
     label: 'Pronóstico IA',
     href: '/forecast',
-    icon: <BrainCircuit size={15} />,
+    icon: <Sparkles size={15} />,
     badge: 'NUEVO',
   },
   {
